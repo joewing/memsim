@@ -17,6 +17,12 @@ package body Memory.Prefetch is
       Start(mem.mem.all);
       Read(mem.mem.all, address);
       Commit(mem.mem.all, cycles);
+
+      -- Prefetch the next address.
+      -- Here we assume that there will be enough time between the
+      -- prefetch and the next access that the prefetch will not
+      -- interfere with the next access.  Therefore, we ignore the
+      -- access time for the prefetch.
       declare
          next_address : Address_Type;
       begin
@@ -27,6 +33,7 @@ package body Memory.Prefetch is
          end if;
          Read(mem.mem.all, next_address);
       end;
+
       Advance(mem, cycles);
    end Read;
 

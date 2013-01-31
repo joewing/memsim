@@ -11,8 +11,8 @@ procedure Main is
    ram1     : RAM_Pointer        := Create_RAM(100);
    ram2     : RAM_Pointer        := Create_RAM(100);
    bank     : Bank_Pointer       := Create_Bank;
-   cache    : Cache_Pointer      := Create_Cache(bank, 4, 2, 1, 1);
-   prefetch : Prefetch_Pointer   := Create_Prefetch(cache, 1);
+   cache    : Cache_Pointer      := Create_Cache(bank, 4, 1, 1, 1);
+   prefetch : Prefetch_Pointer   := Create_Prefetch(cache, 10);
 
 begin
 
