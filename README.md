@@ -2,10 +2,10 @@
 Memory Simulator
 ==============================================================================
 
-This is a library to simluate memory hierarchies to determine how long
+This is a library to simulate memory hierarchies to determine how long
 memory access take.
 
-Currenty, the following packages are available:
+Currently, the following packages are available:
 
  - *Memory*: The base package.
  - *Memory.RAM*: A simple RAM with constant access time.
