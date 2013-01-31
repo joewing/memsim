@@ -1,29 +1,25 @@
 
+with Clock; use Clock;
+
 package Memory is
 
    type Address_Type is mod 2 ** 32;
 
-   type Memory_Base is abstract tagged private;
+   type Memory_Type is abstract tagged limited private;
 
-   type Memory_Pointer is access all Memory_Base'class;
+   type Memory_Pointer is access Memory_Type;
 
-   procedure Read(mem      : access Memory_Base;
-                  address  : Address_Type) is abstract;
+   function Read(mem      : Memory_Pointer;
+                 address  : Address_Type) return Natural is abstract;
 
-   procedure Write(mem     : access Memory_Base;
-                   address : Address_Type) is abstract;
-
-   procedure Step(mem      : access Memory_Base;
-                  cycles   : Natural := 1) is abstract;
-
-   function Get_Time(mem : access Memory_Base) return Natural is abstract;
+   function Write(mem     : Memory_Pointer;
+                  address : Address_Type) return Natural is abstract;
 
 private
 
-   procedure Set_Time(mem  : access Memory_Base;
-                      t    : Natural) is abstract;
-
-   type Memory_Base is abstract tagged with null record;
+   type Memory_Type is abstract tagged limited record
+      clock : Clock_Pointer;
+   end record;
 
 end Memory;
 

@@ -3,14 +3,28 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Memory.Cache is
 
-   function Get_Tag(mem       : access Cached_Memory;
+   function Create_Cache(mem           : Memory_Pointer;
+                         line_count    : Natural := 1;
+                         line_size     : Natural := 1;
+                         associativity : Natural := 1) return Cache_Pointer is
+      result : Cache_Pointer := new Cache_Type;
+   begin
+      result.clock         := mem.clock;
+      reuslt.mem           := mem;
+      result.line_size     := line_size;
+      result.line_count    := line_count;
+      result.associativity := associativity;
+      return result;
+   end Create_Cache;
+
+   function Get_Tag(mem       : Cache_Pointer;
                     address   : Address_Type) return Address_Type is
       mask : constant Address_Type := not Address_Type(mem.line_size - 1);
    begin
       return address and mask;
    end Get_Tag;
 
-   function Get_Index(mem     : access Cached_Memory;
+   function Get_Index(mem     : Cache_Pointer;
                       address : Address_Type) return Natural is
       set_size    : constant Natural := mem.line_size * mem.associativity;
       set_count   : constant Natural := mem.line_count / mem.associativity;
@@ -19,21 +33,21 @@ package body Memory.Cache is
       return (base mod set_count) * set_size;
    end Get_Index;
 
-   function Get_First_Index(mem     : access Cached_Memory;
+   function Get_First_Index(mem     : Cache_Pointer;
                             address : Address_Type) return Natural is
    begin
       return Get_Index(mem, address);
    end Get_First_Index;
 
-   function Get_Last_Index(mem      : access Cached_Memory;
+   function Get_Last_Index(mem      : Cache_Pointer;
                            address  : Address_Type) return Natural is
    begin
       return Get_First_Index(mem, address) + mem.associativity - 1;
    end Get_Last_Index;
 
-   procedure Get_Data(mem      : access Cached_Memory;
-                      address  : Address_Type;
-                      is_read  : Boolean) is
+   function Get_Data(mem      : Cache_Pointer;
+                     address  : Address_Type;
+                     is_read  : Boolean) return Natural is
 
       data        : Cache_Data_Pointer;
       tag         : constant Address_Type := Get_Tag(mem, address);
@@ -41,6 +55,7 @@ package body Memory.Cache is
       last        : constant Natural := Get_Last_Index(mem, address);
       oldest      : Natural := 0;
       oldest_age  : Natural := 0;
+      cycles      : Natural := 1;
 
    begin
 
@@ -63,7 +78,7 @@ package body Memory.Cache is
             data.age := 0;
             data.dirty := data.dirty or not is_read;
 Put_Line("HIT: " & Address_Type'image(address));
-            return;
+            return cycles;
          elsif data.age > oldest_age then
             oldest_age := data.age;
             oldest := i;
@@ -76,7 +91,7 @@ Put_Line("EVICT: " & Natural'image(oldest));
       data := mem.data.Element(oldest);
       if data.dirty then
          for i in 0 .. mem.line_size - 1 loop
-            Write(mem.mem, data.address + Address_Type(i));
+            cycles := cycles + Write(mem.mem, data.address + Address_Type(i));
          end loop;
          data.dirty := False;
       end if;
@@ -89,7 +104,7 @@ Put_Line("EVICT: " & Natural'image(oldest));
                          := data.address + Address_Type(i);
          begin
             if is_read or full_address /= address then
-               Read(mem.mem, data.address + Address_Type(i));
+               cycles := cycles + Read(mem.mem, data.address + Address_Type(i));
             end if;
          end;
       end loop;
@@ -97,56 +112,21 @@ Put_Line("EVICT: " & Natural'image(oldest));
       -- Mark the data as new and return.
       data.age := 0;
       data.dirty := not is_read;
+      return cycles;
 
    end Get_Data;
 
-   procedure Read(mem      : access Cached_Memory;
-                  address  : Address_Type) is
+   function Read(mem      : Cache_Pointer;
+                 address  : Address_Type) return Natural is
    begin
-      Get_Data(mem, address, True);
+      return Get_Data(mem, address, True);
    end Read;
 
-   procedure Write(mem     : access Cached_Memory;
-                   address : Address_Type) is
+   function Write(mem     : Cache_Pointer;
+                  address : Address_Type) return Natural is
    begin
-      Get_Data(mem, address, False);
+      return Get_Data(mem, address, False);
    end Write;
-
-   procedure Step(mem      : access Cached_Memory;
-                  cycles   : Natural := 1) is
-   begin
-      Step(mem.mem, cycles);
-      Set_Time(mem, Get_Time(mem.mem));
-   end Step;
-
-   procedure Set_Memory(mem      : access Cached_Memory;
-                        next     : Memory_Pointer) is
-   begin
-      mem.mem := next;
-   end Set_Memory;
-
-   procedure Set_Line_Size(mem   : access Cached_Memory;
-                           size  : Natural) is
-   begin
-      mem.line_size := size;
-   end Set_Line_Size;
-
-   procedure Set_Line_Count(mem     : access Cached_Memory;
-                            count   : Natural) is
-   begin
-      mem.line_count := count;
-   end Set_Line_Count;
-
-   procedure Set_Associativity(mem           : access Cached_Memory;
-                               associativity : Natural) is
-   begin
-      mem.associativity := associativity;
-   end Set_Associativity;
-
-   function Get_Time(mem : access Cached_Memory) return Natural is
-   begin
-      Get_Time(mem.mem);
-   end Get_Time;
 
 end Memory.Cache;
 

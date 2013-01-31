@@ -3,32 +3,20 @@ with Ada.Containers.Vectors; use Ada.Containers;
 
 package Memory.Cache is
 
-   type Cached_Memory is new Memory_Base with private;
+   type Cache_Type is new Memory_Type with private;
 
-   type Cached_Pointer is access all Cached_Memory'class;
+   type Cache_Pointer is access Cache_Type;
 
-   procedure Read(mem      : access Cached_Memory;
-                  address  : Address_Type);
+   function Create_Cache(mem           : Memory_Pointer;
+                         line_count    : Natural := 1;
+                         line_size     : Natural := 1;
+                         associativity : Natural := 1) return Cache_Pointer;
 
-   procedure Write(mem     : access Cached_Memory;
-                   address : Address_Type);
+   function Read(mem      : Cache_Pointer;
+                 address  : Address_Type) return Natural;
 
-   procedure Step(mem      : access Cached_Memory;
-                  cycles   : Natural := 1);
-
-   procedure Set_Memory(mem   : access Cached_Memory;
-                        next  : Memory_Pointer);
-
-   procedure Set_Line_Size(mem   : access Cached_Memory;
-                           size  : Natural);
-
-   procedure Set_Line_Count(mem     : access Cached_Memory;
-                            count   : Natural);
-
-   procedure Set_Associativity(mem           : access Cached_Memory;
-                               associativity : Natural);
-
-   function Get_Time(mem : access Cached_Memory) return Natural;
+   function Write(mem     : Cache_Pointer;
+                  address : Address_Type) return Natural;
 
 private
 

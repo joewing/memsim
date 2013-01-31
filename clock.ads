@@ -5,9 +5,9 @@ package Clock is
 
    type Clock_Pointer is access Clock_Type;
 
-   function Get_Time(c : Clock_Type) return Natural;
+   function Get_Time(clock : Clock_Pointer) return Natural;
 
-   procedure Advance(c        : Clock_Type;
+   procedure Advance(clock    : Clock_Pointer;
                      cycles   : Natural := 1);
 
 private

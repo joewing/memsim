@@ -3,23 +3,25 @@ with Ada.Containers.Vectors; use Ada.Containers;
 
 package Memory.Bank is
 
-   type Banked_Memory is new Memory_Base with private;
+   type Bank_Type is new Memory_Type with private;
 
-   type Banked_Pointer is access all Banked_Memory'class;
+   type Bank_Pointer is access Bank_Type;
 
-   procedure Read(mem      : access Banked_Memory;
-                  address  : Address_Type);
+   function Create_Bank(clock : Clock_Pointer) return Bank_Pointer;
 
-   procedure Write(mem     : access Banked_Memory;
-                   address : Address_Type);
+   function Read(mem      : Bank_Pointer;
+                 address  : Address_Type) return Natural;
 
-   procedure Step(mem      : access Banked_Memory;
+   function Write(mem     : Bank_Pointer;
+                  address : Address_Type) return Natural;
+
+   procedure Step(mem      : Bank_Pointer;
                   cycles   : Natural := 1);
 
-   procedure Add_Bank(mem:    access Banked_Memory;
-                      bank:   Memory_Pointer;
-                      key:    Address_Type;
-                      mask:   Address_Type);
+   procedure Add_Bank(mem  : Bank_Pointer;
+                      bank : Memory_Pointer;
+                      key  : Address_Type;
+                      mask : Address_Type);
 
 private
 
@@ -31,7 +33,7 @@ private
 
    package Bank_Vectors is new Vectors(Natural, Bank_Data);
 
-   type Banked_Memory is new Memory_Base with record
+   type Bank_Type is new Memory_Type with record
       banks    : Bank_Vectors.Vector;
    end record;
 

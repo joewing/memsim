@@ -3,23 +3,27 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Memory.RAM is
 
-   procedure Read(mem : access RAM; address : Address_Type) is
+   function Create_RAM(clock     : Clock_Pointer;
+                       latency   : Natural := 1) return RAM_Pointer is
+      result : RAM_Pointer := new RAM_Type;
    begin
-      Put_Line("Time: " & Natural'image(mem.time)
-               & " Read: " & Address_Type'image(address));
-      mem.time := mem.time + mem.latency;
+      result.clock := clock;
+      result.latency := latency;
+      return result;
+   end Create_RAM;
+
+   function Read(mem       : Memory_Pointer;
+                 address   : Address_Type) return Natural is
+   begin
+      Put_Line("RAM Read: " & Address_Type'image(address));
+      return mem.latency;
    end Read;
 
-   procedure Write(mem : access RAM; address : Address_Type) is
+   function Write(mem      : RAM_Pointer;
+                  address : Address_Type) return Natural is
    begin
-      Put_Line("Time: " & Natural'image(mem.time)
-               & " Write: " & Address_Type'image(address));
-      mem.time := mem.time + mem.latency;
+      Put_Line("RAM Write: " & Address_Type'image(address));
+      return mem.latency;
    end Write;
-
-   procedure Set_Latency(mem : access RAM; latency : Natural) is
-   begin
-      mem.latency := latency;
-   end Set_Latency;
 
 end Memory.RAM;

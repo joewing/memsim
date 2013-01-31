@@ -1,7 +1,14 @@
 
 package body Memory.Bank is
 
-   function Get_Data(mem      : access Banked_Memory;
+   function Create_Bank(clock : Clock_Pointer) return Bank_Pointer is
+      result : Bank_Pointer := new Bank_Type;
+   begin
+      result.clock := clock;
+      return result;
+   end Create_Bank;
+
+   function Get_Data(mem      : Bank_Pointer;
                      address  : Address_Type) return Bank_Data is
       data : Bank_Data;
    begin
@@ -14,21 +21,21 @@ package body Memory.Bank is
       return Bank_Data'(null, 0, 0);
    end Get_Data;
 
-   procedure Read(mem      : access Banked_Memory;
-                  address  : Address_Type) is
+   function Read(mem      : Bank_Pointer;
+                 address  : Address_Type) is
       data : constant Bank_Data := Get_Data(mem, address);
    begin
-      Read(data.mem, address);
+      return Read(data.mem, address);
    end Read;
 
-   procedure Write(mem     : access Banked_Memory;
+   function Write(mem     : Bank_Pointer;
                    address : Address_Type) is
       data : constant Bank_Data := Get_Data(mem, address);
    begin
-      Write(data.mem, address);
+      return Write(data.mem, address);
    end Write;
 
-   procedure Step(mem      : access Banked_Memory;
+   procedure Step(mem      : Bank_Pointer;
                   cycles   : Natural := 1) is
       data     : Bank_Data;
       time     : Natural;
@@ -48,7 +55,7 @@ package body Memory.Bank is
       end loop;
    end Step;
 
-   procedure Add_Bank(mem  : access Banked_Memory;
+   procedure Add_Bank(mem  : Bank_Pointer;
                       bank : Memory_Pointer;
                       key  : Address_Type;
                       mask : Address_Type) is

@@ -7,12 +7,15 @@ with Trace;
 
 procedure Main is
 
-   cache    : Memory.Cache.Cached_Pointer := new Memory.Cache.Cached_Memory;
+   clock    : Clock.Clock_Pointer         := new Clock.Clock_Type;
+   cache    : Memory.Cache.Cached_Pointer;
    mem      : Memory.Bank.Banked_Pointer  := new Memory.Bank.Banked_Memory;
    bank1    : Memory.RAM.RAM_Pointer      := new Memory.RAM.RAM;
    bank2    : Memory.RAM.RAM_Pointer      := new Memory.RAM.RAM;
 
 begin
+
+   cache := Memory.Cache.Create_Cache(clock, 4, 2, 1);
 
    Memory.RAM.Set_Latency(bank1, 100);
    Memory.RAM.Set_Latency(bank2, 100);
