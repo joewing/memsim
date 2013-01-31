@@ -1,12 +1,15 @@
 
 package body Memory.Prefetch is
 
-   function Create_Prefetch(mem     : access Memory_Type'class;
-                            stride  : Integer := 1) return Prefetch_Pointer is
+   function Create_Prefetch(mem        : access Memory_Type'class;
+                            stride     : Address_Type := 1;
+                            multiplier : Address_Type := 1)
+                            return Prefetch_Pointer is
       result : constant Prefetch_Pointer := new Prefetch_Type;
    begin
-      result.mem     := mem;
-      result.stride  := stride;
+      result.mem        := mem;
+      result.stride     := stride;
+      result.multiplier := multiplier;
       return result;
    end Create_Prefetch;
 
@@ -26,11 +29,7 @@ package body Memory.Prefetch is
       declare
          next_address : Address_Type;
       begin
-         if mem.stride < 0 then
-            next_address := address - Address_Type(-mem.stride);
-         else
-            next_address := address + Address_Type(mem.stride);
-         end if;
+         next_address := address * mem.multiplier + mem.stride;
          Read(mem.mem.all, next_address);
       end;
 
