@@ -45,7 +45,7 @@ package body Trace is
       return result;
    end Read_Access;
 
-   procedure Process(mem   : Memory_Pointer;
+   procedure Process(mem   : in out Memory_Type'class;
                      name  : String) is
       file : Character_IO.File_Type;
    begin
@@ -55,21 +55,19 @@ package body Trace is
       begin
          loop
             declare
-               data : Memory_Access := Read_Access(file);
+               data : constant Memory_Access := Read_Access(file);
             begin
                if data.is_read then
                   Read(mem, data.address);
                else
                   Write(mem, data.address);
                end if;
-               Step(mem);
             end;
          end loop;
       exception
          when End_Error =>
             Character_IO.Close(file);
       end;
-      Put_Line("Total Time: " & Natural'image(Memory.Get_Time(mem)));
    end Process;
 
 end Trace;

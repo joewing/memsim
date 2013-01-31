@@ -3,23 +3,21 @@ package Memory.RAM is
 
    type RAM_Type is new Memory_Type with private;
 
-   type RAM_Pointer is access RAM_Type;
+   type RAM_Pointer is access all RAM_Type'class;
 
-   function Create_RAM(clock     : Clock_Pointer;
-                       latency   : Natural := 1) return RAM_Pointer;
+   function Create_RAM(latency : Natural := 1) return RAM_Pointer;
 
-   function Read(mem      : RAM_Pointer;
-                 address  : Address_Type) return Natural;
+   overriding
+   procedure Read(mem      : in out RAM_Type;
+                  address  : Address_Type);
 
-   function Write(mem     : RAM_Pointer;
-                  address : Address_Type) return Natural;
-
-   procedure Set_Latency(mem     : access RAM;
-                         latency : Natural);
+   overriding
+   procedure Write(mem     : in out RAM_Type;
+                   address : Address_Type);
 
 private
 
-   type RAM is new Memory_Base with record
+   type RAM_Type is new Memory_Type with record
       latency  : Natural := 1;
    end record;
 

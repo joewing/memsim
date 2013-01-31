@@ -1,6 +1,6 @@
 
 all:
-	gnatmake main.adb
+	gnatmake -gnatwa main.adb
 
 clean:
 	rm -f main *.ali *.o

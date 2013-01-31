@@ -1,32 +1,26 @@
 
-with Clock;
-with Memory;
-with Memory.Bank;
-with Memory.Cache;
-with Memory.RAM;
-with Trace;
+with Ada.Text_IO;    use Ada.Text_IO;
+
+with Memory;         use Memory;
+with Memory.Bank;    use Memory.Bank;
+with Memory.Cache;   use Memory.Cache;
+with Memory.RAM;     use Memory.RAM;
+with Trace;          use Trace;
 
 procedure Main is
 
-   clk      : Clock.Clock_Pointer         := new Clock.Clock_Type;
-   cache    : Memory.Cache.Cache_Pointer;
-   mem      : Memory.Bank.Bank_Pointer;
-   bank1    : Memory.RAM.RAM_Pointer;
-   bank2    : Memory.RAM.RAM_Pointer;
+   ram1     : RAM_Pointer     := Create_RAM(100);
+   ram2     : RAM_Pointer     := Create_RAM(100);
+   bank     : Bank_Pointer    := Create_Bank;
+   cache    : Cache_Pointer   := Create_Cache(bank, 4, 2, 1, 1);
 
 begin
 
-   mem := Memory.Bank.Create_Bank(clk);
-   Memory.Bank.Add_Bank(mem, Memory.Memory_Pointer(bank1), 0, 1);
-   Memory.Bank.Add_Bank(mem, Memory.Memory_Pointer(bank2), 1, 1);
+   Add_Bank(bank.all, ram1, 0, 1);
+   Add_Bank(bank.all, ram2, 1, 1);
+   Process(cache.all, "test.txt");
 
-   cache := Memory.Cache.Create_Cache(clk, 4, 2, 1);
-
-   Memory.Cache.Set_Memory(cache, Memory.Memory_Pointer(mem));
-   Memory.Cache.Set_Line_Size(cache, 2);
-   Memory.Cache.Set_Line_Count(cache, 4);
-   Memory.Cache.Set_Associativity(cache, 2);
-   Trace.Process(Memory.Memory_Pointer(cache), "test.txt");
+   Put_Line("Total time: " & Natural'image(Get_Time(cache.all)));
 
 end Main;
 

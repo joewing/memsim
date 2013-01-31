@@ -1,29 +1,38 @@
 
-with Ada.Containers.Vectors; use Ada.Containers;
-
 package Memory.Bank is
 
    type Bank_Type is new Memory_Type with private;
 
-   type Bank_Pointer is access Bank_Type;
+   type Bank_Pointer is access all Bank_Type'class;
 
-   function Create_Bank(clock : Clock_Pointer) return Bank_Pointer;
+   function Create_Bank return Bank_Pointer;
 
-   function Read(mem      : Bank_Pointer;
-                 address  : Address_Type) return Natural;
+   overriding
+   procedure Start(mem : in out Bank_Type);
 
-   function Write(mem     : Bank_Pointer;
-                  address : Address_Type) return Natural;
+   overriding
+   procedure Commit(mem    : in out Bank_Type;
+                    cycles : out Natural);
 
-   procedure Add_Bank(mem  : Bank_Pointer;
-                      bank : Memory_Pointer;
+   overriding
+   procedure Read(mem      : in out Bank_Type;
+                  address  : Address_Type);
+
+   overriding
+   procedure Write(mem     : in out Bank_Type;
+                   address : Address_Type);
+
+   procedure Add_Bank(mem  : in out Bank_Type;
+                      bank : access Memory_Type'class;
                       key  : Address_Type;
                       mask : Address_Type);
+
+   Bank_Error : exception;
 
 private
 
    type Bank_Data is record
-      mem      : Memory_Pointer;
+      mem      : access Memory_Type'class;
       key      : Address_Type;
       mask     : Address_Type;
    end record;

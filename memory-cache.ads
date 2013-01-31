@@ -1,22 +1,23 @@
 
-with Ada.Containers.Vectors; use Ada.Containers;
-
 package Memory.Cache is
 
    type Cache_Type is new Memory_Type with private;
 
-   type Cache_Pointer is access Cache_Type;
+   type Cache_Pointer is access all Cache_Type'class;
 
-   function Create_Cache(mem           : Memory_Pointer;
+   function Create_Cache(mem           : access Memory_Type'class;
                          line_count    : Natural := 1;
                          line_size     : Natural := 1;
-                         associativity : Natural := 1) return Cache_Pointer;
+                         associativity : Natural := 1;
+                         latency       : Natural := 1) return Cache_Pointer;
 
-   function Read(mem      : Cache_Pointer;
-                 address  : Address_Type) return Natural;
+   overriding
+   procedure Read(mem      : in out Cache_Type;
+                  address  : Address_Type);
 
-   function Write(mem     : Cache_Pointer;
-                  address : Address_Type) return Natural;
+   overriding
+   procedure Write(mem     : in out Cache_Type;
+                   address : Address_Type);
 
 private
 
@@ -29,12 +30,13 @@ private
 
    package Cache_Vectors is new Vectors(Natural, Cache_Data_Pointer);
 
-   type Cached_Memory is new Memory_Base with record
+   type Cache_Type is new Memory_Type with record
       line_size      : Natural := 1;
       line_count     : Natural := 1;
       associativity  : Natural := 1;
+      latency        : Natural := 1;
       data           : Cache_Vectors.Vector;
-      mem            : Memory_Pointer;
+      mem            : access Memory_Type'class;
    end record;
 
 end Memory.Cache;
