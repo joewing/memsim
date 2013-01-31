@@ -5,7 +5,7 @@ package body Memory.Cache is
                          line_count    : Natural := 1;
                          line_size     : Natural := 1;
                          associativity : Natural := 1;
-                         latency       : Natural := 1) return Cache_Pointer is
+                         latency       : Time_Type := 1) return Cache_Pointer is
       result : constant Cache_Pointer := new Cache_Type;
    begin
       result.mem           := mem;
@@ -27,9 +27,9 @@ package body Memory.Cache is
                       address : Address_Type) return Natural is
       set_size    : constant Natural := mem.line_size * mem.associativity;
       set_count   : constant Natural := mem.line_count / mem.associativity;
-      base        : constant Natural := Natural(address) / set_size;
+      base        : constant Address_Type := address / Address_Type(set_size);
    begin
-      return (base mod set_count) * set_size;
+      return (Natural(base) mod set_count) * set_size;
    end Get_Index;
 
    function Get_First_Index(mem     : Cache_Type;
@@ -54,7 +54,7 @@ package body Memory.Cache is
       last        : constant Natural := Get_Last_Index(mem, address);
       oldest      : Natural := 0;
       oldest_age  : Natural := 0;
-      cycles      : Natural := mem.latency;
+      cycles      : Time_Type := mem.latency;
 
    begin
 

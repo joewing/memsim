@@ -5,6 +5,8 @@ package Memory is
 
    type Address_Type is mod 2 ** 32;
 
+   type Time_Type is new Natural;
+
    type Memory_Type is abstract tagged limited private;
 
    type Memory_Pointer is access all Memory_Type'class;
@@ -14,7 +16,7 @@ package Memory is
 
    -- Commit a transaction.
    procedure Commit(mem    : in out Memory_Type;
-                    cycles : out Natural);
+                    cycles : out Time_Type);
 
    procedure Read(mem      : in out Memory_Type;
                   address  : Address_Type) is abstract;
@@ -22,18 +24,18 @@ package Memory is
    procedure Write(mem     : in out Memory_Type;
                    address : Address_Type) is abstract;
 
-   function Get_Time(mem : Memory_Type) return Natural;
+   function Get_Time(mem : Memory_Type) return Time_Type;
 
 private
 
    procedure Advance(mem      : in out Memory_Type;
-                     cycles   : Natural);
+                     cycles   : Time_Type);
 
-   package Transaction_Vectors is new Vectors(Natural, Natural);
+   package Transaction_Vectors is new Vectors(Natural, Time_Type);
 
    type Memory_Type is abstract tagged limited record
       transactions   : Transaction_Vectors.Vector;
-      time           : Natural := 0;
+      time           : Time_Type := 0;
    end record;
 
 end Memory;

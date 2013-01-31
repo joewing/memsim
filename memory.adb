@@ -7,21 +7,21 @@ package body Memory is
    end Start;
 
    procedure Commit(mem    : in out Memory_Type;
-                    cycles : out Natural) is
-      start_time : Natural;
+                    cycles : out Time_Type) is
+      start_time : Time_Type;
    begin
       start_time := mem.transactions.Last_Element;
       cycles := mem.time - start_time;
       mem.transactions.Delete_Last;
    end Commit;
 
-   function Get_Time(mem : Memory_Type) return Natural is
+   function Get_Time(mem : Memory_Type) return Time_Type is
    begin
       return mem.time;
    end Get_Time;
 
    procedure Advance(mem      : in out Memory_type;
-                     cycles   : Natural) is
+                     cycles   : Time_Type) is
    begin
       mem.time := mem.time + cycles;
    end Advance;

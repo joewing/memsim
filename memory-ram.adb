@@ -3,7 +3,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Memory.RAM is
 
-   function Create_RAM(latency : Natural := 1) return RAM_Pointer is
+   function Create_RAM(latency : Time_Type := 1) return RAM_Pointer is
       result : constant RAM_Pointer := new RAM_Type;
    begin
       result.latency := latency;

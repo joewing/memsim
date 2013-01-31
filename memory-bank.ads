@@ -12,7 +12,7 @@ package Memory.Bank is
 
    overriding
    procedure Commit(mem    : in out Bank_Type;
-                    cycles : out Natural);
+                    cycles : out Time_Type);
 
    overriding
    procedure Read(mem      : in out Bank_Type;

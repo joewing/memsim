@@ -29,13 +29,13 @@ package body Memory.Bank is
    end Start;
 
    procedure Commit(mem    : in out Bank_Type;
-                    cycles : out Natural) is
-      max_cycles  : Natural := 0;
+                    cycles : out Time_Type) is
+      max_cycles  : Time_Type := 0;
    begin
       for i in mem.banks.First_Index .. mem.banks.Last_Index loop
          declare
             data     : constant Bank_Data := mem.banks.Element(i);
-            bcycles  : Natural;
+            bcycles  : Time_Type;
          begin
             Commit(data.mem.all, bcycles);
             if bcycles > max_cycles then
@@ -50,7 +50,7 @@ package body Memory.Bank is
    procedure Read(mem      : in out Bank_Type;
                   address  : Address_Type) is
       data     : constant Bank_Data := Get_Data(mem, address);
-      cycles   : Natural;
+      cycles   : Time_Type;
    begin
       Start(data.mem.all);
       Read(data.mem.all, address);
@@ -61,7 +61,7 @@ package body Memory.Bank is
    procedure Write(mem     : in out Bank_Type;
                    address : Address_Type) is
       data     : constant Bank_Data := Get_Data(mem, address);
-      cycles   : Natural;
+      cycles   : Time_Type;
    begin
       Start(data.mem.all);
       Write(data.mem.all, address);

@@ -9,7 +9,7 @@ package Memory.Cache is
                          line_count    : Natural := 1;
                          line_size     : Natural := 1;
                          associativity : Natural := 1;
-                         latency       : Natural := 1) return Cache_Pointer;
+                         latency       : Time_Type := 1) return Cache_Pointer;
 
    overriding
    procedure Read(mem      : in out Cache_Type;
@@ -34,7 +34,7 @@ private
       line_size      : Natural := 1;
       line_count     : Natural := 1;
       associativity  : Natural := 1;
-      latency        : Natural := 1;
+      latency        : Time_Type := 1;
       data           : Cache_Vectors.Vector;
       mem            : access Memory_Type'class;
    end record;
