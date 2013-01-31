@@ -15,9 +15,6 @@ package Memory.Bank is
    function Write(mem     : Bank_Pointer;
                   address : Address_Type) return Natural;
 
-   procedure Step(mem      : Bank_Pointer;
-                  cycles   : Natural := 1);
-
    procedure Add_Bank(mem  : Bank_Pointer;
                       bank : Memory_Pointer;
                       key  : Address_Type;

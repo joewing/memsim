@@ -7,7 +7,7 @@ package Memory is
 
    type Memory_Type is abstract tagged limited private;
 
-   type Memory_Pointer is access Memory_Type;
+   type Memory_Pointer is access all Memory_Type;
 
    function Read(mem      : Memory_Pointer;
                  address  : Address_Type) return Natural is abstract;

@@ -35,26 +35,6 @@ package body Memory.Bank is
       return Write(data.mem, address);
    end Write;
 
-   procedure Step(mem      : Bank_Pointer;
-                  cycles   : Natural := 1) is
-      data     : Bank_Data;
-      time     : Natural;
-      max_time : Natural := 0;
-   begin
-      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
-         data := mem.banks.Element(i);
-         time := Get_Time(data.mem);
-         if time > max_time then
-            max_time := time;
-         end if;
-      end loop;
-      max_time := max_time + cycles;
-      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
-         data := mem.banks.Element(i);
-         Set_Time(data.mem, max_time);
-      end loop;
-   end Step;
-
    procedure Add_Bank(mem  : Bank_Pointer;
                       bank : Memory_Pointer;
                       key  : Address_Type;
