@@ -1,7 +1,7 @@
 
 all:
-	gnatmake -Isrc -gnatwa main.adb
+	gnatmake -D obj -Isrc -gnatwa main.adb
 
 clean:
-	rm -f main *.ali *.o src/*.ali src/*.o
+	rm -f main obj/*.ali obj/*.o
 
