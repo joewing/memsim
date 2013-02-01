@@ -6,15 +6,17 @@ package body Trace is
 
    package Character_IO is new Ada.Sequential_IO(Character);
 
+   type Access_Type is (Read, Write, Idle);
+
    type Memory_Access is record
-      is_read     : Boolean;
-      address     : Address_Type;
+      t     : Access_Type;
+      value : Natural;
    end record;
 
-   function To_Address(ch : Character) return Address_Type is
+   function To_Natural(ch : Character) return Natural is
    begin
-      return Address_Type(Character'pos(ch) - Character'pos('0'));
-   end To_Address;
+      return Natural(Character'pos(ch) - Character'pos('0'));
+   end To_Natural;
 
    function Read_Access(file : Character_IO.File_Type) return Memory_Access is
       result   : Memory_Access;
@@ -24,9 +26,13 @@ package body Trace is
       -- Determine if this is a read or a write.
       loop
          Character_IO.Read(file, ch);
-         exit when ch = 'R' or ch = 'W';
+         exit when ch = 'R' or ch = 'W' or ch = 'I';
       end loop;
-      result.is_read := ch = 'R';
+      case ch is
+         when 'R' | 'r' => result.t := Read;
+         when 'W' | 'w' => result.t := Write;
+         when others    => result.t := Idle;
+      end case;
 
       -- Skip to the address.
       loop
@@ -34,19 +40,20 @@ package body Trace is
          exit when ch >= '0' and ch <= '9';
       end loop;
 
-      -- Read the address.
-      result.address := To_Address(ch);
+      -- Read the value.
+      result.value := To_Natural(ch);
       loop
          Character_IO.Read(file, ch);
          exit when ch < '0' or ch > '9';
-         result.address := result.address * 10 + To_Address(ch);
+         result.value := result.value * 10 + To_Natural(ch);
       end loop;
 
       return result;
    end Read_Access;
 
-   procedure Process(mem   : in out Memory_Type'class;
-                     name  : String) is
+   procedure Process(mem      : in out Memory_Type'class;
+                     name     : in String;
+                     spacing  : in Time_Type := 1) is
       file : Character_IO.File_Type;
    begin
       Character_IO.Open(File => file,
@@ -57,12 +64,13 @@ package body Trace is
             declare
                data : constant Memory_Access := Read_Access(file);
             begin
-               if data.is_read then
-                  Read(mem, data.address);
-               else
-                  Write(mem, data.address);
-               end if;
+               case data.t is
+                  when Read   => Read(mem, Address_Type(data.value));
+                  when Write  => Write(mem, Address_Type(data.value));
+                  when Idle   => Idle(mem, Time_Type(data.value));
+               end case;
             end;
+            Idle(mem, spacing);
          end loop;
       exception
          when End_Error =>

@@ -45,8 +45,8 @@ package body Memory.Cache is
    end Get_Last_Index;
 
    procedure Get_Data(mem      : in out Cache_Type;
-                      address  : Address_Type;
-                      is_read  : Boolean) is
+                      address  : in Address_Type;
+                      is_read  : in Boolean) is
 
       data        : Cache_Data_Pointer;
       tag         : constant Address_Type := Get_Tag(mem, address);
@@ -118,16 +118,15 @@ package body Memory.Cache is
    end Get_Data;
 
    procedure Read(mem      : in out Cache_Type;
-                  address  : Address_Type) is
+                  address  : in Address_Type) is
    begin
       Get_Data(mem, address, True);
    end Read;
 
    procedure Write(mem     : in out Cache_Type;
-                   address : Address_Type) is
+                   address : in Address_Type) is
    begin
       Get_Data(mem, address, False);
    end Write;
 
 end Memory.Cache;
-

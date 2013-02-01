@@ -11,14 +11,14 @@ package body Memory.RAM is
    end Create_RAM;
 
    procedure Read(mem       : in out RAM_Type;
-                  address   : Address_Type) is
+                  address   : in Address_Type) is
    begin
       Put_Line("RAM Read: " & Address_Type'image(address));
       Advance(mem, mem.latency);
    end Read;
 
    procedure Write(mem      : in out RAM_Type;
-                   address  : Address_Type) is
+                   address  : in Address_Type) is
    begin
       Put_Line("RAM Write: " & Address_Type'image(address));
       Advance(mem, mem.latency);

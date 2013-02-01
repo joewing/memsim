@@ -48,7 +48,7 @@ package body Memory.Bank is
    end Commit;
 
    procedure Read(mem      : in out Bank_Type;
-                  address  : Address_Type) is
+                  address  : in Address_Type) is
       data     : constant Bank_Data := Get_Data(mem, address);
       cycles   : Time_Type;
    begin
@@ -59,7 +59,7 @@ package body Memory.Bank is
    end Read;
 
    procedure Write(mem     : in out Bank_Type;
-                   address : Address_Type) is
+                   address : in Address_Type) is
       data     : constant Bank_Data := Get_Data(mem, address);
       cycles   : Time_Type;
    begin
@@ -69,13 +69,22 @@ package body Memory.Bank is
       Advance(mem, cycles);
    end Write;
 
+   procedure Idle(mem      : in out Bank_Type;
+                  cycles   : in Time_Type) is
+   begin
+      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
+         Idle(mem.banks.Element(i).mem.all, cycles);
+      end loop;
+      Advance(mem, cycles);
+   end Idle;
+
    procedure Add_Bank(mem  : in out Bank_Type;
                       bank : access Memory_Type'class;
-                      key  : Address_Type;
-                      mask : Address_Type) is
+                      key  : in Address_Type;
+                      mask : in Address_Type) is
       data : constant Bank_Data := Bank_Data'(bank, key, mask);
    begin
-      Bank_Vectors.Append(mem.banks, data);
+      mem.banks.Append(data);
    end Add_Bank;
 
 end Memory.Bank;

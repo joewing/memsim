@@ -9,11 +9,11 @@ package Memory.RAM is
 
    overriding
    procedure Read(mem      : in out RAM_Type;
-                  address  : Address_Type);
+                  address  : in Address_Type);
 
    overriding
    procedure Write(mem     : in out RAM_Type;
-                   address : Address_Type);
+                   address : in Address_Type);
 
 private
 

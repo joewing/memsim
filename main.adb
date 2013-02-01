@@ -18,7 +18,7 @@ begin
 
    Add_Bank(bank.all, ram1, 0, 1);
    Add_Bank(bank.all, ram2, 1, 1);
-   Process(prefetch.all, "test.txt");
+   Process(prefetch.all, "test.txt", 50);
 
 end Main;
 

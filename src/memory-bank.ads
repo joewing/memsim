@@ -16,16 +16,20 @@ package Memory.Bank is
 
    overriding
    procedure Read(mem      : in out Bank_Type;
-                  address  : Address_Type);
+                  address  : in Address_Type);
 
    overriding
    procedure Write(mem     : in out Bank_Type;
-                   address : Address_Type);
+                   address : in Address_Type);
+
+   overriding
+   procedure Idle(mem      : in out Bank_Type;
+                  cycles   : in Time_Type);
 
    procedure Add_Bank(mem  : in out Bank_Type;
                       bank : access Memory_Type'class;
-                      key  : Address_Type;
-                      mask : Address_Type);
+                      key  : in Address_Type;
+                      mask : in Address_Type);
 
    Bank_Error : exception;
 

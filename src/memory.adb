@@ -15,13 +15,19 @@ package body Memory is
       mem.transactions.Delete_Last;
    end Commit;
 
+   procedure Idle(mem      : in out Memory_Type;
+                  cycles   : in Time_Type) is
+   begin
+      Advance(mem, cycles);
+   end Idle;
+
    function Get_Time(mem : Memory_Type) return Time_Type is
    begin
       return mem.time;
    end Get_Time;
 
    procedure Advance(mem      : in out Memory_type;
-                     cycles   : Time_Type) is
+                     cycles   : in Time_Type) is
    begin
       mem.time := mem.time + cycles;
    end Advance;

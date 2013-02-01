@@ -19,17 +19,20 @@ package Memory is
                     cycles : out Time_Type);
 
    procedure Read(mem      : in out Memory_Type;
-                  address  : Address_Type) is abstract;
+                  address  : in Address_Type) is abstract;
 
    procedure Write(mem     : in out Memory_Type;
-                   address : Address_Type) is abstract;
+                   address : in Address_Type) is abstract;
+
+   procedure Idle(mem      : in out Memory_Type;
+                  cycles   : in Time_Type);
 
    function Get_Time(mem : Memory_Type) return Time_Type;
 
 private
 
    procedure Advance(mem      : in out Memory_Type;
-                     cycles   : Time_Type);
+                     cycles   : in Time_Type);
 
    package Transaction_Vectors is new Vectors(Natural, Time_Type);
 

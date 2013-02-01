@@ -13,19 +13,20 @@ package Memory.Cache is
 
    overriding
    procedure Read(mem      : in out Cache_Type;
-                  address  : Address_Type);
+                  address  : in Address_Type);
 
    overriding
    procedure Write(mem     : in out Cache_Type;
-                   address : Address_Type);
+                   address : in Address_Type);
 
 private
 
    type Cache_Data is record
-      address  : Address_Type := 16#FFFFFFFF#;
+      address  : Address_Type := Address_Type'last;
       age      : Natural      := 0;
       dirty    : Boolean      := False;
    end record;
+
    type Cache_Data_Pointer is access Cache_Data;
 
    package Cache_Vectors is new Vectors(Natural, Cache_Data_Pointer);
