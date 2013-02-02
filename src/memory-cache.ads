@@ -6,9 +6,9 @@ package Memory.Cache is
    type Cache_Pointer is access all Cache_Type'class;
 
    function Create_Cache(mem           : access Memory_Type'class;
-                         line_count    : Natural := 1;
-                         line_size     : Natural := 1;
-                         associativity : Natural := 1;
+                         line_count    : Positive := 1;
+                         line_size     : Positive := 1;
+                         associativity : Positive := 1;
                          latency       : Time_Type := 1) return Cache_Pointer;
 
    overriding
@@ -32,9 +32,9 @@ private
    package Cache_Vectors is new Vectors(Natural, Cache_Data_Pointer);
 
    type Cache_Type is new Memory_Type with record
-      line_size      : Natural := 1;
-      line_count     : Natural := 1;
-      associativity  : Natural := 1;
+      line_size      : Positive := 1;
+      line_count     : Positive := 1;
+      associativity  : Positive := 1;
       latency        : Time_Type := 1;
       data           : Cache_Vectors.Vector;
       mem            : access Memory_Type'class;

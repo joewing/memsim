@@ -1,11 +1,21 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
+
 with Lexer; use Lexer;
+
+with Memory.RAM;
+with Memory.Bank;
+with Memory.Cache;
+with Memory.Prefetch;
 
 package body Parser is
 
    Parse_Error : exception;
+
+   procedure Parse_Memory(lexer  : in out Lexer_Type;
+                          result : out Memory_Pointer);
 
    procedure Match(lexer   : in out Lexer_Type;
                    token   : in Token_Type) is
@@ -20,14 +30,85 @@ package body Parser is
 
    procedure Parse_RAM(lexer  : in out Lexer_Type;
                        result : out Memory_Pointer) is
+
+      latency     : Time_Type := 1;
+
    begin
-      result := null;
+      while Get_Type(lexer) = Open loop
+         Match(lexer, Open);
+         declare
+            name : constant String := Get_Value(lexer);
+         begin
+            Match(lexer, Literal);
+            declare
+               value : constant String := Get_Value(lexer);
+            begin
+               Match(lexer, Literal);
+               if name = "latency" then
+                  latency := Time_Type'Value(value);
+               else
+                  Put_Line("ERROR: invalid RAM attribute: " & value);
+                  raise Parse_Error;
+               end if;
+            end;
+         end;
+         Match(lexer, Close);
+      end loop;
+      result := Memory_Pointer(RAM.Create_RAM(latency));
    end Parse_RAM;
 
    procedure Parse_Cache(lexer   : in out Lexer_Type;
                          result  : out Memory_Pointer) is
+
+      mem            : Memory_Pointer := null;
+      line_count     : Positive := 1;
+      line_size      : Positive := 1;
+      associativity  : Positive := 1;
+      latency        : Time_Type := 1;
+
    begin
-      result := null;
+      while Get_Type(lexer) = Open loop
+         Match(lexer, Open);
+         declare
+            name : constant String := Get_Value(lexer);
+         begin
+            Match(lexer, Literal);
+            if name = "memory" then
+               if mem /= null then
+                  Put_Line("ERROR: memory declared multipled times for cache");
+                  raise Parse_Error;
+               end if;
+               Parse_Memory(lexer, mem);
+            else
+               declare
+                  value : constant String := Get_Value(lexer);
+               begin
+                  Match(lexer, Literal);
+                  if name = "line_count" then
+                     line_count := Positive'Value(value);
+                  elsif name = "line_size" then
+                     line_size := Positive'Value(value);
+                  elsif name = "associativity" then
+                     associativity := Positive'Value(value);
+                  elsif name = "latency" then
+                     latency := Time_Type'Value(value);
+                  else
+                     Put_Line("ERROR: invalid cache attribute: " & value);
+                  end if;
+               end;
+            end if;
+         end;
+         Match(lexer, Close);
+      end loop;
+      if mem = null then
+         Put_Line("ERROR: no memory specified for cache");
+         raise Parse_Error;
+      end if;
+      result := Memory_Pointer(Cache.Create_Cache(mem,
+                                                  line_count,
+                                                  line_size,
+                                                  associativity,
+                                                  latency));
    end Parse_Cache;
 
    procedure Parse_Bank(lexer    : in out Lexer_Type;
@@ -86,6 +167,9 @@ package body Parser is
       Match(lexer, EOF);
       Close(lexer);
       return result;
+   exception
+      when Parse_Error =>
+         return null;
    end Parse;
 
 end Parser;

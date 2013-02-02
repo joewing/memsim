@@ -1,5 +1,6 @@
 
 with Ada.Containers.Vectors; use Ada.Containers;
+with Ada.Unchecked_Deallocation;
 
 package Memory is
 

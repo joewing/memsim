@@ -2,9 +2,9 @@
 package body Memory.Cache is
 
    function Create_Cache(mem           : access Memory_Type'class;
-                         line_count    : Natural := 1;
-                         line_size     : Natural := 1;
-                         associativity : Natural := 1;
+                         line_count    : Positive := 1;
+                         line_size     : Positive := 1;
+                         associativity : Positive := 1;
                          latency       : Time_Type := 1) return Cache_Pointer is
       result : constant Cache_Pointer := new Cache_Type;
    begin
