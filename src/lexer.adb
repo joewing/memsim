@@ -29,11 +29,11 @@ package body Lexer is
          case Element(lexer.buffer, 1) is
             when '('    =>
                lexer.token := Open;
-               lexer.value := Null_Unbounded_String;
+               lexer.value := Head(lexer.buffer, 1);
                Delete(lexer.buffer, 1, 1);
             when ')'    =>
                lexer.token := Close;
-               lexer.value := Null_Unbounded_String;
+               lexer.value := Head(lexer.buffer, 1);
                Delete(lexer.buffer, 1, 1);
             when others =>
                lexer.token := Literal;
@@ -58,7 +58,6 @@ package body Lexer is
    begin
       loop
          Character_IO.Read(lexer.file, ch);
-Put_Line("Got " & Character'image(ch));
          if Is_Space(ch) then
             if Length(lexer.buffer) > 0 then
                Get_Buffer_Token(lexer);
@@ -86,7 +85,7 @@ Put_Line("Got " & Character'image(ch));
             Get_Buffer_Token(lexer);
          else
             lexer.token := EOF;
-            lexer.value := Null_Unbounded_String;
+            lexer.value := To_Unbounded_String("<EOF>");
          end if;
    end Next;
 

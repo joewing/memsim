@@ -1,5 +1,6 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Lexer; use Lexer;
 
 package body Parser is
@@ -10,8 +11,8 @@ package body Parser is
                    token   : in Token_Type) is
    begin
       if Get_Type(lexer) /= token then
-         Put_Line("Got " & Token_Type'image(Get_Type(lexer)) & " expected " &
-                  Token_Type'image(token));
+         Put_Line("ERROR: got '" & Get_Value(lexer) & "' expected '" &
+                  Get_Value(lexer));
          raise Parse_Error;
       end if;
       Next(lexer);
@@ -41,6 +42,21 @@ package body Parser is
       result := null;
    end Parse_Prefetch;
 
+   type Memory_Parser_Type is record
+      name     : Unbounded_String;
+      parser   : access procedure(lexer   : in out Lexer_Type;
+                                  result  : out Memory_Pointer);
+   end record;
+
+   type Memory_Parser_Array is array(Positive range <>) of Memory_Parser_Type;
+
+   parser_map : constant Memory_Parser_Array := (
+      (To_Unbounded_String("bank"),       Parse_Bank'access),
+      (To_Unbounded_String("cache"),      Parse_Cache'access),
+      (To_Unbounded_String("prefetch"),   Parse_Prefetch'access),
+      (To_Unbounded_String("ram"),        Parse_RAM'access)
+   );
+
    procedure Parse_Memory(lexer  : in out Lexer_Type;
                           result : out Memory_Pointer) is
    begin
@@ -49,20 +65,16 @@ package body Parser is
          name : constant String := Get_Value(lexer);
       begin
          Next(lexer);
-         if    name = "ram" then
-            Parse_RAM(lexer, result);
-         elsif name = "cache" then
-            Parse_Cache(lexer, result);
-         elsif name = "bank" then
-            Parse_Bank(lexer, result);
-         elsif name = "prefetch" then
-            Parse_Prefetch(lexer, result);
-         else
-            Put_Line("ERROR: invalid memory type: " & name);
-            raise Parse_Error;
-         end if;
+         for i in parser_map'first .. parser_map'last loop
+            if parser_map(i).name = name then
+               parser_map(i).parser(lexer, result);
+               Match(lexer, Close);
+               return;
+            end if;
+         end loop;
+         Put_Line("ERROR: invalid memory type: " & name);
+         raise Parse_Error;
       end;
-      Match(lexer, Close);
    end Parse_Memory;
 
    function Parse(file_name : String) return Memory_Pointer is
