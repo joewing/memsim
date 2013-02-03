@@ -69,4 +69,9 @@ package body Memory.Prefetch is
       end if;
    end Idle;
 
+   procedure Finalize(mem : in out Prefetch_Type) is
+   begin
+      Destroy(Memory_Pointer(mem.mem));
+   end Finalize;
+
 end Memory.Prefetch;

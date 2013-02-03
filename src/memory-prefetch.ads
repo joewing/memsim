@@ -31,4 +31,7 @@ private
       multiplier  : Address_Type := 1;
    end record;
 
+   overriding
+   procedure Finalize(mem : in out Prefetch_Type);
+
 end Memory.Prefetch;

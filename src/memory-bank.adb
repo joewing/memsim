@@ -87,5 +87,14 @@ package body Memory.Bank is
       mem.banks.Append(data);
    end Add_Bank;
 
+   procedure Finalize(mem : in out Bank_Type) is
+      data : Bank_Data;
+   begin
+      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
+         data := mem.banks.Element(i);
+         Destroy(Memory_Pointer(data.mem));
+      end loop;
+   end Finalize;
+
 end Memory.Bank;
 

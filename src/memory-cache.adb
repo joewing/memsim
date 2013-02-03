@@ -129,4 +129,9 @@ package body Memory.Cache is
       Get_Data(mem, address, False);
    end Write;
 
+   procedure Finalize(mem : in out Cache_Type) is
+   begin
+      Destroy(Memory_Pointer(mem.mem));
+   end Finalize;
+
 end Memory.Cache;

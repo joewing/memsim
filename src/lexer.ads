@@ -26,12 +26,15 @@ package Lexer is
 
    function Get_Value(lexer : Lexer_Type) return String;
 
+   function Get_Line(lexer : Lexer_Type) return Positive;
+
 private
 
    package Character_IO is new Ada.Sequential_IO(Character);
 
    type Lexer_Type is limited record
       file     : Character_IO.File_Type;
+      line     : Positive := 1;
       buffer   : Unbounded_String;
       token    : Token_Type := Invalid;
       value    : Unbounded_String;

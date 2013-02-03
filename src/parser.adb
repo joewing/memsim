@@ -16,13 +16,20 @@ package body Parser is
    procedure Parse_Memory(lexer  : in out Lexer_Type;
                           result : out Memory_Pointer);
 
+   procedure Raise_Error(lexer   : in Lexer_Type;
+                         msg     : in String) is
+      line : constant Positive := Get_Line(lexer);
+   begin
+      Put_Line("ERROR[" & Positive'Image(line) & "]: " & msg);
+      raise Parse_Error;
+   end Raise_Error;
+
    procedure Match(lexer   : in out Lexer_Type;
                    token   : in Token_Type) is
    begin
       if Get_Type(lexer) /= token then
-         Put_Line("ERROR: got '" & Get_Value(lexer) & "' expected '" &
-                  Get_Value(lexer));
-         raise Parse_Error;
+         Raise_Error(lexer, "got '" & Get_Value(lexer) & "' expected '" &
+                     Token_Type'Image(token) & "'");
       end if;
       Next(lexer);
    end Match;
@@ -46,14 +53,16 @@ package body Parser is
                if name = "latency" then
                   latency := Time_Type'Value(value);
                else
-                  Put_Line("ERROR: invalid RAM attribute: " & value);
-                  raise Parse_Error;
+                  Raise_Error(lexer, "invalid ram attribute: " & value);
                end if;
             end;
          end;
          Match(lexer, Close);
       end loop;
       result := Memory_Pointer(RAM.Create_RAM(latency));
+   exception
+      when Data_Error =>
+         Raise_Error(lexer, "invalid value in ram");
    end Parse_RAM;
 
    procedure Parse_Cache(lexer   : in out Lexer_Type;
@@ -74,9 +83,8 @@ package body Parser is
             Match(lexer, Literal);
             if name = "memory" then
                if mem /= null then
-                  Put_Line("ERROR: memory declared multipled times for cache");
-                  Destroy(mem);
-                  raise Parse_Error;
+                  Raise_Error(lexer,
+                              "memory declared multipled times in cache");
                end if;
                Parse_Memory(lexer, mem);
             else
@@ -93,9 +101,7 @@ package body Parser is
                   elsif name = "latency" then
                      latency := Time_Type'Value(value);
                   else
-                     Put_Line("ERROR: invalid cache attribute: " & value);
-                     Destroy(mem);
-                     raise Parse_Error;
+                     Raise_Error(lexer, "invalid cache attribute: " & value);
                   end if;
                end;
             end if;
@@ -103,14 +109,20 @@ package body Parser is
          Match(lexer, Close);
       end loop;
       if mem = null then
-         Put_Line("ERROR: no memory specified for cache");
-         raise Parse_Error;
+         Raise_Error(lexer, "no memory specified in cache");
       end if;
       result := Memory_Pointer(Cache.Create_Cache(mem,
                                                   line_count,
                                                   line_size,
                                                   associativity,
                                                   latency));
+   exception
+      when Data_Error =>
+         Destroy(mem);
+         Raise_Error(lexer, "invalid value in cache");
+      when Parse_Error =>
+         Destroy(mem);
+         raise Parse_Error;
    end Parse_Cache;
 
    procedure Parse_Bank(lexer    : in out Lexer_Type;
@@ -135,24 +147,21 @@ package body Parser is
                   if mem = null then
                      Parse_Memory(lexer, mem);
                   else
-                     Put_Line("ERROR: duplicate memories in bank");
-                     Destroy(Memory_Pointer(bank));
                      Destroy(mem);
-                     raise Parse_Error;
+                     Raise_Error(lexer, "duplicate memories in bank");
                   end if;
                else
                   declare
                      value : constant String := Get_Value(lexer);
                   begin
+                     Match(lexer, Literal);
                      if name = "key" then
                         key := Address_Type'Value(value);
                      elsif name = "mask" then
                         mask := Address_Type'Value(value);
                      else
-                        Put_Line("ERROR: invalid attribute in bank: " & name);
-                        Destroy(Memory_Pointer(bank));
-                        Destroy(Memory_Pointer(mem));
-                        raise Parse_Error;
+                        Raise_Error(lexer,
+                                    "invalid attribute in bank: " & name);
                      end if;
                   end;
                end if;
@@ -163,6 +172,13 @@ package body Parser is
          Match(lexer, Close);
       end loop;
       result := Memory_Pointer(bank);
+   exception
+      when Data_Error =>
+         Destroy(Memory_Pointer(bank));
+         Raise_Error(lexer, "invalid value in bank");
+      when Parse_Error =>
+         Destroy(Memory_Pointer(bank));
+         raise Parse_Error;
    end Parse_Bank;
 
    procedure Parse_Prefetch(lexer   : in out Lexer_Type;
@@ -171,12 +187,47 @@ package body Parser is
       stride      : Address_Type := 1;
       multiplier  : Address_Type := 1;
    begin
+      while Get_Type(lexer) = Open loop
+         Match(lexer, Open);
+         declare
+            name : constant String := Get_Value(lexer);
+         begin
+            Match(lexer, Literal);
+            if name = "memory" then
+               if mem /= null then
+                  Raise_Error(lexer, "memory set multiple times in prefetch");
+               end if;
+               Parse_Memory(lexer, mem);
+            else
+               declare
+                  value : constant String := Get_Value(lexer);
+               begin
+                  Match(lexer, Literal);
+                  if name = "stride" then
+                     stride := Address_Type'Value(value);
+                  elsif name = "multiplier" then
+                     multiplier := Address_Type'Value(value);
+                  else
+                     Raise_Error(lexer,
+                                 "invalid attribute in prefetch: " & name);
+                  end if;
+               end;
+            end if;
+         end;
+         Match(lexer, Close);
+      end loop;
       if mem = null then
-         Put_Line("ERROR: memory not set for prefetch");
-         raise Parse_Error;
+         Raise_Error(lexer, "memory not set in prefetch");
       end if;
       result := Memory_Pointer(Prefetch.Create_Prefetch(mem, stride,
                                                         multiplier));
+   exception
+      when Data_Error =>
+         Destroy(mem);
+         Raise_Error(lexer, "invalid value in prefetch");
+      when Parse_Error =>
+         Destroy(mem);
+         raise Parse_Error;
    end Parse_Prefetch;
 
    type Memory_Parser_Type is record
@@ -209,8 +260,7 @@ package body Parser is
                return;
             end if;
          end loop;
-         Put_Line("ERROR: invalid memory type: " & name);
-         raise Parse_Error;
+         Raise_Error(lexer, "invalid memory type: " & name);
       end;
    end Parse_Memory;
 

@@ -1,5 +1,6 @@
 
 with Ada.Containers.Vectors; use Ada.Containers;
+with Ada.Finalization; use Ada.Finalization;
 
 package Memory is
 
@@ -7,7 +8,7 @@ package Memory is
 
    type Time_Type is new Natural;
 
-   type Memory_Type is abstract tagged limited private;
+   type Memory_Type is abstract new Limited_Controlled with private;
 
    type Memory_Pointer is access all Memory_Type'class;
 
@@ -33,15 +34,18 @@ package Memory is
 
 private
 
-   procedure Advance(mem      : in out Memory_Type;
-                     cycles   : in Time_Type);
-
    package Transaction_Vectors is new Vectors(Natural, Time_Type);
 
-   type Memory_Type is abstract tagged limited record
+   type Memory_Type is abstract new Limited_Controlled with record
       transactions   : Transaction_Vectors.Vector;
       time           : Time_Type := 0;
    end record;
+
+   procedure Advance(mem      : in out Memory_Type;
+                     cycles   : in Time_Type);
+
+   overriding
+   procedure Finalize(mem : in out Memory_Type);
 
 end Memory;
 

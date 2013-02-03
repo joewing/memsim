@@ -38,11 +38,16 @@ package body Memory is
       end if;
    end Destroy;
 
-   procedure Advance(mem      : in out Memory_type;
+   procedure Advance(mem      : in out Memory_Type;
                      cycles   : in Time_Type) is
    begin
       mem.time := mem.time + cycles;
    end Advance;
+
+   procedure Finalize(mem : in out Memory_Type) is
+   begin
+      null;
+   end Finalize;
 
 end Memory;
 

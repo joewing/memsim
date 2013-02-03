@@ -40,5 +40,8 @@ private
       mem            : access Memory_Type'class;
    end record;
 
+   overriding
+   procedure Finalize(mem : in out Cache_Type);
+
 end Memory.Cache;
 

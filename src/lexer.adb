@@ -58,6 +58,9 @@ package body Lexer is
    begin
       loop
          Character_IO.Read(lexer.file, ch);
+         if ch = Latin_1.LF then
+            lexer.line := lexer.line + 1;
+         end if;
          if Is_Space(ch) then
             if Length(lexer.buffer) > 0 then
                Get_Buffer_Token(lexer);
@@ -98,5 +101,10 @@ package body Lexer is
    begin
       return To_String(lexer.value);
    end Get_Value;
+
+   function Get_Line(lexer : Lexer_Type) return Positive is
+   begin
+      return lexer.line;
+   end Get_Line;
 
 end Lexer;

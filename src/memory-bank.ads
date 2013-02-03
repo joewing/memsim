@@ -47,5 +47,8 @@ private
       banks    : Bank_Vectors.Vector;
    end record;
 
+   overriding
+   procedure Finalize(mem : in out Bank_Type);
+
 end Memory.Bank;
 
