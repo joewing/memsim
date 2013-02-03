@@ -18,9 +18,10 @@ package body Parser is
 
    procedure Raise_Error(lexer   : in Lexer_Type;
                          msg     : in String) is
-      line : constant Positive := Get_Line(lexer);
+      name : constant String := Get_File_Name(lexer);
+      line : constant String := Positive'Image(Get_Line(lexer));
    begin
-      Put_Line("ERROR[" & Positive'Image(line) & "]: " & msg);
+      Put_Line(name & "[" & line(2 .. line'Last) & "]: error: " & msg);
       raise Parse_Error;
    end Raise_Error;
 

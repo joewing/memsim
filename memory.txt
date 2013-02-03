@@ -1,3 +1,6 @@
+;
+; Example memory configuration.
+;
 (prefetch (stride 1) (multiplier 1)
    (memory
       (cache (latency 1) (associativity 1) (line_count 4) (line_size 1)

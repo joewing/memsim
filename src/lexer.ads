@@ -26,6 +26,8 @@ package Lexer is
 
    function Get_Value(lexer : Lexer_Type) return String;
 
+   function Get_File_Name(lexer : Lexer_Type) return String;
+
    function Get_Line(lexer : Lexer_Type) return Positive;
 
 private

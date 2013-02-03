@@ -54,13 +54,20 @@ package body Lexer is
    end Is_Space;
 
    procedure Next(lexer : in out Lexer_Type) is
-      ch : Character;
+      ch          : Character;
+      in_comment  : Boolean := False;
    begin
       loop
-         Character_IO.Read(lexer.file, ch);
-         if ch = Latin_1.LF then
-            lexer.line := lexer.line + 1;
-         end if;
+         loop
+            Character_IO.Read(lexer.file, ch);
+            if ch = ';' then
+               in_comment := True;
+            elsif ch = Latin_1.LF then
+               lexer.line := lexer.line + 1;
+               in_comment := False;
+            end if;
+            exit when not in_comment;
+         end loop;
          if Is_Space(ch) then
             if Length(lexer.buffer) > 0 then
                Get_Buffer_Token(lexer);
@@ -101,6 +108,11 @@ package body Lexer is
    begin
       return To_String(lexer.value);
    end Get_Value;
+
+   function Get_File_Name(lexer : Lexer_Type) return String is
+   begin
+      return Character_IO.Name(lexer.file);
+   end Get_File_Name;
 
    function Get_Line(lexer : Lexer_Type) return Positive is
    begin
