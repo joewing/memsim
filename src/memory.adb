@@ -1,4 +1,6 @@
 
+with Ada.Unchecked_Deallocation;
+
 package body Memory is
 
    procedure Start(mem : in out Memory_Type) is
@@ -25,6 +27,16 @@ package body Memory is
    begin
       return mem.time;
    end Get_Time;
+
+   procedure Deallocate is
+      new Ada.Unchecked_Deallocation(Memory_Type'class, Memory_Pointer);
+
+   procedure Destroy(mem : in out Memory_Pointer) is
+   begin
+      if mem /= null then
+         Deallocate(mem);
+      end if;
+   end Destroy;
 
    procedure Advance(mem      : in out Memory_type;
                      cycles   : in Time_Type) is

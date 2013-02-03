@@ -1,6 +1,5 @@
 
 with Ada.Containers.Vectors; use Ada.Containers;
-with Ada.Unchecked_Deallocation;
 
 package Memory is
 
@@ -29,6 +28,8 @@ package Memory is
                   cycles   : in Time_Type);
 
    function Get_Time(mem : Memory_Type) return Time_Type;
+
+   procedure Destroy(mem : in out Memory_Pointer);
 
 private
 

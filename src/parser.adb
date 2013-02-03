@@ -1,7 +1,6 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Containers.Doubly_Linked_Lists; use Ada.Containers;
 
 with Lexer; use Lexer;
 
@@ -76,6 +75,7 @@ package body Parser is
             if name = "memory" then
                if mem /= null then
                   Put_Line("ERROR: memory declared multipled times for cache");
+                  Destroy(mem);
                   raise Parse_Error;
                end if;
                Parse_Memory(lexer, mem);
@@ -94,6 +94,8 @@ package body Parser is
                      latency := Time_Type'Value(value);
                   else
                      Put_Line("ERROR: invalid cache attribute: " & value);
+                     Destroy(mem);
+                     raise Parse_Error;
                   end if;
                end;
             end if;
@@ -113,14 +115,68 @@ package body Parser is
 
    procedure Parse_Bank(lexer    : in out Lexer_Type;
                         result   : out Memory_Pointer) is
+      bank  : Memory.Bank.Bank_Pointer := Memory.Bank.Create_Bank;
+      mem   : Memory_Pointer := null;
+      key   : Address_Type := 0;
+      mask  : Address_Type := 1;
    begin
-      result := null;
+      while Get_Type(lexer) = Open loop
+         Match(lexer, Open);
+         mem   := null;
+         key   := 0;
+         mask  := 1;
+         while Get_Type(lexer) = Open loop
+            Match(lexer, Open);
+            declare
+               name  : constant String := Get_Value(lexer);
+            begin
+               Match(lexer, Literal);
+               if name = "memory" then
+                  if mem = null then
+                     Parse_Memory(lexer, mem);
+                  else
+                     Put_Line("ERROR: duplicate memories in bank");
+                     Destroy(Memory_Pointer(bank));
+                     Destroy(mem);
+                     raise Parse_Error;
+                  end if;
+               else
+                  declare
+                     value : constant String := Get_Value(lexer);
+                  begin
+                     if name = "key" then
+                        key := Address_Type'Value(value);
+                     elsif name = "mask" then
+                        mask := Address_Type'Value(value);
+                     else
+                        Put_Line("ERROR: invalid attribute in bank: " & name);
+                        Destroy(Memory_Pointer(bank));
+                        Destroy(Memory_Pointer(mem));
+                        raise Parse_Error;
+                     end if;
+                  end;
+               end if;
+            end;
+            Match(lexer, Close);
+         end loop;
+         Memory.Bank.Add_Bank(bank.all, mem, key, mask);
+         Match(lexer, Close);
+      end loop;
+      result := Memory_Pointer(bank);
    end Parse_Bank;
 
    procedure Parse_Prefetch(lexer   : in out Lexer_Type;
                             result  : out Memory_Pointer) is
+      mem         : Memory_Pointer := null;
+      stride      : Address_Type := 1;
+      multiplier  : Address_Type := 1;
    begin
-      result := null;
+      if mem = null then
+         Put_Line("ERROR: memory not set for prefetch");
+         raise Parse_Error;
+      end if;
+      result := Memory_Pointer(Prefetch.Create_Prefetch(mem, stride,
+                                                        multiplier));
    end Parse_Prefetch;
 
    type Memory_Parser_Type is record
