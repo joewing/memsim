@@ -4,6 +4,7 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 with Lexer; use Lexer;
 
+with Memory.Stats;
 with Memory.RAM;
 with Memory.Bank;
 with Memory.Cache;
@@ -34,6 +35,16 @@ package body Parser is
       end if;
       Next(lexer);
    end Match;
+
+   procedure Parse_Stats(lexer   : in out Lexer_Type;
+                         result  : out Memory_Pointer) is
+      mem : Memory_Pointer := null;
+   begin
+      if Get_Type(lexer) = Open then
+         Parse_Memory(lexer, mem);
+      end if;
+      result := Memory_Pointer(Stats.Create_Stats(mem));
+   end Parse_Stats;
 
    procedure Parse_RAM(lexer  : in out Lexer_Type;
                        result : out Memory_Pointer) is
@@ -243,7 +254,8 @@ package body Parser is
       (To_Unbounded_String("bank"),       Parse_Bank'access),
       (To_Unbounded_String("cache"),      Parse_Cache'access),
       (To_Unbounded_String("prefetch"),   Parse_Prefetch'access),
-      (To_Unbounded_String("ram"),        Parse_RAM'access)
+      (To_Unbounded_String("ram"),        Parse_RAM'access),
+      (To_Unbounded_String("stats"),      Parse_Stats'access)
    );
 
    procedure Parse_Memory(lexer  : in out Lexer_Type;
