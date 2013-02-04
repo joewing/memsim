@@ -35,4 +35,7 @@ private
    overriding
    procedure Show_Access_Stats(mem : in Stats_Type);
 
+   overriding
+   procedure Finalize(mem : in out Stats_Type);
+
 end Memory.Stats;

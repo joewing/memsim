@@ -99,4 +99,11 @@ package body Memory.Stats is
       Show_Histogram("Multipliers", mem.multipliers);
    end Show_Access_Stats;
 
+   procedure Finalize(mem : in out Stats_Type) is
+   begin
+      if mem.mem /= null then
+         Destroy(Memory_Pointer(mem.mem));
+      end if;
+   end Finalize;
+
 end Memory.Stats;

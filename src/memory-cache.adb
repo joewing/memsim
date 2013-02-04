@@ -1,4 +1,6 @@
 
+with Ada.Unchecked_Deallocation;
+
 package body Memory.Cache is
 
    function Create_Cache(mem           : access Memory_Type'Class;
@@ -135,8 +137,18 @@ package body Memory.Cache is
       Show_Access_Stats(mem.mem.all);
    end Show_Access_Stats;
 
+   procedure Free is
+      new Ada.Unchecked_Deallocation(Cache_Data, Cache_Data_Pointer);
+
    procedure Finalize(mem : in out Cache_Type) is
    begin
+      for i in mem.data.First_Index .. mem.data.Last_Index loop
+         declare
+            ptr : Cache_Data_Pointer := mem.data.Element(i);
+         begin
+            Free(ptr);
+         end;
+      end loop;
       Destroy(Memory_Pointer(mem.mem));
    end Finalize;
 
