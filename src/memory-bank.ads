@@ -3,7 +3,9 @@ package Memory.Bank is
 
    type Bank_Type is new Memory_Type with private;
 
-   type Bank_Pointer is access all Bank_Type'class;
+   type Bank_Pointer is access all Bank_Type'Class;
+
+   Bank_Error : exception;
 
    function Create_Bank return Bank_Pointer;
 
@@ -27,16 +29,14 @@ package Memory.Bank is
                   cycles   : in Time_Type);
 
    procedure Add_Bank(mem  : in out Bank_Type;
-                      bank : access Memory_Type'class;
+                      bank : access Memory_Type'Class;
                       key  : in Address_Type;
                       mask : in Address_Type);
-
-   Bank_Error : exception;
 
 private
 
    type Bank_Data is record
-      mem      : access Memory_Type'class;
+      mem      : access Memory_Type'Class;
       key      : Address_Type;
       mask     : Address_Type;
    end record;
@@ -46,6 +46,9 @@ private
    type Bank_Type is new Memory_Type with record
       banks    : Bank_Vectors.Vector;
    end record;
+
+   overriding
+   procedure Show_Access_Stats(mem : in Bank_Type);
 
    overriding
    procedure Finalize(mem : in out Bank_Type);

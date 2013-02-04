@@ -3,7 +3,7 @@ package Memory.RAM is
 
    type RAM_Type is new Memory_Type with private;
 
-   type RAM_Pointer is access all RAM_Type'class;
+   type RAM_Pointer is access all RAM_Type'Class;
 
    function Create_RAM(latency : Time_Type := 1) return RAM_Pointer;
 

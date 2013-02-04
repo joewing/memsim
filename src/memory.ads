@@ -10,7 +10,7 @@ package Memory is
 
    type Memory_Type is abstract new Limited_Controlled with private;
 
-   type Memory_Pointer is access all Memory_Type'class;
+   type Memory_Pointer is access all Memory_Type'Class;
 
    -- Start a transaction.
    procedure Start(mem : in out Memory_Type);
@@ -30,7 +30,7 @@ package Memory is
 
    function Get_Time(mem : Memory_Type) return Time_Type;
 
-   procedure Show_Stats(mem : in Memory_Type);
+   procedure Show_Stats(mem : in Memory_Type'Class);
 
    procedure Destroy(mem : in out Memory_Pointer);
 
@@ -42,6 +42,8 @@ private
       transactions   : Transaction_Vectors.Vector;
       time           : Time_Type := 0;
    end record;
+
+   procedure Show_Access_Stats(mem : in Memory_Type);
 
    procedure Advance(mem      : in out Memory_Type;
                      cycles   : in Time_Type);

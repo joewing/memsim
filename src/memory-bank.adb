@@ -78,8 +78,15 @@ package body Memory.Bank is
       Advance(mem, cycles);
    end Idle;
 
+   procedure Show_Access_Stats(mem : in Bank_Type) is
+   begin
+      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
+         Show_Access_Stats(mem.banks.Element(i).mem.all);
+      end loop;
+   end Show_Access_Stats;
+
    procedure Add_Bank(mem  : in out Bank_Type;
-                      bank : access Memory_Type'class;
+                      bank : access Memory_Type'Class;
                       key  : in Address_Type;
                       mask : in Address_Type) is
       data : constant Bank_Data := Bank_Data'(bank, key, mask);

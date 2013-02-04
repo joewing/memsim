@@ -11,7 +11,7 @@ package body Benchmark.Heap is
 
       size  : constant Integer := Read(benchmark, 0) + 1;
       ptr   : Integer := size;
- 
+
    begin
 
       -- Increase the size of the heap.
@@ -90,18 +90,32 @@ package body Benchmark.Heap is
 
    end Remove;
 
+   procedure Set_Argument(benchmark : in out Heap_Type;
+                          arg       : in String) is
+   begin
+      if arg(arg'First .. arg'First + 4) = "size=" then
+         benchmark.size := Positive'Value(arg(arg'First + 5 .. arg'Last));
+      elsif arg(arg'First .. arg'First + 10) = "iterations=" then
+         benchmark.iterations :=
+            Positive'Value(arg(arg'First + 11 .. arg'Last));
+      else
+         raise Invalid_Argument;
+      end if;
+   exception
+      when others =>
+         raise Invalid_Argument;
+   end Set_Argument;
+
    procedure Run(benchmark : in out Heap_Type) is
-      length   : constant Positive := benchmark.length;
-      size     : constant Positive := benchmark.size;
    begin
 
       Init(benchmark);
 
-      for i in 1 .. size loop
+      for i in 1 .. benchmark.size loop
          Insert(benchmark, Get_Random(benchmark));
       end loop;
 
-      for i in 1 .. length loop
+      for i in 1 .. benchmark.iterations loop
          declare
             value : Integer;
          begin

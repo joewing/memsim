@@ -1,38 +1,34 @@
 
+with Ada.Unchecked_Deallocation;
+
 package body Benchmark is
 
-   procedure Set_Run_Length(benchmark  : in out Benchmark_Type'class;
-                            length     : in Positive) is
-   begin
-      benchmark.length := length;
-   end Set_Run_Length;
-
-   procedure Set_Size(benchmark  : in out Benchmark_Type'class;
-                      size       : in Positive) is
-   begin
-      benchmark.size := size;
-   end Set_Size;
-
-   procedure Run(benchmark : in out Benchmark_Type'class;
+   procedure Run(benchmark : in out Benchmark_Type'Class;
                  mem       : in Memory.Memory_Pointer) is
    begin
       benchmark.mem := mem;
       Run(benchmark);
    end Run;
 
-   function Get_Random(benchmark : Benchmark_Type'class) return Natural is
+   procedure Set_Argument(benchmark : in out Benchmark_Type;
+                          arg       : in String) is
+   begin
+      raise Invalid_Argument;
+   end Set_Argument;
+
+   function Get_Random(benchmark : Benchmark_Type'Class) return Natural is
    begin
       return Random.Random(benchmark.generator);
    end Get_Random;
 
-   function Read(benchmark : Benchmark_Type'class;
+   function Read(benchmark : Benchmark_Type'Class;
                  address   : Natural) return Integer is
    begin
       Memory.Read(benchmark.mem.all, Memory.Address_Type(address));
       return benchmark.data.Element(address);
    end Read;
 
-   procedure Write(benchmark  : in out Benchmark_Type'class;
+   procedure Write(benchmark  : in out Benchmark_Type'Class;
                    address    : in Natural;
                    value      : in Integer) is
    begin
@@ -42,5 +38,19 @@ package body Benchmark is
       end if;
       benchmark.data.Replace_Element(address, value);
    end Write;
+
+   procedure Idle(benchmark   : in out Benchmark_Type'Class;
+                  cycles      : in Time_Type) is
+   begin
+      Memory.Idle(benchmark.mem.all, cycles);
+   end Idle;
+
+   procedure Deallocate is
+      new Ada.Unchecked_Deallocation(Benchmark_Type'Class, Benchmark_Pointer);
+
+   procedure Destroy(benchmark : in out Benchmark_Pointer) is
+   begin
+      Deallocate(benchmark);
+   end Destroy;
 
 end Benchmark;

@@ -1,7 +1,7 @@
 
 package body Memory.Prefetch is
 
-   function Create_Prefetch(mem        : access Memory_Type'class;
+   function Create_Prefetch(mem        : access Memory_Type'Class;
                             stride     : Address_Type := 1;
                             multiplier : Address_Type := 1)
                             return Prefetch_Pointer is
@@ -68,6 +68,11 @@ package body Memory.Prefetch is
          mem.pending := mem.pending - cycles;
       end if;
    end Idle;
+
+   procedure Show_Access_Stats(mem : in Prefetch_Type) is
+   begin
+      Show_Access_Stats(mem.mem.all);
+   end Show_Access_Stats;
 
    procedure Finalize(mem : in out Prefetch_Type) is
    begin

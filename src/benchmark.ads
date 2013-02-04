@@ -12,16 +12,19 @@ package Benchmark is
 
    type Benchmark_Type is abstract new Limited_Controlled with private;
 
-   procedure Set_Run_Length(benchmark  : in out Benchmark_Type'class;
-                            length     : in Positive);
+   type Benchmark_Pointer is access all Benchmark_Type'Class;
 
-   procedure Set_Size(benchmark  : in out Benchmark_Type'class;
-                      size       : in Positive);
+   Invalid_Argument : exception;
 
-   procedure Run(benchmark : in out Benchmark_Type'class;
+   procedure Run(benchmark : in out Benchmark_Type'Class;
                  mem       : in Memory_Pointer);
 
+   procedure Set_Argument(benchmark    : in out Benchmark_Type;
+                          arg          : in String);
+
    procedure Run(benchmark : in out Benchmark_Type) is abstract;
+
+   procedure Destroy(benchmark : in out Benchmark_Pointer);
 
 private
 
@@ -33,17 +36,18 @@ private
       generator   : Random.Generator;
       mem         : Memory.Memory_Pointer;
       data        : Data_Vectors.Vector;
-      length      : Positive := 1000;
-      size        : Positive := 1024;
    end record;
 
-   function Get_Random(benchmark : Benchmark_Type'class) return Natural;
+   function Get_Random(benchmark : Benchmark_Type'Class) return Natural;
 
-   function Read(benchmark : Benchmark_Type'class;
+   function Read(benchmark : Benchmark_Type'Class;
                  address   : Natural) return Integer;
 
-   procedure Write(benchmark  : in out Benchmark_Type'class;
+   procedure Write(benchmark  : in out Benchmark_Type'Class;
                    address    : in Natural;
                    value      : in Integer);
+
+   procedure Idle(benchmark   : in out Benchmark_Type'Class;
+                  cycles      : in Time_Type);
 
 end Benchmark;

@@ -3,9 +3,9 @@ package Memory.Prefetch is
 
    type Prefetch_Type is new Memory_Type with private;
 
-   type Prefetch_Pointer is access all Prefetch_Type'class;
+   type Prefetch_Pointer is access all Prefetch_Type'Class;
 
-   function Create_Prefetch(mem        : access Memory_Type'class;
+   function Create_Prefetch(mem        : access Memory_Type'Class;
                             stride     : Address_Type := 1;
                             multiplier : Address_Type := 1)
                             return Prefetch_Pointer;
@@ -25,11 +25,14 @@ package Memory.Prefetch is
 private
 
    type Prefetch_Type is new Memory_Type with record
-      mem         : access Memory_Type'class;
+      mem         : access Memory_Type'Class;
       pending     : Time_Type := 0;
       stride      : Address_Type := 1;
       multiplier  : Address_Type := 1;
    end record;
+
+   overriding
+   procedure Show_Access_Stats(mem : in Prefetch_Type);
 
    overriding
    procedure Finalize(mem : in out Prefetch_Type);

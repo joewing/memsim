@@ -3,9 +3,9 @@ package Memory.Cache is
 
    type Cache_Type is new Memory_Type with private;
 
-   type Cache_Pointer is access all Cache_Type'class;
+   type Cache_Pointer is access all Cache_Type'Class;
 
-   function Create_Cache(mem           : access Memory_Type'class;
+   function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 1;
                          associativity : Positive := 1;
@@ -22,7 +22,7 @@ package Memory.Cache is
 private
 
    type Cache_Data is record
-      address  : Address_Type := Address_Type'last;
+      address  : Address_Type := Address_Type'Last;
       age      : Natural      := 0;
       dirty    : Boolean      := False;
    end record;
@@ -37,8 +37,11 @@ private
       associativity  : Positive := 1;
       latency        : Time_Type := 1;
       data           : Cache_Vectors.Vector;
-      mem            : access Memory_Type'class;
+      mem            : access Memory_Type'Class;
    end record;
+
+   overriding
+   procedure Show_Access_Stats(mem : in Cache_Type);
 
    overriding
    procedure Finalize(mem : in out Cache_Type);

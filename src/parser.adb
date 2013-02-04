@@ -251,11 +251,11 @@ package body Parser is
    type Memory_Parser_Array is array(Positive range <>) of Memory_Parser_Type;
 
    parser_map : constant Memory_Parser_Array := (
-      (To_Unbounded_String("bank"),       Parse_Bank'access),
-      (To_Unbounded_String("cache"),      Parse_Cache'access),
-      (To_Unbounded_String("prefetch"),   Parse_Prefetch'access),
-      (To_Unbounded_String("ram"),        Parse_RAM'access),
-      (To_Unbounded_String("stats"),      Parse_Stats'access)
+      (To_Unbounded_String("bank"),       Parse_Bank'Access),
+      (To_Unbounded_String("cache"),      Parse_Cache'Access),
+      (To_Unbounded_String("prefetch"),   Parse_Prefetch'Access),
+      (To_Unbounded_String("ram"),        Parse_RAM'Access),
+      (To_Unbounded_String("stats"),      Parse_Stats'Access)
    );
 
    procedure Parse_Memory(lexer  : in out Lexer_Type;
@@ -266,7 +266,7 @@ package body Parser is
          name : constant String := Get_Value(lexer);
       begin
          Next(lexer);
-         for i in parser_map'first .. parser_map'last loop
+         for i in parser_map'First .. parser_map'Last loop
             if parser_map(i).name = name then
                parser_map(i).parser(lexer, result);
                Match(lexer, Close);
@@ -287,6 +287,8 @@ package body Parser is
       Close(lexer);
       return result;
    exception
+      when Name_Error =>
+         return null;
       when Parse_Error =>
          return null;
    end Parse;

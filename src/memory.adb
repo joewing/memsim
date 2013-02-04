@@ -29,13 +29,14 @@ package body Memory is
       return mem.time;
    end Get_Time;
 
-   procedure Show_Stats(mem : in Memory_Type) is
+   procedure Show_Stats(mem : in Memory_Type'Class) is
    begin
       Put_Line("Time:" & Time_Type'Image(mem.time) & " cycles");
+      Show_Access_Stats(mem);
    end Show_Stats;
 
    procedure Deallocate is
-      new Ada.Unchecked_Deallocation(Memory_Type'class, Memory_Pointer);
+      new Ada.Unchecked_Deallocation(Memory_Type'Class, Memory_Pointer);
 
    procedure Destroy(mem : in out Memory_Pointer) is
    begin
@@ -49,6 +50,11 @@ package body Memory is
    begin
       mem.time := mem.time + cycles;
    end Advance;
+
+   procedure Show_Access_Stats(mem : in Memory_Type) is
+   begin
+      null;
+   end Show_Access_Stats;
 
 end Memory;
 

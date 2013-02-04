@@ -1,11 +1,12 @@
 
 package body Memory.Cache is
 
-   function Create_Cache(mem           : access Memory_Type'class;
+   function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 1;
                          associativity : Positive := 1;
-                         latency       : Time_Type := 1) return Cache_Pointer is
+                         latency       : Time_Type := 1)
+                         return Cache_Pointer is
       result : constant Cache_Pointer := new Cache_Type;
    begin
       result.mem           := mem;
@@ -128,6 +129,11 @@ package body Memory.Cache is
    begin
       Get_Data(mem, address, False);
    end Write;
+
+   procedure Show_Access_Stats(mem : in Cache_Type) is
+   begin
+      Show_Access_Stats(mem.mem.all);
+   end Show_Access_Stats;
 
    procedure Finalize(mem : in out Cache_Type) is
    begin
