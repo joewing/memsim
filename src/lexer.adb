@@ -1,5 +1,4 @@
 
-with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 use Ada.Characters;
 

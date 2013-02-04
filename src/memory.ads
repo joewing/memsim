@@ -30,6 +30,8 @@ package Memory is
 
    function Get_Time(mem : Memory_Type) return Time_Type;
 
+   procedure Show_Stats(mem : in Memory_Type);
+
    procedure Destroy(mem : in out Memory_Pointer);
 
 private
@@ -43,9 +45,6 @@ private
 
    procedure Advance(mem      : in out Memory_Type;
                      cycles   : in Time_Type);
-
-   overriding
-   procedure Finalize(mem : in out Memory_Type);
 
 end Memory;
 

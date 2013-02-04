@@ -76,7 +76,6 @@ package body Trace is
          when End_Error =>
             Character_IO.Close(file);
       end;
-      Put_Line("Total time: " & Time_Type'image(Get_Time(mem)));
    end Process;
 
 end Trace;

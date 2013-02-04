@@ -1,6 +1,4 @@
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 package body Memory.RAM is
 
    function Create_RAM(latency : Time_Type := 1) return RAM_Pointer is
@@ -13,14 +11,12 @@ package body Memory.RAM is
    procedure Read(mem       : in out RAM_Type;
                   address   : in Address_Type) is
    begin
-      Put_Line("RAM Read: " & Address_Type'image(address));
       Advance(mem, mem.latency);
    end Read;
 
    procedure Write(mem      : in out RAM_Type;
                    address  : in Address_Type) is
    begin
-      Put_Line("RAM Write: " & Address_Type'image(address));
       Advance(mem, mem.latency);
    end Write;
 

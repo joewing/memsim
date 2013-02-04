@@ -1,4 +1,5 @@
 
+with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 
 package body Memory is
@@ -28,6 +29,11 @@ package body Memory is
       return mem.time;
    end Get_Time;
 
+   procedure Show_Stats(mem : in Memory_Type) is
+   begin
+      Put_Line("Time:" & Time_Type'Image(mem.time) & " cycles");
+   end Show_Stats;
+
    procedure Deallocate is
       new Ada.Unchecked_Deallocation(Memory_Type'class, Memory_Pointer);
 
@@ -43,11 +49,6 @@ package body Memory is
    begin
       mem.time := mem.time + cycles;
    end Advance;
-
-   procedure Finalize(mem : in out Memory_Type) is
-   begin
-      null;
-   end Finalize;
 
 end Memory;
 
