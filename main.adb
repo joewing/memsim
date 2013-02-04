@@ -16,7 +16,7 @@ begin
 
    -- Make sure we have enough arguments.
    if Argument_Count < 2 then
-      Put_Line("usage: " & Command_Name & " <benchmark> <memory> [<options>]");
+      Put_Line("usage: " & Command_Name & " <memory> <benchmark> [<options>]");
       Put_Line("benchmarks:");
       Put_Line("   trace [file=trace.txt] [spacing=0]");
       Put_Line("   heap [size=1024] [iterations=1000]");
