@@ -12,6 +12,7 @@ Currently, the following packages are available:
  - *Memory.Cache*: A write-back cache with various parameters.
  - *Memory.Bank*: A memory bank which can contain multiple memories.
  - *Memory.Prefetch*: A memory prefetcher (assumes prefetches are free).
+ - *Memory.SPM*: A scratchpad memory.
  - *Memory.Stats*: A memory to track memory access statistics.
 
 The *Parser* package can be used to parse a file containing a memory
