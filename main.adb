@@ -7,6 +7,7 @@ with Parser;
 with Benchmark;               use Benchmark;
 with Benchmark.Heap;
 with Benchmark.Trace;
+with Benchmark.Stride;
 with Benchmark.Hash;
 
 procedure Main is
@@ -40,6 +41,8 @@ procedure Main is
                Benchmark.Hash.Create_Hash'Access),
       BM_Entry("heap", "[size=1024] [iterations=1000]",
                Benchmark.Heap.Create_Heap'Access),
+      BM_Entry("stride", "[size=1024] [iterations=1000] [stride=1]",
+               Benchmark.Stride.Create_Stride'Access),
       BM_Entry("trace", "[file=trace.txt] [spacing=0]",
                Benchmark.Trace.Create_Trace'Access)
    );

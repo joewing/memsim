@@ -1,5 +1,6 @@
 
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_IO;       use Ada.Text_IO;
+with Ada.Float_Text_IO; use Ada.Float_Text_IO;
 
 package body Histograms is
 
@@ -15,14 +16,37 @@ package body Histograms is
       end if;
    end Increment;
 
+   function Get_Total(hist : Histogram_Type) return Float is
+      total : Float := 0.0;
+      procedure Helper(pos : in Histogram_Maps.Cursor) is
+      begin
+         total := total + Float(Histogram_Maps.Element(pos));
+      end Helper;
+   begin
+      hist.data.Iterate(Helper'Access);
+      if total = 0.0 then
+         return 1.0;
+      else
+         return total;
+      end if;
+   end Get_Total;
+
    procedure Show(hist     : in Histogram_Type;
                   label    : in String) is
 
+      total : constant Float := Get_Total(hist);
+
       procedure Helper(pos : in Histogram_Maps.Cursor) is
-         key   : constant Key_Type := Histogram_Maps.Key(pos);
-         value : constant Natural  := Histogram_Maps.Element(pos);
+         key      : constant Key_Type := Histogram_Maps.Key(pos);
+         value    : constant Natural  := Histogram_Maps.Element(pos);
+         percent  : constant Float := 100.0 * Float(value) / total;
       begin
-         Put_Line("  " & Key_Type'Image(key) & ":" & Natural'Image(value));
+         if percent >= 1.0 then
+            Put("  " & Key_Type'Image(key) & ":");
+            Put(percent, Fore => 3, Aft => 0, Exp => 0);
+            Put("%");
+            New_Line;
+         end if;
       end Helper;
 
    begin

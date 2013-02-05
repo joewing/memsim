@@ -34,9 +34,9 @@ package body Benchmark.Trace is
          exit when ch = 'R' or ch = 'W' or ch = 'I';
       end loop;
       case ch is
-         when 'R' | 'r' => result.t := Read;
-         when 'W' | 'w' => result.t := Write;
-         when others    => result.t := Idle;
+         when 'R'    => result.t := Read;
+         when 'W'    => result.t := Write;
+         when others => result.t := Idle;
       end case;
 
       -- Skip to the address.

@@ -25,10 +25,10 @@ package body Memory.Stats is
    function Compute_Stride(last, current : Address_Type) return Integer is
       stride : Integer := 0;
    begin
-      if    last > current and last - current <= Max_Stride then
-         stride := Integer(last - current);
-      elsif current > last and current - last <= Max_Stride then
-         stride := -Integer(current - last);
+      if    last < current and current - last <= Max_Stride then
+         stride := Integer(current - last);
+      elsif last > current and last - current <= Max_Stride then
+         stride := -Integer(last - current);
       end if;
       return stride;
    end Compute_Stride;
