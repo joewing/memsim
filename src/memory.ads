@@ -4,7 +4,7 @@ with Ada.Finalization; use Ada.Finalization;
 
 package Memory is
 
-   type Address_Type is mod 2 ** 32;
+   type Address_Type is mod 2 ** 64;
 
    type Time_Type is new Natural;
 

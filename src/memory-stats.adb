@@ -3,6 +3,8 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Memory.Stats is
 
+   Max_Stride : constant := Integer'Last;
+
    function Create_Stats(mem : access Memory_Type'Class)
                         return Stats_Pointer is
       result : constant Stats_Pointer := new Stats_Type;
@@ -10,18 +12,6 @@ package body Memory.Stats is
       result.mem := mem;
       return result;
    end Create_Stats;
-
-   procedure Increment(m : in out Stride_Maps.Map;
-                       i : in Integer) is
-      value : Natural := 1;
-   begin
-      if Stride_Maps.Contains(m, i) then
-         value := Stride_Maps.Element(m, i) + 1;
-         Stride_Maps.Replace(m, i, value);
-      else
-         Stride_Maps.Insert(m, i, value);
-      end if;
-   end Increment;
 
    function Compute_Multiple(last, current : Integer) return Integer is
    begin
@@ -32,16 +22,26 @@ package body Memory.Stats is
       end if;
    end Compute_Multiple;
 
+   function Compute_Stride(last, current : Address_Type) return Integer is
+      stride : Integer := 0;
+   begin
+      if    last > current and last - current <= Max_Stride then
+         stride := Integer(last - current);
+      elsif current > last and current - last <= Max_Stride then
+         stride := -Integer(current - last);
+      end if;
+      return stride;
+   end Compute_Stride;
+
    procedure Process(mem      : in out Stats_Type;
                      address  : in Address_Type) is
-      iaddr  : constant Integer := Integer(address);
-      stride : constant Integer := iaddr - mem.last_address;
+      stride : constant Integer := Compute_Stride(mem.last_address, address);
       mult   : constant Integer := Compute_Multiple(mem.last_stride, stride);
    begin
-      Increment(mem.addresses, iaddr);
-      Increment(mem.strides, stride);
-      Increment(mem.multipliers, mult);
-      mem.last_address  := iaddr;
+      mem.addresses.Increment(address);
+      mem.strides.Increment(stride);
+      mem.multipliers.Increment(mult);
+      mem.last_address  := address;
       mem.last_stride   := stride;
    end Process;
 
@@ -73,19 +73,6 @@ package body Memory.Stats is
       Process(mem, address);
    end Write;
 
-   procedure Show_Histogram(label   : in String;
-                            m       : in Stride_Maps.Map) is
-      procedure Show(pos : in Stride_Maps.Cursor) is
-         key   : constant Integer := Stride_Maps.Key(pos);
-         value : constant Natural := Stride_Maps.Element(pos);
-      begin
-         Put_Line("  " & Integer'Image(key) & ":" & Natural'Image(value));
-      end Show;
-   begin
-      Put_Line(label & ":");
-      Stride_Maps.Iterate(m, Show'Access);
-   end Show_Histogram;
-
    procedure Show_Access_Stats(mem : in Stats_Type) is
    begin
       if mem.mem /= null then
@@ -94,9 +81,9 @@ package body Memory.Stats is
       Put_Line("Reads:" & Natural'Image(mem.reads));
       Put_Line("Writes:" & Natural'Image(mem.writes));
       Put_Line("Accesses:" & Natural'Image(mem.reads + mem.writes));
-      Show_Histogram("Addresses", mem.addresses);
-      Show_Histogram("Strides", mem.strides);
-      Show_Histogram("Multipliers", mem.multipliers);
+      mem.addresses.Show("Addresses");
+      mem.strides.Show("Strides");
+      mem.multipliers.Show("Multipliers");
    end Show_Access_Stats;
 
    procedure Finalize(mem : in out Stats_Type) is

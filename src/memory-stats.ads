@@ -1,5 +1,5 @@
 
-with Ada.Containers.Ordered_Maps;
+with Histograms;
 
 package Memory.Stats is
 
@@ -19,17 +19,18 @@ package Memory.Stats is
 
 private
 
-   package Stride_Maps is new Ordered_Maps(Integer, Natural);
+   package Address_Histograms is new Histograms(Address_Type);
+   package Stride_Histograms is new Histograms(Integer);
 
    type Stats_Type is new Memory_Type with record
       mem            : access Memory_Type'Class := null;
-      last_address   : Integer := 0;
+      last_address   : Address_Type := 0;
       last_stride    : Integer := 0;
       reads          : Natural := 0;
       writes         : Natural := 0;
-      addresses      : Stride_Maps.Map;
-      strides        : Stride_Maps.Map;
-      multipliers    : Stride_Maps.Map;
+      addresses      : Address_Histograms.Histogram_Type;
+      strides        : Stride_Histograms.Histogram_Type;
+      multipliers    : Stride_Histograms.Histogram_Type;
    end record;
 
    overriding

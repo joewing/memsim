@@ -10,7 +10,7 @@ package body Benchmark.Trace is
 
    type Memory_Access is record
       t     : Access_Type;
-      value : Natural;
+      value : Address_Type;
    end record;
 
    function Create_Trace return Benchmark_Pointer is
@@ -18,10 +18,10 @@ package body Benchmark.Trace is
       return new Trace_Type;
    end Create_Trace;
 
-   function To_Natural(ch : Character) return Natural is
+   function To_Address(ch : Character) return Address_Type is
    begin
-      return Natural(Character'Pos(ch) - Character'Pos('0'));
-   end To_Natural;
+      return Address_Type(Character'Pos(ch) - Character'Pos('0'));
+   end To_Address;
 
    function Read_Access(file : Character_IO.File_Type) return Memory_Access is
       result   : Memory_Access;
@@ -46,11 +46,11 @@ package body Benchmark.Trace is
       end loop;
 
       -- Read the value.
-      result.value := To_Natural(ch);
+      result.value := To_Address(ch);
       loop
          Character_IO.Read(file, ch);
          exit when ch < '0' or ch > '9';
-         result.value := result.value * 10 + To_Natural(ch);
+         result.value := result.value * 10 + To_Address(ch);
       end loop;
 
       return result;
@@ -83,9 +83,9 @@ package body Benchmark.Trace is
          begin
             case data.t is
                when Read   =>
-                  Read(benchmark.mem.all, Address_Type(data.value));
+                  Read(benchmark.mem.all, data.value);
                when Write  =>
-                  Write(benchmark.mem.all, Address_Type(data.value));
+                  Write(benchmark.mem.all, data.value);
                when Idle   =>
                   Idle(benchmark, Time_Type(data.value));
             end case;

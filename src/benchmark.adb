@@ -1,8 +1,6 @@
 
 with Ada.Unchecked_Deallocation;
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 package body Benchmark is
 
    procedure Run(benchmark : in out Benchmark_Type'Class;
