@@ -38,6 +38,11 @@ private
       data        : Data_Vectors.Vector;
    end record;
 
+   function Check_Argument(arg   : String;
+                           name  : String) return Boolean;
+
+   function Extract_Argument(arg : String) return String;
+
    function Get_Random(benchmark : Benchmark_Type'Class) return Natural;
 
    function Read(benchmark : Benchmark_Type'Class;

@@ -13,6 +13,11 @@ package body Benchmark.Trace is
       value : Natural;
    end record;
 
+   function Create_Trace return Benchmark_Pointer is
+   begin
+      return new Trace_Type;
+   end Create_Trace;
+
    function To_Natural(ch : Character) return Natural is
    begin
       return Natural(Character'Pos(ch) - Character'Pos('0'));
@@ -54,11 +59,10 @@ package body Benchmark.Trace is
    procedure Set_Argument(benchmark : in out Trace_Type;
                           arg       : in String) is
    begin
-      if arg(arg'First .. arg'First + 4) = "file=" then
-         benchmark.file_name
-            := To_Unbounded_String(arg(arg'First + 5 .. arg'Last));
-      elsif arg(arg'First .. arg'First + 7) = "spacing=" then
-         benchmark.spacing := Time_Type'Value(arg(arg'First + 8 .. arg'Last));
+      if Check_Argument(arg, "file") then
+         benchmark.file_name := To_Unbounded_String(Extract_Argument(arg));
+      elsif Check_Argument(arg, "spacing") then
+         benchmark.spacing := Time_Type'Value(Extract_Argument(arg));
       else
          raise Invalid_Argument;
       end if;

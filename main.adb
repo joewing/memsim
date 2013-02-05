@@ -1,16 +1,48 @@
 
-with Ada.Command_Line;  use Ada.Command_Line;
-with Ada.Text_IO;       use Ada.Text_IO;
-with Memory;            use Memory;
+with Ada.Command_Line;        use Ada.Command_Line;
+with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+with Ada.Text_IO;             use Ada.Text_IO;
+with Memory;                  use Memory;
 with Parser;
-with Benchmark;         use Benchmark;
+with Benchmark;               use Benchmark;
 with Benchmark.Heap;
 with Benchmark.Trace;
+with Benchmark.Hash;
 
 procedure Main is
 
    mem   : Memory_Pointer := null;
    bm    : Benchmark.Benchmark_Pointer := null;
+
+   type Benchmark_Constructor_Type is
+      access function return Benchmark.Benchmark_Pointer;
+
+   type Benchmark_Info_Type is record
+      name           : Unbounded_String;
+      usage          : Unbounded_String;
+      constructor    : Benchmark_Constructor_Type;
+   end record;
+
+   type Benchmark_Info_Array is array(Natural range <>) of Benchmark_Info_Type;
+
+   function BM_Entry(name        : String;
+                     usage       : String;
+                     constructor : Benchmark_Constructor_Type)
+                     return Benchmark_Info_Type is
+   begin
+      return Benchmark_Info_Type'(To_Unbounded_String(name),
+                                  To_Unbounded_String(usage),
+                                  constructor);
+   end BM_Entry;
+
+   benchmark_map : constant Benchmark_Info_Array := (
+      BM_Entry("hash", "[size=1024] [iterations=1000]",
+               Benchmark.Hash.Create_Hash'Access),
+      BM_Entry("heap", "[size=1024] [iterations=1000]",
+               Benchmark.Heap.Create_Heap'Access),
+      BM_Entry("trace", "[file=trace.txt] [spacing=0]",
+               Benchmark.Trace.Create_Trace'Access)
+   );
 
 begin
 
@@ -18,28 +50,38 @@ begin
    if Argument_Count < 2 then
       Put_Line("usage: " & Command_Name & " <memory> <benchmark> [<options>]");
       Put_Line("benchmarks:");
-      Put_Line("   trace [file=trace.txt] [spacing=0]");
-      Put_Line("   heap [size=1024] [iterations=1000]");
+      for i in benchmark_map'First .. benchmark_map'Last loop
+         Put_Line("   " & To_String(benchmark_map(i).name & " " &
+                  To_String(benchmark_map(i).usage)));
+      end loop;
       return;
    end if;
 
-   -- Parse the memory file.
-   mem := Parser.Parse(Argument(1));
-   if mem = null then
-      Put_Line("error: could not open memory: " & Argument(1));
-      return;
-   end if;
+   declare
+      memory_file : constant String := Argument(1);
+      bm_name     : constant String := Argument(2);
+   begin
 
-   -- Create the benchmark.
-   if Argument(2) = "heap" then
-      bm := new Benchmark.Heap.Heap_Type;
-   elsif Argument(2) = "trace" then
-      bm := new Benchmark.Trace.Trace_Type;
-   end if;
-   if bm = null then
-      Put_Line("error: invalid benchmark: " & Argument(2));
-      return;
-   end if;
+      -- Parse the memory file.
+      mem := Parser.Parse(memory_file);
+      if mem = null then
+         Put_Line("error: could not open memory: " & memory_file);
+         return;
+      end if;
+
+      -- Create the benchmark.
+      for i in benchmark_map'First .. benchmark_map'Last loop
+         if benchmark_map(i).name = bm_name then
+            bm := benchmark_map(i).constructor.all;
+            exit;
+         end if;
+      end loop;
+      if bm = null then
+         Put_Line("error: invalid benchmark: " & Argument(2));
+         return;
+      end if;
+
+   end;
 
    -- Set benchmark arguments.
    for i in 3 .. Argument_Count loop

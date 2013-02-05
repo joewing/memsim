@@ -1,6 +1,8 @@
 
 with Ada.Unchecked_Deallocation;
 
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Benchmark is
 
    procedure Run(benchmark : in out Benchmark_Type'Class;
@@ -15,6 +17,28 @@ package body Benchmark is
    begin
       raise Invalid_Argument;
    end Set_Argument;
+
+   function Check_Argument(arg   : String;
+                           name  : String) return Boolean is
+      full_name   : constant String := name & "=";
+      len         : constant Natural := full_name'Length;
+   begin
+      if len < arg'Length then
+         return arg(arg'First .. arg'First + len - 1) = full_name;
+      else
+         return False;
+      end if;
+   end Check_Argument;
+
+   function Extract_Argument(arg : String) return String is
+   begin
+      for i in arg'First .. arg'Last loop
+         if arg(i) = '=' then
+            return arg(i + 1 .. arg'Last);
+         end if;
+      end loop;
+      return "";
+   end Extract_Argument;
 
    function Get_Random(benchmark : Benchmark_Type'Class) return Natural is
    begin
