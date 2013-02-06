@@ -6,7 +6,7 @@ package Memory is
 
    type Address_Type is mod 2 ** 64;
 
-   type Time_Type is new Natural;
+   type Time_Type is new Long_Integer range 0 .. Long_Integer'Last;
 
    type Memory_Type is abstract new Limited_Controlled with private;
 

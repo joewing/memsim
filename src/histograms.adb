@@ -6,7 +6,7 @@ package body Histograms is
 
    procedure Increment(hist   : in out Histogram_Type;
                        key    : in Key_Type) is
-      value : Natural := 1;
+      value : Long_Integer := 1;
    begin
       if hist.data.Contains(key) then
          value := hist.data.Element(key) + 1;
@@ -38,7 +38,7 @@ package body Histograms is
 
       procedure Helper(pos : in Histogram_Maps.Cursor) is
          key      : constant Key_Type := Histogram_Maps.Key(pos);
-         value    : constant Natural  := Histogram_Maps.Element(pos);
+         value    : constant Long_Integer := Histogram_Maps.Element(pos);
          percent  : constant Float := 100.0 * Float(value) / total;
       begin
          if percent >= 1.0 then

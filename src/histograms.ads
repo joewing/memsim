@@ -17,7 +17,7 @@ package Histograms is
 private
 
    package Histogram_Maps is new Ordered_Maps(Key_Type      => Key_Type,
-                                              Element_Type  => Natural);
+                                              Element_Type  => Long_Integer);
 
    type Histogram_Type is tagged limited record
       data : Histogram_Maps.Map;

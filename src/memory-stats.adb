@@ -78,9 +78,9 @@ package body Memory.Stats is
       if mem.mem /= null then
          Show_Access_Stats(mem.mem.all);
       end if;
-      Put_Line("Reads:" & Natural'Image(mem.reads));
-      Put_Line("Writes:" & Natural'Image(mem.writes));
-      Put_Line("Accesses:" & Natural'Image(mem.reads + mem.writes));
+      Put_Line("Reads:" & Long_Integer'Image(mem.reads));
+      Put_Line("Writes:" & Long_Integer'Image(mem.writes));
+      Put_Line("Accesses:" & Long_Integer'Image(mem.reads + mem.writes));
       mem.addresses.Show("Addresses");
       mem.strides.Show("Strides");
       mem.multipliers.Show("Multipliers");

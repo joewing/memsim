@@ -26,8 +26,8 @@ private
       mem            : access Memory_Type'Class := null;
       last_address   : Address_Type := 0;
       last_stride    : Integer := 0;
-      reads          : Natural := 0;
-      writes         : Natural := 0;
+      reads          : Long_Integer := 0;
+      writes         : Long_Integer := 0;
       addresses      : Address_Histograms.Histogram_Type;
       strides        : Stride_Histograms.Histogram_Type;
       multipliers    : Stride_Histograms.Histogram_Type;
