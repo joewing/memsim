@@ -10,6 +10,7 @@ with Memory.Bank;
 with Memory.Cache;
 with Memory.Prefetch;
 with Memory.SPM;
+with Memory.Dup;
 
 package body Parser is
 
@@ -77,6 +78,24 @@ package body Parser is
       when Data_Error =>
          Raise_Error(lexer, "invalid value in ram");
    end Parse_RAM;
+
+   procedure Parse_Dup(lexer  : in out Lexer_Type;
+                       result : out Memory_Pointer) is
+
+      dp    : Dup.Dup_Pointer := Dup.Create_Dup;
+      mem   : Memory_Pointer := null;
+
+   begin
+      while Get_Type(lexer) = Open loop
+         Parse_Memory(lexer, mem);
+         Dup.Add_Memory(dp.all, mem);
+      end loop;
+      result := Memory_Pointer(dp);
+   exception
+      when others =>
+         Destroy(Memory_Pointer(dp));
+         raise Parse_Error;
+   end Parse_Dup;
 
    procedure Parse_SPM(lexer  : in out Lexer_Type;
                        result : out Memory_Pointer) is
@@ -302,7 +321,8 @@ package body Parser is
       (To_Unbounded_String("prefetch"),   Parse_Prefetch'Access),
       (To_Unbounded_String("ram"),        Parse_RAM'Access),
       (To_Unbounded_String("stats"),      Parse_Stats'Access),
-      (To_Unbounded_String("spm"),        Parse_SPM'Access)
+      (To_Unbounded_String("spm"),        Parse_SPM'Access),
+      (To_Unbounded_String("dup"),        Parse_Dup'Access)
    );
 
    procedure Parse_Memory(lexer  : in out Lexer_Type;

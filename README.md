@@ -8,10 +8,11 @@ memory access take.
 Currently, the following memory packages are available:
 
  - *Memory*: The base package.
- - *Memory.RAM*: A simple RAM with constant access time.
- - *Memory.Cache*: A write-back cache with various parameters.
  - *Memory.Bank*: A memory bank which can contain multiple memories.
+ - *Memory.Cache*: A write-back cache with various parameters.
+ - *Memory.Dup*: Duplicate accesses to other memories.
  - *Memory.Prefetch*: A memory prefetcher (assumes prefetches are free).
+ - *Memory.RAM*: A simple RAM with constant access time.
  - *Memory.SPM*: A scratchpad memory.
  - *Memory.Stats*: A memory to track memory access statistics.
 
