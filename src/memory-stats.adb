@@ -78,12 +78,12 @@ package body Memory.Stats is
       if mem.mem /= null then
          Show_Access_Stats(mem.mem.all);
       end if;
-      Put_Line("Reads:" & Long_Integer'Image(mem.reads));
-      Put_Line("Writes:" & Long_Integer'Image(mem.writes));
-      Put_Line("Accesses:" & Long_Integer'Image(mem.reads + mem.writes));
-      mem.addresses.Show("Addresses");
-      mem.strides.Show("Strides");
-      mem.multipliers.Show("Multipliers");
+      Put_Line("    Reads:   " & Long_Integer'Image(mem.reads));
+      Put_Line("    Writes:  " & Long_Integer'Image(mem.writes));
+      Put_Line("    Accesses:" & Long_Integer'Image(mem.reads + mem.writes));
+      mem.addresses.Show("    Addresses");
+      mem.strides.Show("   Strides");
+      mem.multipliers.Show("   Multipliers");
    end Show_Access_Stats;
 
    procedure Finalize(mem : in out Stats_Type) is

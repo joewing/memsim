@@ -1,4 +1,6 @@
 
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Memory.Dup is
 
    function Create_Dup return Dup_Pointer is
@@ -74,12 +76,18 @@ package body Memory.Dup is
       Update_Time(mem);
    end Idle;
 
-   procedure Show_Access_Stats(mem : in Dup_Type) is
+   procedure Show_Stats(mem : in Dup_Type) is
    begin
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop
-         Show_Access_Stats(mem.memories.Element(i).all);
+         declare
+            other : constant Memory_Pointer := mem.memories.Element(i);
+         begin
+            Put(Integer'Image(i) & ": ");
+            Show_Stats(other.all);
+            Show_Access_Stats(other.all);
+         end;
       end loop;
-   end Show_Access_Stats;
+   end Show_Stats;
 
    procedure Finalize(mem : in out Dup_Type) is
    begin

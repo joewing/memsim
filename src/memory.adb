@@ -29,7 +29,7 @@ package body Memory is
       return mem.time;
    end Get_Time;
 
-   procedure Show_Stats(mem : in Memory_Type'Class) is
+   procedure Show_Stats(mem : in Memory_Type) is
    begin
       Put_Line("Time:" & Time_Type'Image(mem.time) & " cycles");
       Show_Access_Stats(mem);

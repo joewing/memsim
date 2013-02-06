@@ -42,7 +42,7 @@ package body Histograms is
          percent  : constant Float := 100.0 * Float(value) / total;
       begin
          if percent >= 1.0 then
-            Put("  " & Key_Type'Image(key) & ":");
+            Put("    " & Key_Type'Image(key) & ":");
             Put(percent, Fore => 3, Aft => 0, Exp => 0);
             Put("%");
             New_Line;

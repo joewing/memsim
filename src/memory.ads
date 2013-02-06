@@ -30,7 +30,7 @@ package Memory is
 
    function Get_Time(mem : Memory_Type) return Time_Type;
 
-   procedure Show_Stats(mem : in Memory_Type'Class);
+   procedure Show_Stats(mem : in Memory_Type);
 
    procedure Destroy(mem : in out Memory_Pointer);
 
