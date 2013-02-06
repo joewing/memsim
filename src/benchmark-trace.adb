@@ -11,6 +11,7 @@ package body Benchmark.Trace is
    type Memory_Access is record
       t     : Access_Type;
       value : Address_Type;
+      size  : Address_Type;
    end record;
 
    task type Consumer_Task is
@@ -33,14 +34,16 @@ package body Benchmark.Trace is
       while not done loop
          select
             accept Process(data : in Memory_Access) do
-               case data.t is
-                  when Read   =>
-                     Read(mem.all, data.value);
-                  when Write  =>
-                     Write(mem.all, data.value);
-                  when Idle   =>
-                     Idle(mem.all, Time_Type(data.value));
-               end case;
+               for i in 0 .. data.size - 1 loop
+                  case data.t is
+                     when Read   =>
+                        Read(mem.all, data.value + i);
+                     when Write  =>
+                        Write(mem.all, data.value + i);
+                     when Idle   =>
+                        Idle(mem.all, Time_Type(data.value));
+                  end case;
+               end loop;
                Idle(mem.all, spacing);
             end Process;
          or
@@ -81,7 +84,7 @@ package body Benchmark.Trace is
 
    function Read_Access(file : Character_IO.File_Type) return Memory_Access is
       result   : Memory_Access;
-      ch       : Character;
+      ch       : Character := '?';
    begin
 
       -- Determine if this is a read or a write.
@@ -108,6 +111,18 @@ package body Benchmark.Trace is
          exit when not Is_Address(ch);
          result.value := result.value * 16 + To_Address(ch);
       end loop;
+
+      -- Read the size if a read or write.
+      if result.t = Read or result.t = Write then
+         result.size := 0;
+         loop
+            Character_IO.Read(file, ch);
+            exit when not Is_Address(ch);
+            result.size := result.size * 16 + To_Address(ch);
+         end loop;
+      else
+         result.size := 1;
+      end if;
 
       return result;
    end Read_Access;

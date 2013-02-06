@@ -31,10 +31,11 @@ to use the memory.
 For the trace benchmark, sequences of memory access actions separated by
 new lines.  The format of each line is:
 
-   *action* *value*
+   *action* *value*[:*size*]
 
 where *action* is 'R' for read, 'W' for write, and 'I' for idle.
 For reads and writes, *value* is a hexadecimal value indicating the
-address.  For idle states, *value* is the number of idle cycles.
-Idle is used to separate reads and writes.
+address and *size* is the size of the read or write.  For idle actions,
+*value* is the number of idle cycles (there is no size for idle actions).
+Idle is used to insert processing time.
 
