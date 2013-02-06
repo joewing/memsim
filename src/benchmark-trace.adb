@@ -56,9 +56,27 @@ package body Benchmark.Trace is
       return new Trace_Type;
    end Create_Trace;
 
-   function To_Address(ch : Character) return Address_Type is
+   function Is_Address(ch : Character) return Boolean is
    begin
-      return Address_Type(Character'Pos(ch) - Character'Pos('0'));
+      case ch is
+         when '0' .. '9' =>
+            return True;
+         when 'a' .. 'f' =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Address;
+
+   function To_Address(ch : Character) return Address_Type is
+      pos : constant Integer := Character'Pos(ch);
+   begin
+      case ch is
+         when '0' .. '9' =>
+            return Address_Type(pos - Character'Pos('0'));
+         when others =>
+            return Address_Type(pos - Character'Pos('a') + 10);
+      end case;
    end To_Address;
 
    function Read_Access(file : Character_IO.File_Type) return Memory_Access is
@@ -80,15 +98,15 @@ package body Benchmark.Trace is
       -- Skip to the address.
       loop
          Character_IO.Read(file, ch);
-         exit when ch >= '0' and ch <= '9';
+         exit when Is_Address(ch);
       end loop;
 
       -- Read the value.
       result.value := To_Address(ch);
       loop
          Character_IO.Read(file, ch);
-         exit when ch < '0' or ch > '9';
-         result.value := result.value * 10 + To_Address(ch);
+         exit when not Is_Address(ch);
+         result.value := result.value * 16 + To_Address(ch);
       end loop;
 
       return result;

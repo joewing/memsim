@@ -9,7 +9,7 @@ package Benchmark.Trace is
    --    <action> <value>
    --
    -- where <action> is 'R' for read, 'W' for write, and 'I' for idle.
-   -- For reads and writes, <value> is a decimal value indicating the
+   -- For reads and writes, <value> is a hexadecimal value indicating the
    -- address.  For idle states, <value> is the number of idle cycles.
    -- Idle is used to separate reads and writes.
 
