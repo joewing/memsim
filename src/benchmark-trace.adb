@@ -13,6 +13,44 @@ package body Benchmark.Trace is
       value : Address_Type;
    end record;
 
+   task type Consumer_Task is
+      entry Initialize(m : in Memory_Pointer;
+                       s : in Time_Type);
+      entry Process(data : in Memory_Access);
+      entry Stop;
+   end Consumer_Task;
+
+   task body Consumer_Task is
+      mem         : Memory_Pointer;
+      spacing     : Time_Type;
+      done        : Boolean := False;
+   begin
+      accept Initialize(m : in Memory_Pointer;
+                        s : in Time_Type) do
+         mem := m;
+         spacing := s;
+      end Initialize;
+      while not done loop
+         select
+            accept Process(data : in Memory_Access) do
+               case data.t is
+                  when Read   =>
+                     Read(mem.all, data.value);
+                  when Write  =>
+                     Write(mem.all, data.value);
+                  when Idle   =>
+                     Idle(mem.all, Time_Type(data.value));
+               end case;
+               Idle(mem.all, spacing);
+            end Process;
+         or
+            accept Stop do
+               done := True;
+            end Stop;
+         end select;
+      end loop;
+   end Consumer_Task;
+
    function Create_Trace return Benchmark_Pointer is
    begin
       return new Trace_Type;
@@ -72,8 +110,10 @@ package body Benchmark.Trace is
    end Set_Argument;
 
    procedure Run(benchmark : in out Trace_Type) is
-      file : Character_IO.File_Type;
+      file     : Character_IO.File_Type;
+      consumer : Consumer_Task;
    begin
+      consumer.Initialize(benchmark.mem, benchmark.spacing);
       Character_IO.Open(File => file,
                         Mode => Character_IO.In_File,
                         Name => To_String(benchmark.file_name));
@@ -81,22 +121,16 @@ package body Benchmark.Trace is
          declare
             data : constant Memory_Access := Read_Access(file);
          begin
-            case data.t is
-               when Read   =>
-                  Read(benchmark.mem.all, data.value);
-               when Write  =>
-                  Write(benchmark.mem.all, data.value);
-               when Idle   =>
-                  Idle(benchmark, Time_Type(data.value));
-            end case;
+            consumer.Process(data);
          end;
-         Idle(benchmark, benchmark.spacing);
       end loop;
    exception
       when Character_IO.Name_Error =>
          Put_Line("error: could not open " & To_String(benchmark.file_name));
+         consumer.Stop;
       when Character_IO.End_Error =>
          Character_IO.Close(file);
+         consumer.Stop;
    end Run;
 
 end Benchmark.Trace;

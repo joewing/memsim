@@ -15,6 +15,8 @@ package Benchmark.Trace is
 
    type Trace_Type is new Benchmark_Type with private;
 
+   type Trace_Pointer is access all Trace_Type'Class;
+
    function Create_Trace return Benchmark_Pointer;
 
    procedure Set_Argument(benchmark : in out Trace_Type;
