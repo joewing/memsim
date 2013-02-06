@@ -14,7 +14,8 @@ package body Memory.Prefetch is
    end Create_Prefetch;
 
    procedure Read(mem      : in out Prefetch_Type;
-                  address  : Address_Type) is
+                  address  : in Address_Type;
+                  size     : in Positive) is
       cycles : Time_Type;
    begin
 
@@ -23,7 +24,7 @@ package body Memory.Prefetch is
 
       -- Fetch the requested address.
       Start(mem.mem.all);
-      Read(mem.mem.all, address);
+      Read(mem.mem.all, address, size);
       Commit(mem.mem.all, cycles);
 
       -- Prefetch the next address and save the time needed for the fetch.
@@ -32,7 +33,7 @@ package body Memory.Prefetch is
       begin
          next_address := address * mem.multiplier + mem.stride;
          Start(mem.mem.all);
-         Read(mem.mem.all, next_address);
+         Read(mem.mem.all, next_address, 1);
          Commit(mem.mem.all, mem.pending);
       end;
 
@@ -42,7 +43,8 @@ package body Memory.Prefetch is
    end Read;
 
    procedure Write(mem     : in out Prefetch_Type;
-                   address : Address_Type) is
+                   address : in Address_Type;
+                   size    : in Positive) is
       cycles : Time_Type;
    begin
 
@@ -51,7 +53,7 @@ package body Memory.Prefetch is
 
       -- Write the requested address.
       Start(mem.mem.all);
-      Write(mem.mem.all, address);
+      Write(mem.mem.all, address, size);
       Commit(mem.mem.all, cycles);
 
       -- Update the time.

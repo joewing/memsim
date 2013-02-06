@@ -20,10 +20,12 @@ package Memory is
                     cycles : out Time_Type);
 
    procedure Read(mem      : in out Memory_Type;
-                  address  : in Address_Type) is abstract;
+                  address  : in Address_Type;
+                  size     : in Positive) is abstract;
 
    procedure Write(mem     : in out Memory_Type;
-                   address : in Address_Type) is abstract;
+                   address : in Address_Type;
+                   size    : in Positive) is abstract;
 
    procedure Idle(mem      : in out Memory_Type;
                   cycles   : in Time_Type);

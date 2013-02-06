@@ -48,23 +48,25 @@ package body Memory.Bank is
    end Commit;
 
    procedure Read(mem      : in out Bank_Type;
-                  address  : in Address_Type) is
+                  address  : in Address_Type;
+                  size     : in Positive) is
       data     : constant Bank_Data := Get_Data(mem, address);
       cycles   : Time_Type;
    begin
       Start(data.mem.all);
-      Read(data.mem.all, address);
+      Read(data.mem.all, address, size);
       Commit(data.mem.all, cycles);
       Advance(mem, cycles);
    end Read;
 
    procedure Write(mem     : in out Bank_Type;
-                   address : in Address_Type) is
+                   address : in Address_Type;
+                   size    : in Positive) is
       data     : constant Bank_Data := Get_Data(mem, address);
       cycles   : Time_Type;
    begin
       Start(data.mem.all);
-      Write(data.mem.all, address);
+      Write(data.mem.all, address, size);
       Commit(data.mem.all, cycles);
       Advance(mem, cycles);
    end Write;

@@ -50,19 +50,21 @@ package body Memory.Dup is
    end Commit;
 
    procedure Read(mem      : in out Dup_Type;
-                  address  : in Address_Type) is
+                  address  : in Address_Type;
+                  size     : in Positive) is
    begin
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop
-         Read(mem.memories.Element(i).all, address);
+         Read(mem.memories.Element(i).all, address, size);
       end loop;
       Update_Time(mem);
    end Read;
 
    procedure Write(mem     : in out Dup_Type;
-                   address : in Address_Type) is
+                   address : in Address_Type;
+                   size    : in Positive) is
    begin
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop
-         Write(mem.memories.Element(i).all, address);
+         Write(mem.memories.Element(i).all, address, size);
       end loop;
       Update_Time(mem);
    end Write;

@@ -46,7 +46,7 @@ package body Benchmark is
    function Read(benchmark : Benchmark_Type'Class;
                  address   : Natural) return Integer is
    begin
-      Memory.Read(benchmark.mem.all, Memory.Address_Type(address));
+      Memory.Read(benchmark.mem.all, Memory.Address_Type(address), 4);
       return benchmark.data.Element(address);
    end Read;
 
@@ -54,7 +54,7 @@ package body Benchmark is
                    address    : in Natural;
                    value      : in Integer) is
    begin
-      Memory.Write(benchmark.mem.all, Memory.Address_Type(address));
+      Memory.Write(benchmark.mem.all, Memory.Address_Type(address), 4);
       if Count_Type(address) >= benchmark.data.Length then
          benchmark.data.Set_Length(Count_Type(address + 1));
       end if;

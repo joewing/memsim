@@ -12,11 +12,13 @@ package Memory.Prefetch is
 
    overriding
    procedure Read(mem      : in out Prefetch_Type;
-                  address  : in Address_Type);
+                  address  : in Address_Type;
+                  size     : in Positive);
 
    overriding
    procedure Write(mem     : in out Prefetch_Type;
-                   address : in Address_Type);
+                   address : in Address_Type;
+                   size    : in Positive);
 
    overriding
    procedure Idle(mem      : in out Prefetch_Type;

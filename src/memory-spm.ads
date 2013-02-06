@@ -11,11 +11,13 @@ package Memory.SPM is
 
    overriding
    procedure Read(mem      : in out SPM_Type;
-                  address  : in Address_Type);
+                  address  : in Address_Type;
+                  size     : in Positive);
 
    overriding
    procedure Write(mem     : in out SPM_Type;
-                   address : in Address_Type);
+                   address : in Address_Type;
+                   size    : in Positive);
 
 private
 

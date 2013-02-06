@@ -18,11 +18,13 @@ package Memory.Bank is
 
    overriding
    procedure Read(mem      : in out Bank_Type;
-                  address  : in Address_Type);
+                  address  : in Address_Type;
+                  size     : in Positive);
 
    overriding
    procedure Write(mem     : in out Bank_Type;
-                   address : in Address_Type);
+                   address : in Address_Type;
+                   size    : in Positive);
 
    overriding
    procedure Idle(mem      : in out Bank_Type;

@@ -5,7 +5,7 @@ package body Memory.Cache is
 
    function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
-                         line_size     : Positive := 1;
+                         line_size     : Positive := 8;
                          associativity : Positive := 1;
                          latency       : Time_Type := 1)
                          return Cache_Pointer is
@@ -93,7 +93,8 @@ package body Memory.Cache is
       if data.dirty then
          Start(mem.mem.all);
          for i in 0 .. mem.line_size - 1 loop
-            Write(mem.mem.all, data.address + Address_Type(i));
+            Write(mem.mem.all, data.address + Address_Type(i),
+                  mem.line_size);
          end loop;
          Commit(mem.mem.all, cycles);
          data.dirty := False;
@@ -108,7 +109,8 @@ package body Memory.Cache is
                          := data.address + Address_Type(i);
          begin
             if is_read or full_address /= address then
-               Read(mem.mem.all, data.address + Address_Type(i));
+               Read(mem.mem.all, data.address + Address_Type(i),
+                    mem.line_size);
             end if;
          end;
       end loop;
@@ -122,15 +124,23 @@ package body Memory.Cache is
    end Get_Data;
 
    procedure Read(mem      : in out Cache_Type;
-                  address  : in Address_Type) is
+                  address  : in Address_Type;
+                  size     : in Positive) is
+      extra : constant Positive := size / mem.line_size;
    begin
-      Get_Data(mem, address, True);
+      for i in 0 .. extra loop
+         Get_Data(mem, address + Address_Type(i * mem.line_size), True);
+      end loop;
    end Read;
 
    procedure Write(mem     : in out Cache_Type;
-                   address : in Address_Type) is
+                   address : in Address_Type;
+                   size    : in Positive) is
+      extra : constant Positive := size / mem.line_size;
    begin
-      Get_Data(mem, address, False);
+      for i in 0 .. extra loop
+         Get_Data(mem, address + Address_Type(i * mem.line_size), False);
+      end loop;
    end Write;
 
    procedure Show_Access_Stats(mem : in Cache_Type) is

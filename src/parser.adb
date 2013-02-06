@@ -52,6 +52,7 @@ package body Parser is
                        result : out Memory_Pointer) is
 
       latency     : Time_Type := 1;
+      word_size   : Positive  := 8;
 
    begin
       while Get_Type(lexer) = Open loop
@@ -66,6 +67,8 @@ package body Parser is
                Match(lexer, Literal);
                if name = "latency" then
                   latency := Time_Type'Value(value);
+               elsif name = "word_size" then
+                  word_size := Positive'Value(value);
                else
                   Raise_Error(lexer, "invalid ram attribute: " & value);
                end if;
@@ -73,7 +76,7 @@ package body Parser is
          end;
          Match(lexer, Close);
       end loop;
-      result := Memory_Pointer(RAM.Create_RAM(latency));
+      result := Memory_Pointer(RAM.Create_RAM(latency, word_size));
    exception
       when Data_Error =>
          Raise_Error(lexer, "invalid value in ram");

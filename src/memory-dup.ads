@@ -19,11 +19,13 @@ package Memory.Dup is
 
    overriding
    procedure Read(mem      : in out Dup_Type;
-                  address  : in Address_Type);
+                  address  : in Address_Type;
+                  size     : in Positive);
 
    overriding
    procedure Write(mem     : in out Dup_Type;
-                   address : in Address_Type);
+                   address : in Address_Type;
+                   size    : in Positive);
 
    overriding
    procedure Idle(mem      : in out Dup_Type;

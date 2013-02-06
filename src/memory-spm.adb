@@ -13,25 +13,47 @@ package body Memory.SPM is
    end Create_SPM;
 
    procedure Read(mem      : in out SPM_Type;
-                  address  : in Address_Type) is
+                  address  : in Address_Type;
+                  size     : in Positive) is
       cycles : Time_Type := mem.latency;
    begin
       if address >= Address_Type(mem.size) then
          Start(mem.mem.all);
-         Read(mem.mem.all, address);
+         Read(mem.mem.all, address, size);
          Commit(mem.mem.all, cycles);
+      elsif address + Address_Type(size) > Address_Type(mem.size) then
+         declare
+            naddr : constant Address_Type := Address_Type(mem.size);
+            diff  : constant Address_Type := naddr - address;
+            nsize : constant Positive := mem.size - Positive(diff);
+         begin
+            Start(mem.mem.all);
+            Read(mem.mem.all, naddr, nsize);
+            Commit(mem.mem.all, cycles);
+         end;
       end if;
       Advance(mem, cycles);
    end Read;
 
    procedure Write(mem     : in out SPM_Type;
-                   address : in Address_Type) is
+                   address : in Address_Type;
+                   size    : in Positive) is
       cycles : Time_Type := mem.latency;
    begin
       if address >= Address_Type(mem.size) then
          Start(mem.mem.all);
-         Write(mem.mem.all, address);
+         Write(mem.mem.all, address, size);
          Commit(mem.mem.all, cycles);
+      elsif address + Address_Type(size) > Address_Type(mem.size) then
+         declare
+            naddr : constant Address_Type := Address_Type(mem.size);
+            diff  : constant Address_Type := naddr - address;
+            nsize : constant Positive := mem.size - Positive(diff);
+         begin
+            Start(mem.mem.all);
+            Write(mem.mem.all, naddr, nsize);
+            Commit(mem.mem.all, cycles);
+         end;
       end if;
       Advance(mem, cycles);
    end Write;

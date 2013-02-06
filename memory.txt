@@ -3,7 +3,7 @@
 ;
 (dup
    (stats
-      (prefetch (stride 1) (multiplier 1)
+      (prefetch (stride 0) (multiplier 2)
          (memory
             (cache (latency 1) (associativity 1) (line_count 4) (line_size 1)
                (memory

@@ -46,12 +46,13 @@ package body Memory.Stats is
    end Process;
 
    procedure Read(mem      : in out Stats_Type;
-                  address  : in Address_Type) is
+                  address  : in Address_Type;
+                  size     : in Positive) is
       cycles : Time_Type := 0;
    begin
       if mem.mem /= null then
          Start(mem.mem.all);
-         Read(mem.mem.all, address);
+         Read(mem.mem.all, address, size);
          Commit(mem.mem.all, cycles);
          Advance(mem, cycles);
       end if;
@@ -60,12 +61,13 @@ package body Memory.Stats is
    end Read;
 
    procedure Write(mem     : in out Stats_Type;
-                   address : in Address_Type) is
+                   address : in Address_Type;
+                   size    : in Positive) is
       cycles : Time_Type := 0;
    begin
       if mem.mem /= null then
          Start(mem.mem.all);
-         Write(mem.mem.all, address);
+         Write(mem.mem.all, address, size);
          Commit(mem.mem.all, cycles);
          Advance(mem, cycles);
       end if;
@@ -81,8 +83,8 @@ package body Memory.Stats is
       Put_Line("    Reads:   " & Long_Integer'Image(mem.reads));
       Put_Line("    Writes:  " & Long_Integer'Image(mem.writes));
       Put_Line("    Accesses:" & Long_Integer'Image(mem.reads + mem.writes));
-      mem.addresses.Show("    Addresses");
-      mem.strides.Show("   Strides");
+      mem.addresses.Show  ("    Addresses");
+      mem.strides.Show    ("   Strides");
       mem.multipliers.Show("   Multipliers");
    end Show_Access_Stats;
 

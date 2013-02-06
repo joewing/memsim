@@ -11,7 +11,7 @@ package body Benchmark.Trace is
    type Memory_Access is record
       t     : Access_Type;
       value : Address_Type;
-      size  : Address_Type;
+      size  : Natural;
    end record;
 
    task type Consumer_Task is
@@ -34,16 +34,14 @@ package body Benchmark.Trace is
       while not done loop
          select
             accept Process(data : in Memory_Access) do
-               for i in 0 .. data.size - 1 loop
-                  case data.t is
-                     when Read   =>
-                        Read(mem.all, data.value + i);
-                     when Write  =>
-                        Write(mem.all, data.value + i);
-                     when Idle   =>
-                        Idle(mem.all, Time_Type(data.value));
-                  end case;
-               end loop;
+               case data.t is
+                  when Read   =>
+                     Read(mem.all, data.value, data.size);
+                  when Write  =>
+                     Write(mem.all, data.value, data.size);
+                  when Idle   =>
+                     Idle(mem.all, Time_Type(data.value));
+               end case;
                Idle(mem.all, spacing);
             end Process;
          or
@@ -118,7 +116,7 @@ package body Benchmark.Trace is
          loop
             Character_IO.Read(file, ch);
             exit when not Is_Address(ch);
-            result.size := result.size * 16 + To_Address(ch);
+            result.size := result.size * 16 + Natural(To_Address(ch));
          end loop;
       else
          result.size := 1;

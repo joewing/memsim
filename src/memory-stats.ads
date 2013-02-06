@@ -11,11 +11,13 @@ package Memory.Stats is
 
    overriding
    procedure Read(mem      : in out Stats_Type;
-                  address  : in Address_Type);
+                  address  : in Address_Type;
+                  size     : in Positive);
 
    overriding
    procedure Write(mem     : in out Stats_Type;
-                   address : in Address_Type);
+                   address : in Address_Type;
+                   size    : in Positive);
 
 private
 

@@ -7,17 +7,19 @@ package Memory.Cache is
 
    function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
-                         line_size     : Positive := 1;
+                         line_size     : Positive := 8;
                          associativity : Positive := 1;
                          latency       : Time_Type := 1) return Cache_Pointer;
 
    overriding
    procedure Read(mem      : in out Cache_Type;
-                  address  : in Address_Type);
+                  address  : in Address_Type;
+                  size     : in Positive);
 
    overriding
    procedure Write(mem     : in out Cache_Type;
-                   address : in Address_Type);
+                   address : in Address_Type;
+                   size    : in Positive);
 
 private
 
@@ -32,7 +34,7 @@ private
    package Cache_Vectors is new Vectors(Natural, Cache_Data_Pointer);
 
    type Cache_Type is new Memory_Type with record
-      line_size      : Positive := 1;
+      line_size      : Positive := 8;
       line_count     : Positive := 1;
       associativity  : Positive := 1;
       latency        : Time_Type := 1;
