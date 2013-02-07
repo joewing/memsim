@@ -7,10 +7,11 @@ package body Histograms is
    procedure Increment(hist   : in out Histogram_Type;
                        key    : in Key_Type) is
       value : Long_Integer := 1;
+      pos   : constant Histogram_Maps.Cursor := hist.data.Find(key);
    begin
-      if hist.data.Contains(key) then
+      if Histogram_Maps.Has_Element(pos) then
          value := hist.data.Element(key) + 1;
-         hist.data.Replace(key, value);
+         hist.data.Replace_Element(pos, value);
       else
          hist.data.Insert(key, value);
       end if;
