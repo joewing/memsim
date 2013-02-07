@@ -18,20 +18,18 @@ package body Benchmark.Trace is
       entry Initialize(m : in Memory_Pointer;
                        s : in Time_Type);
       entry Process(data : in Memory_Access);
-      entry Stop;
    end Consumer_Task;
 
    task body Consumer_Task is
       mem         : Memory_Pointer;
       spacing     : Time_Type;
-      done        : Boolean := False;
    begin
       accept Initialize(m : in Memory_Pointer;
                         s : in Time_Type) do
          mem := m;
          spacing := s;
       end Initialize;
-      while not done loop
+      loop
          select
             accept Process(data : in Memory_Access) do
                case data.t is
@@ -45,9 +43,7 @@ package body Benchmark.Trace is
                Idle(mem.all, spacing);
             end Process;
          or
-            accept Stop do
-               done := True;
-            end Stop;
+            terminate;
          end select;
       end loop;
    end Consumer_Task;
@@ -127,13 +123,12 @@ package body Benchmark.Trace is
 
    procedure Set_Argument(benchmark : in out Trace_Type;
                           arg       : in String) is
+      value : constant String := Extract_Argument(arg);
    begin
       if Check_Argument(arg, "file") then
-         benchmark.file_name := To_Unbounded_String(Extract_Argument(arg));
-      elsif Check_Argument(arg, "spacing") then
-         benchmark.spacing := Time_Type'Value(Extract_Argument(arg));
+         benchmark.file_name := To_Unbounded_String(value);
       else
-         raise Invalid_Argument;
+         Set_Argument(Benchmark_Type(benchmark), arg);
       end if;
    exception
       when others =>
@@ -158,10 +153,8 @@ package body Benchmark.Trace is
    exception
       when Character_IO.Name_Error =>
          Put_Line("error: could not open " & To_String(benchmark.file_name));
-         consumer.Stop;
       when Character_IO.End_Error =>
          Character_IO.Close(file);
-         consumer.Stop;
    end Run;
 
 end Benchmark.Trace;

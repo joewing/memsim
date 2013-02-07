@@ -86,7 +86,6 @@ package body Memory.Dup is
          begin
             Put(Integer'Image(i) & ": ");
             Show_Stats(other.all);
-            Show_Access_Stats(other.all);
          end;
       end loop;
    end Show_Stats;

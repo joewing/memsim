@@ -12,8 +12,16 @@ package body Benchmark is
 
    procedure Set_Argument(benchmark : in out Benchmark_Type;
                           arg       : in String) is
+      value : constant String := Extract_Argument(arg);
    begin
-      raise Invalid_Argument;
+      if Check_Argument(arg, "spacing") then
+         benchmark.spacing := Time_Type'Value(value);
+      else
+         raise Invalid_Argument;
+      end if;
+   exception
+      when others =>
+         raise Invalid_Argument;
    end Set_Argument;
 
    function Check_Argument(arg   : String;
@@ -46,7 +54,8 @@ package body Benchmark is
    function Read(benchmark : Benchmark_Type'Class;
                  address   : Natural) return Integer is
    begin
-      Memory.Read(benchmark.mem.all, Memory.Address_Type(address), 4);
+      Memory.Read(benchmark.mem.all, Memory.Address_Type(address * 4), 4);
+      Memory.Idle(benchmark.mem.all, benchmark.spacing);
       return benchmark.data.Element(address);
    end Read;
 
@@ -54,18 +63,13 @@ package body Benchmark is
                    address    : in Natural;
                    value      : in Integer) is
    begin
-      Memory.Write(benchmark.mem.all, Memory.Address_Type(address), 4);
+      Memory.Write(benchmark.mem.all, Memory.Address_Type(address * 4), 4);
+      Memory.Idle(benchmark.mem.all, benchmark.spacing);
       if Count_Type(address) >= benchmark.data.Length then
          benchmark.data.Set_Length(Count_Type(address + 1));
       end if;
       benchmark.data.Replace_Element(address, value);
    end Write;
-
-   procedure Idle(benchmark   : in out Benchmark_Type'Class;
-                  cycles      : in Time_Type) is
-   begin
-      Memory.Idle(benchmark.mem.all, cycles);
-   end Idle;
 
    procedure Deallocate is
       new Ada.Unchecked_Deallocation(Benchmark_Type'Class, Benchmark_Pointer);

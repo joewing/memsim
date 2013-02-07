@@ -1,0 +1,7 @@
+(prefetch (stride 8) (multiplier 1)
+   (memory
+      (cache (line_size 8) (line_count 256) (associativity 1)
+         (memory (ram (word_size 8) (latency 100)))
+      )
+   )
+)

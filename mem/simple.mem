@@ -1,1 +1,1 @@
-(ram (latency 100))
+(ram (word_size 8) (latency 100))

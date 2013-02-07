@@ -37,13 +37,17 @@ procedure Main is
    end BM_Entry;
 
    benchmark_map : constant Benchmark_Info_Array := (
-      BM_Entry("hash", "[size=1024] [iterations=1000]",
+      BM_Entry("hash",
+               "[size=1024] [iterations=1000] [spacing=100]",
                Benchmark.Hash.Create_Hash'Access),
-      BM_Entry("heap", "[size=1024] [iterations=1000]",
+      BM_Entry("heap",
+               "[size=1024] [iterations=1000] [spacing=100]",
                Benchmark.Heap.Create_Heap'Access),
-      BM_Entry("stride", "[size=1024] [iterations=1000] [stride=1]",
+      BM_Entry("stride",
+               "[size=1024] [iterations=1000] [stride=1] [spacing=100]",
                Benchmark.Stride.Create_Stride'Access),
-      BM_Entry("trace", "[file=trace.txt] [spacing=0]",
+      BM_Entry("trace",
+               "[file=trace.txt] [spacing=100]",
                Benchmark.Trace.Create_Trace'Access)
    );
 

@@ -50,6 +50,7 @@ package body Memory.Prefetch is
 
       -- Add any time left from the last prefetch.
       Advance(mem, mem.pending);
+      mem.pending := 0;
 
       -- Write the requested address.
       Start(mem.mem.all);
@@ -69,6 +70,7 @@ package body Memory.Prefetch is
       else
          mem.pending := mem.pending - cycles;
       end if;
+      Advance(mem, cycles);
    end Idle;
 
    procedure Show_Access_Stats(mem : in Prefetch_Type) is

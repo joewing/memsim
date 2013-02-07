@@ -126,7 +126,7 @@ package body Memory.Cache is
    procedure Read(mem      : in out Cache_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      extra : constant Positive := size / mem.line_size;
+      extra : constant Natural := size / mem.line_size;
    begin
       for i in 0 .. extra loop
          Get_Data(mem, address + Address_Type(i * mem.line_size), True);
@@ -136,7 +136,7 @@ package body Memory.Cache is
    procedure Write(mem     : in out Cache_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      extra : constant Positive := size / mem.line_size;
+      extra : constant Natural := size / mem.line_size;
    begin
       for i in 0 .. extra loop
          Get_Data(mem, address + Address_Type(i * mem.line_size), False);

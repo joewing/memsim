@@ -97,13 +97,14 @@ package body Benchmark.Heap is
 
    procedure Set_Argument(benchmark : in out Heap_Type;
                           arg       : in String) is
+      value : constant String := Extract_Argument(arg);
    begin
       if Check_Argument(arg, "size") then
-         benchmark.size := Positive'Value(Extract_Argument(arg));
+         benchmark.size := Positive'Value(value);
       elsif Check_Argument(arg, "iterations") then
-         benchmark.iterations := Positive'Value(Extract_Argument(arg));
+         benchmark.iterations := Positive'Value(value);
       else
-         raise Invalid_Argument;
+         Set_Argument(Benchmark_Type(benchmark), arg);
       end if;
    exception
       when others =>

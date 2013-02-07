@@ -28,7 +28,6 @@ private
 
    type Trace_Type is new Benchmark_Type with record
       file_name   : Unbounded_String := To_Unbounded_String("trace.txt");
-      spacing     : Time_Type        := 0;
    end record;
 
 end Benchmark.Trace;

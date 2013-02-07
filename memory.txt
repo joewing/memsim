@@ -5,11 +5,13 @@
    (stats
       (prefetch (stride 0) (multiplier 2)
          (memory
-            (cache (latency 1) (associativity 1) (line_count 4) (line_size 1)
+            (cache (latency 1) (associativity 1) (line_count 4) (line_size 8)
                (memory
                   (bank
-                     ((key 0) (mask 1) (memory (ram (latency 100))))
-                     ((key 1) (mask 1) (memory (ram (latency 100))))
+                     ((key 0) (mask 1)
+                        (memory (ram (word_size 8) (latency 100))))
+                     ((key 1) (mask 1)
+                        (memory (ram (word_size 8) (latency 100))))
                   )
                )
             )

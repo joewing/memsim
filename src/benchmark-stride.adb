@@ -8,15 +8,16 @@ package body Benchmark.Stride is
 
    procedure Set_Argument(benchmark : in out Stride_Type;
                           arg       : in String) is
+      value : constant String := Extract_Argument(arg);
    begin
       if Check_Argument(arg, "size") then
-         benchmark.size := Positive'Value(Extract_Argument(arg));
+         benchmark.size := Positive'Value(value);
       elsif Check_Argument(arg, "stride") then
-         benchmark.stride := Integer'Value(Extract_Argument(arg));
+         benchmark.stride := Integer'Value(value);
       elsif Check_Argument(arg, "iterations") then
-         benchmark.iterations := Positive'Value(Extract_Argument(arg));
+         benchmark.iterations := Positive'Value(value);
       else
-         raise Invalid_Argument;
+         Set_Argument(Benchmark_Type(benchmark), arg);
       end if;
    exception
       when others =>
@@ -33,7 +34,7 @@ package body Benchmark.Stride is
       for i in 1 .. benchmark.iterations loop
          for offset in 0 .. benchmark.size - 1 loop
             declare
-               temp : constant Integer := Read(benchmark, offset) + 1;
+               temp   : constant Integer := Read(benchmark, offset) + 1;
             begin
                Write(benchmark, offset, temp);
             end;

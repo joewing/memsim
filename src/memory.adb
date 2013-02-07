@@ -32,7 +32,7 @@ package body Memory is
    procedure Show_Stats(mem : in Memory_Type) is
    begin
       Put_Line("Time:" & Time_Type'Image(mem.time) & " cycles");
-      Show_Access_Stats(mem);
+      Show_Access_Stats(Memory_Type'Class(mem));
    end Show_Stats;
 
    procedure Deallocate is

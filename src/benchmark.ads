@@ -36,6 +36,7 @@ private
       generator   : Random.Generator;
       mem         : Memory.Memory_Pointer;
       data        : Data_Vectors.Vector;
+      spacing     : Time_Type := 100;
    end record;
 
    function Check_Argument(arg   : String;
@@ -51,8 +52,5 @@ private
    procedure Write(benchmark  : in out Benchmark_Type'Class;
                    address    : in Natural;
                    value      : in Integer);
-
-   procedure Idle(benchmark   : in out Benchmark_Type'Class;
-                  cycles      : in Time_Type);
 
 end Benchmark;
