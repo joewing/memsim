@@ -85,6 +85,7 @@ following memory packages are available:
  - *Memory.Trace*: A memory to write a memory access trace.
  - *Memory.Transform*: Base class for memory address transformers.
  - *Memory.Transform.Offset*: Transform memory addresses by an offset.
+ - *Memory.Transform.Shift*: Transform memory addresses by shifting.
 
 The following benchmark packages are available:
 
