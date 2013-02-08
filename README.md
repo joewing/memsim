@@ -9,10 +9,10 @@ This is a memory simulator to determine how long memory access take.
 Running memsim with no arguments will show its usage:
 
 <pre>
-usage: ./memsim <memory> <benchmark> [<options>]
+usage: ./memsim \<memory\> \<benchmark\> [\<options\>]
 benchmarks:
-  hash [size=1024] [iterations=1000\] [spacing=100]
-  heap [size=1024] [iterations=1000\] [spacing=100]
+  hash [size=1024] [iterations=1000] [spacing=100]
+  heap [size=1024] [iterations=1000] [spacing=100]
   stride [size=1024] [iterations=1000] [stride=1] [spacing=100]
   trace [file=trace.txt] [spacing=100]
 </pre>
@@ -22,10 +22,7 @@ s-expressions.  For example, a simple cached memory would look as follows:
 
 <pre>
 (cache (latency 1) (line_size 8) (line_count 1024) (associativity 4)
-   (memory
-      (ram (latency 100))
-   )
-)
+   (memory (ram (latency 100))))
 </pre>
 
 See the *mem* subdirectory for more examples.
@@ -53,7 +50,8 @@ idle time.  The format of a read is:
 
 <pre>R[address]:[size]</pre>
 
-The format of a write is:
+Where \[address\] is the address in hexadecimal and \[size\] is the size
+of the memory access in hexadecimal.  Likewise, the format of a write is:
 
 <pre>W[address]:[size]</pre>
 
@@ -61,17 +59,16 @@ Finally, the format of idle time is:
 
 <pre>I[cycles]</pre>
 
-All values are hexadecimal.
+Where \[cycles\] is the number of cycles in hexadecimal.
 
 Building
 ------------------------------------------------------------------------------
-Simply run 'make'.
-
+Assuming GNAT is installed, simply run 'make'.
 
 Implementation
 ------------------------------------------------------------------------------
 
-memsim is implemented in Ada.  There are two main package hierarchies:
+memsim is implemented in Ada 2005.  There are two main package hierarchies:
 the *Memory* package and the *Benchmark* package.  The *Parser* package
 (which uses the *Lexer* package) is used to build up memories.  The
 following memory packages are available:
