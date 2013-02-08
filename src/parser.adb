@@ -25,6 +25,12 @@ package body Parser is
    procedure Parse_Stats(lexer   : in out Lexer_Type;
                          result  : out Memory_Pointer) is separate;
 
+   procedure Parse_Trace(lexer   : in out Lexer_Type;
+                         result  : out Memory_Pointer) is separate;
+
+   procedure Parse_Transform(lexer  : in out Lexer_Type;
+                             result : out Memory_Pointer) is separate;
+
    type Memory_Parser_Type is record
       name     : Unbounded_String;
       parser   : access procedure(lexer   : in out Lexer_Type;
@@ -40,7 +46,9 @@ package body Parser is
       (To_Unbounded_String("ram"),        Parse_RAM'Access),
       (To_Unbounded_String("stats"),      Parse_Stats'Access),
       (To_Unbounded_String("spm"),        Parse_SPM'Access),
-      (To_Unbounded_String("dup"),        Parse_Dup'Access)
+      (To_Unbounded_String("dup"),        Parse_Dup'Access),
+      (To_Unbounded_String("transform"),  Parse_Transform'Access),
+      (To_Unbounded_String("trace"),      Parse_Trace'Access)
    );
 
    procedure Parse_Memory(lexer  : in out Lexer_Type;

@@ -38,7 +38,7 @@ begin
                elsif name = "latency" then
                   latency := Time_Type'Value(value);
                else
-                  Raise_Error(lexer, "invalid cache attribute: " & value);
+                  Raise_Error(lexer, "invalid cache attribute: " & name);
                end if;
             end;
          end if;

@@ -34,7 +34,8 @@ package body Memory.Stats is
    end Compute_Stride;
 
    procedure Process(mem      : in out Stats_Type;
-                     address  : in Address_Type) is
+                     address  : in Address_Type;
+                     size     : in Positive) is
       stride : constant Integer := Compute_Stride(mem.last_address, address);
       mult   : constant Integer := Compute_Multiple(mem.last_stride, stride);
    begin
@@ -43,6 +44,12 @@ package body Memory.Stats is
       mem.multipliers.Increment(mult);
       mem.last_address  := address;
       mem.last_stride   := stride;
+      if address < mem.min_address then
+         mem.min_address := address;
+      end if;
+      if address + Address_Type(size) > mem.max_address then
+         mem.max_address := address + Address_Type(size);
+      end if;
    end Process;
 
    procedure Read(mem      : in out Stats_Type;
@@ -57,7 +64,7 @@ package body Memory.Stats is
          Advance(mem, cycles);
       end if;
       mem.reads := mem.reads + 1;
-      Process(mem, address);
+      Process(mem, address, size);
    end Read;
 
    procedure Write(mem     : in out Stats_Type;
@@ -72,7 +79,7 @@ package body Memory.Stats is
          Advance(mem, cycles);
       end if;
       mem.writes := mem.writes + 1;
-      Process(mem, address);
+      Process(mem, address, size);
    end Write;
 
    procedure Show_Access_Stats(mem : in Stats_Type) is
@@ -80,9 +87,10 @@ package body Memory.Stats is
       if mem.mem /= null then
          Show_Access_Stats(mem.mem.all);
       end if;
-      Put_Line("    Reads:   " & Long_Integer'Image(mem.reads));
-      Put_Line("    Writes:  " & Long_Integer'Image(mem.writes));
-      Put_Line("    Accesses:" & Long_Integer'Image(mem.reads + mem.writes));
+      Put_Line("    Reads:      " & Long_Integer'Image(mem.reads));
+      Put_Line("    Writes:     " & Long_Integer'Image(mem.writes));
+      Put_Line("    Min Address:" & Address_Type'Image(mem.min_address));
+      Put_Line("    Max Address:" & Address_Type'Image(mem.max_address));
       mem.addresses.Show  ("    Addresses");
       mem.strides.Show    ("   Strides");
       mem.multipliers.Show("   Multipliers");
