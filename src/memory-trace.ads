@@ -34,4 +34,10 @@ private
       mem : Memory_Pointer;
    end record;
 
+   overriding
+   procedure Show_Access_Stats(mem : in Trace_Type);
+
+   overriding
+   procedure Finalize(mem : in out Trace_Type);
+
 end Memory.Trace;

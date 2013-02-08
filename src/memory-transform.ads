@@ -34,4 +34,10 @@ private
       mem   : access Memory_Type'Class;
    end record;
 
+   overriding
+   procedure Show_Access_Stats(mem : in Transform_Type);
+
+   overriding
+   procedure Finalize(mem : in out Transform_Type);
+
 end Memory.Transform;

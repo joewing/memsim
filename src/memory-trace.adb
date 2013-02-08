@@ -87,4 +87,18 @@ package body Memory.Trace is
       end if;
    end Idle;
 
+   procedure Show_Access_Stats(mem : in Trace_Type) is
+   begin
+      if mem.mem /= null then
+         Show_Access_Stats(mem.mem.all);
+      end if;
+   end Show_Access_Stats;
+
+   procedure Finalize(mem : in out Trace_Type) is
+   begin
+      if mem.mem /= null then
+         Destroy(Memory_Pointer(mem.mem));
+      end if;
+   end Finalize;
+
 end Memory.Trace;

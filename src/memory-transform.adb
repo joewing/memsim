@@ -66,4 +66,14 @@ package body Memory.Transform is
       mem.time := mem.mem.time;
    end Idle;
 
+   procedure Show_Access_Stats(mem : in Transform_Type) is
+   begin
+      Show_Access_Stats(mem.mem.all);
+   end Show_Access_Stats;
+
+   procedure Finalize(mem : in out Transform_Type) is
+   begin
+      Destroy(Memory_Pointer(mem.mem));
+   end Finalize;
+
 end Memory.Transform;
