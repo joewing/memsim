@@ -209,9 +209,10 @@ package body Benchmark.Trace is
       sdata    : Stream_Buffer_Pointer;
       total    : Long_Integer := 0;
       pool     : Buffer_Pool_Pointer := new Buffer_Pool_Type;
+      consumer : Consumer_Type;
    begin
       pool.Initialize;
-      benchmark.consumer.Initialize(benchmark.mem,
+      consumer.Initialize(benchmark.mem,
                                     pool,
                                     benchmark.spacing);
       Stream_IO.Open(File => file,
@@ -227,7 +228,7 @@ package body Benchmark.Trace is
          total := total + Long_Integer(sdata.last - sdata.buffer'First + 1);
          Put_Line("Read" & Long_Integer'Image(total) & " bytes");
          sdata.pos := sdata.buffer'First;
-         benchmark.consumer.Process(sdata);
+         consumer.Process(sdata);
       end loop;
    exception
       when Ada.Streams.Stream_IO.End_Error =>

@@ -62,7 +62,6 @@ private
 
    type Trace_Type is new Benchmark_Type with record
       file_name   : Unbounded_String := To_Unbounded_String("trace.txt");
-      consumer    : Consumer_Type;
    end record;
 
 end Benchmark.Trace;
