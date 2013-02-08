@@ -9,7 +9,7 @@ This is a memory simulator to determine how long memory access take.
 Running memsim with no arguments will show its usage:
 
 <pre>
-usage: ./memsim \<memory\> \<benchmark\> [\<options\>]
+usage: ./memsim &lt;memory&gt; &lt;benchmark&gt; [&lt;options&gt;]
 benchmarks:
   hash [size=1024] [iterations=1000] [spacing=100]
   heap [size=1024] [iterations=1000] [spacing=100]
@@ -48,18 +48,19 @@ For the trace benchmark, the trace file contains sequences of memory
 access actions.  There are three types of actions: reads, writes, and
 idle time.  The format of a read is:
 
-<pre>R[address]:[size]</pre>
+<pre>R&lt;address&gt;:&lt;size&gt;</pre>
 
-Where \[address\] is the address in hexadecimal and \[size\] is the size
-of the memory access in hexadecimal.  Likewise, the format of a write is:
+Where &lt;address&gt; is the address in hexadecimal and &lt;size&gt;
+is the size of the memory access in hexadecimal.
+Likewise, the format of a write is:
 
-<pre>W[address]:[size]</pre>
+<pre>W&lt;address&gt;:&lt;size&gt;</pre>
 
 Finally, the format of idle time is:
 
-<pre>I[cycles]</pre>
+<pre>I&lt;cycles&gt;</pre>
 
-Where \[cycles\] is the number of cycles in hexadecimal.
+Where &lt;cycles&gt; is the number of cycles in hexadecimal.
 
 Building
 ------------------------------------------------------------------------------
