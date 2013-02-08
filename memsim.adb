@@ -10,7 +10,7 @@ with Benchmark.Trace;
 with Benchmark.Stride;
 with Benchmark.Hash;
 
-procedure Main is
+procedure MemSim is
 
    mem   : Memory_Pointer := null;
    bm    : Benchmark.Benchmark_Pointer := null;
@@ -106,5 +106,5 @@ begin
    Destroy(bm);
    Destroy(mem);
 
-end Main;
+end MemSim;
 

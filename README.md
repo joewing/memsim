@@ -2,10 +2,79 @@
 Memory Simulator
 ==============================================================================
 
-This is a library to simulate memory hierarchies to determine how long
-memory access take.
+Usage
+------------------------------------------------------------------------------
 
-Currently, the following memory packages are available:
+This is a memory simulator to determine how long memory access take.
+Running memsim with no arguments will show its usage:
+
+<pre>
+usage: ./memsim <memory> <benchmark> [<options>]
+benchmarks:
+  hash [size=1024] [iterations=1000\] [spacing=100]
+  heap [size=1024] [iterations=1000\] [spacing=100]
+  stride [size=1024] [iterations=1000] [stride=1] [spacing=100]
+  trace [file=trace.txt] [spacing=100]
+</pre>
+
+The memory is a memory description.  Memories are specified using
+s-expressions.  For example, a simple cached memory would look as follows:
+
+<pre>
+(cache (latency 1) (line_size 8) (line_count 1024) (associativity 4)
+   (memory
+      (ram (latency 100))
+   )
+)
+</pre>
+
+See the *mem* subdirectory for more examples.
+
+The following benchmarks are available:
+
+ - *hash*: A benchmark to generate random 4-byte memory accesses.
+ - *heap*: A benchmark to perform random insertions and deletions of
+   4-byte items in a full binary heap.
+ - *stride*: A benchmark to perform strided 4-byte memory accesses.
+ - *trace*: A benchmark to execute a memory access trace.
+
+The optional arguments are shown above for each benchmark with defaults.
+The arguments are:
+
+ - *size*: The number of items in the data structure.
+ - *iterations*: The number of iterations to perform.
+ - *spacing*: The number of cycles to insert between each memory access.
+ - *stride*: The stride size in 4-byte words for the *stride* benchmark.
+ - *file*: The name of the file to open for the *trace* benchmark.
+
+For the trace benchmark, the trace file contains sequences of memory
+access actions.  There are three types of actions: reads, writes, and
+idle time.  The format of a read is:
+
+<pre>R[address]:[size]</pre>
+
+The format of a write is:
+
+<pre>W[address]:[size]</pre>
+
+Finally, the format of idle time is:
+
+<pre>I[cycles]</pre>
+
+All values are hexadecimal.
+
+Building
+------------------------------------------------------------------------------
+Simply run 'make'.
+
+
+Implementation
+------------------------------------------------------------------------------
+
+memsim is implemented in Ada.  There are two main package hierarchies:
+the *Memory* package and the *Benchmark* package.  The *Parser* package
+(which uses the *Lexer* package) is used to build up memories.  The
+following memory packages are available:
 
  - *Memory*: The base package.
  - *Memory.Bank*: A memory bank which can contain multiple memories.
@@ -16,29 +85,14 @@ Currently, the following memory packages are available:
  - *Memory.SPM*: A scratchpad memory.
  - *Memory.Stats*: A memory to track memory access statistics.
  - *Memory.Trace*: A memory to write a memory access trace.
+ - *Memory.Transform*: Base class for memory address transformers.
  - *Memory.Transform.Offset*: Transform memory addresses by an offset.
 
-The following benchmarks are available:
+The following benchmark packages are available:
 
  - *Benchmark* The base package.
  - *Benchmark.Hash* A benchmark to generate random memory accesses.
  - *Benchmark.Heap* A benchmark to perform operations on a binary heap.
  - *Benchmark.Trace* A benchmark to process a memory trace.
  - *Benchmark.Stride* A benchmark to generate strided memory accesses.
-
-The *Parser* package can be used to parse a file containing a memory
-description and create a memory.
-After constructing a memory hierarchy, a benchmark package is used
-to use the memory.
-
-For the trace benchmark, sequences of memory access actions separated by
-new lines.  The format of each line is:
-
-   *action* *value*[:*size*]
-
-where *action* is 'R' for read, 'W' for write, and 'I' for idle.
-For reads and writes, *value* is a hexadecimal value indicating the
-address and *size* is the size of the read or write.  For idle actions,
-*value* is the number of idle cycles (there is no size for idle actions).
-Idle is used to insert processing time.
 
