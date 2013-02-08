@@ -1,7 +1,7 @@
 
 with Ada.Text_IO;                use Ada.Text_IO;
-with Ada.Streams.Stream_IO;      use Ada.Streams;
 with Ada.Exceptions;             use Ada.Exceptions;
+with Ada.Streams.Stream_IO;
 with Ada.Unchecked_Deallocation;
 
 package body Benchmark.Trace is
@@ -14,59 +14,94 @@ package body Benchmark.Trace is
       size  : Natural;
    end record;
 
-   Buffer_Size : constant := 2 ** 22;
+   type Parse_State_Type is (State_Action,
+                             State_Pre_Address,
+                             State_Address,
+                             State_Pre_Size,
+                             State_Size);
 
-   type Stream_Data is record
-      file     : Stream_IO.File_Type;
-      buffer   : Stream_Element_Array(1 .. Buffer_Size);
-      pos      : Stream_Element_Offset := Stream_Element_Offset'Last;
-      last     : Stream_Element_Offset := Stream_Element_Offset'First;
-      total    : Long_Integer := 0;
-   end record;
+   procedure Destroy is new Ada.Unchecked_Deallocation(Stream_Buffer_Type,
+                                                       Stream_Buffer_Pointer);
 
-   type Stream_Data_Pointer is access Stream_Data;
+   procedure Destroy is new Ada.Unchecked_Deallocation(Buffer_Pool_Type,
+                                                       Buffer_Pool_Pointer);
 
-   procedure Destroy is new Ada.Unchecked_Deallocation(Stream_Data,
-                                                       Stream_Data_Pointer);
+   procedure Parse_Action(mem       : in Memory_Pointer;
+                          spacing   : in Time_Type;
+                          data      : in Stream_Buffer_Pointer;
+                          mdata     : in out Memory_Access;
+                          state     : in out Parse_State_Type);
 
-   task type Consumer_Task is
-      entry Initialize(m : in Memory_Pointer;
-                       s : in Time_Type);
-      entry Process(data : in Memory_Access);
-   end Consumer_Task;
+   protected body Buffer_Pool_Type is
 
-   task body Consumer_Task is
+      entry Initialize when True is
+      begin
+         for i in buffers'Range loop
+            buffers(i) := new Stream_Buffer_Type;
+            available := available + 1;
+         end loop;
+      end Initialize;
+
+      entry Destroy when available = buffers'Length is
+      begin
+         for i in buffers'Range loop
+            Destroy(buffers(i));
+         end loop;
+      end Destroy;
+
+      entry Allocate(sd : out Stream_Buffer_Pointer) when available > 0 is
+      begin
+         for i in buffers'Range loop
+            if buffers(i) /= null then
+               sd := buffers(i);
+               buffers(i) := null;
+               available := available - 1;
+               return;
+            end if;
+         end loop;
+         sd := null;
+      end Allocate;
+
+      entry Release(sd : in Stream_Buffer_Pointer) when True is
+      begin
+         for i in buffers'Range loop
+            if buffers(i) = null then
+               buffers(i) := sd;
+               available := available + 1;
+               exit;
+            end if;
+         end loop;
+      end Release;
+
+   end Buffer_Pool_Type;
+
+   task body Consumer_Type is
+      pool        : Buffer_Pool_Pointer;
+      mdata       : Memory_Access;
+      state       : Parse_State_Type := State_Action;
       mem         : Memory_Pointer;
       spacing     : Time_Type;
+      buffer      : Stream_Buffer_Pointer;
    begin
       accept Initialize(m : in Memory_Pointer;
+                        p : in Buffer_Pool_Pointer;
                         s : in Time_Type) do
          mem := m;
+         pool := p;
          spacing := s;
       end Initialize;
       loop
          select
-            accept Process(data : in Memory_Access) do
-               case data.t is
-                  when Read   =>
-                     Read(mem.all, data.value, data.size);
-                  when Write  =>
-                     Write(mem.all, data.value, data.size);
-                  when Idle   =>
-                     Idle(mem.all, Time_Type(data.value));
-               end case;
-               Idle(mem.all, spacing);
+            accept Process(b : in Stream_Buffer_Pointer) do
+               buffer := b;
             end Process;
+            Parse_Action(mem, spacing, buffer, mdata, state);
+            pool.Release(buffer);
          or
             terminate;
          end select;
       end loop;
-   end Consumer_Task;
-
-   function Create_Trace return Benchmark_Pointer is
-   begin
-      return new Trace_Type;
-   end Create_Trace;
+   end Consumer_Type;
 
    function To_Address(ch : Character) return Address_Type is
       pos : constant Integer := Character'Pos(ch);
@@ -80,72 +115,80 @@ package body Benchmark.Trace is
       end if;
    end To_Address;
 
-   procedure Get_Character(sdata : in Stream_Data_Pointer;
-                           ch    : out Character) is
+   procedure Process_Action(mem     : in Memory_Pointer;
+                            spacing : in Time_Type;
+                            mdata   : in Memory_Access) is
    begin
-      if sdata.pos > sdata.last then
-         Stream_IO.Read(sdata.file, sdata.buffer, sdata.last);
-         if sdata.last < sdata.buffer'First then
-            raise Stream_IO.End_Error;
-         end if;
-         sdata.total := sdata.total
-                      + Long_Integer(sdata.last - sdata.buffer'First + 1);
-         Put_Line("Read" & Long_Integer'Image(sdata.total) & " bytes");
-         sdata.pos := sdata.buffer'First;
-      end if;
-      ch := Character'Val(sdata.buffer(sdata.pos));
-      sdata.pos := sdata.pos + 1;
-   end Get_Character;
-
-   procedure Read_Access(sdata   : in Stream_Data_Pointer;
-                         result  : out Memory_Access) is
-      ch : Character := '?';
-   begin
-
-      -- Determine if this is a read or a write.
-      loop
-         exit when ch = 'R' or ch = 'W' or ch = 'I';
-         Get_Character(sdata, ch);
-      end loop;
-      case ch is
-         when 'R'    => result.t := Read;
-         when 'W'    => result.t := Write;
-         when others => result.t := Idle;
+      case mdata.t is
+         when Read   =>
+            Read(mem.all, mdata.value, mdata.size);
+         when Write  =>
+            Write(mem.all, mdata.value, mdata.size);
+         when Idle   =>
+            Idle(mem.all, Time_Type(mdata.value));
       end case;
+      Idle(mem.all, spacing);
+   end Process_Action;
 
-      -- Read the address/time.
-      loop
-         Get_Character(sdata, ch);
-         result.value := To_Address(ch);
-         exit when result.value < 16;
+   procedure Parse_Action(mem       : in Memory_Pointer;
+                          spacing   : in Time_Type;
+                          data      : in Stream_Buffer_Pointer;
+                          mdata     : in out Memory_Access;
+                          state     : in out Parse_State_Type) is
+
+      value : Address_Type;
+      ch    : Character;
+
+   begin
+      while data.last >= data.pos loop
+         ch := Character'Val(data.buffer(data.pos));
+         case state is
+            when State_Action =>
+               state := State_Pre_Address;
+               case ch is
+                  when 'R'    => mdata.t := Read;
+                  when 'W'    => mdata.t := Write;
+                  when 'I'    => mdata.t := Idle;
+                  when others => state := State_Action;
+               end case;
+            when State_Pre_Address =>
+               mdata.value := To_Address(ch);
+               if mdata.value < 16 then
+                  state := State_Address;
+               end if;
+            when State_Address =>
+               value := To_Address(ch);
+               if value < 16 then
+                  mdata.value := mdata.value * 16 + value;
+               elsif mdata.t = Idle then
+                  mdata.size := 1;
+                  state := State_Action;
+                  Process_Action(mem, spacing, mdata);
+               else
+                  state := State_Pre_Size;
+               end if;
+            when State_Pre_Size =>
+               mdata.size := Natural(To_Address(ch));
+               if mdata.size < 16 then
+                  state := State_Size;
+               end if;
+            when State_Size =>
+               value := To_Address(ch);
+               if value < 16 then
+                  mdata.size := mdata.size * 16 + Natural(value);
+               else
+                  state := State_Action;
+                  Process_Action(mem, spacing, mdata);
+               end if;
+         end case;
+         data.pos := data.pos + 1;
       end loop;
-      loop
-         Get_Character(sdata, ch);
-         declare
-            temp : constant Address_Type := To_Address(ch);
-         begin
-            exit when temp >= 16;
-            result.value := result.value * 16 + temp;
-         end;
-      end loop;
+   end Parse_Action;
 
-      -- Read the size if a read or write.
-      if result.t = Read or result.t = Write then
-         result.size := 0;
-         loop
-            Get_Character(sdata, ch);
-            declare
-               temp : constant Natural := Natural(To_Address(ch));
-            begin
-               exit when temp >= 16;
-               result.size := result.size * 16 + temp;
-            end;
-         end loop;
-      else
-         result.size := 1;
-      end if;
-
-   end Read_Access;
+   function Create_Trace return Benchmark_Pointer is
+   begin
+      return new Trace_Type;
+   end Create_Trace;
 
    procedure Set_Argument(benchmark : in out Trace_Type;
                           arg       : in String) is
@@ -162,27 +205,41 @@ package body Benchmark.Trace is
    end Set_Argument;
 
    procedure Run(benchmark : in out Trace_Type) is
-      consumer : Consumer_Task;
-      sdata    : Stream_Data_Pointer := new Stream_Data;
-      mdata    : Memory_Access;
+      file     : Stream_IO.File_Type;
+      sdata    : Stream_Buffer_Pointer;
+      total    : Long_Integer := 0;
+      pool     : Buffer_Pool_Pointer := new Buffer_Pool_Type;
    begin
-      consumer.Initialize(benchmark.mem, benchmark.spacing);
-      Stream_IO.Open(File => sdata.file,
+      pool.Initialize;
+      benchmark.consumer.Initialize(benchmark.mem,
+                                    pool,
+                                    benchmark.spacing);
+      Stream_IO.Open(File => file,
                      Mode => Stream_IO.In_File,
                      Name => To_String(benchmark.file_name));
       loop
-         Read_Access(sdata, mdata);
-         consumer.Process(mdata);
+         pool.Allocate(sdata);
+         Stream_IO.Read(file, sdata.buffer, sdata.last);
+         if sdata.last < sdata.buffer'First then
+            pool.Release(sdata);
+            raise Stream_IO.End_Error;
+         end if;
+         total := total + Long_Integer(sdata.last - sdata.buffer'First + 1);
+         Put_Line("Read" & Long_Integer'Image(total) & " bytes");
+         sdata.pos := sdata.buffer'First;
+         benchmark.consumer.Process(sdata);
       end loop;
    exception
       when Ada.Streams.Stream_IO.End_Error =>
-         Stream_IO.Close(sdata.file);
-         Destroy(sdata);
+         Stream_IO.Close(file);
+         pool.Destroy;
+         Destroy(pool);
       when ex: others =>
-         Put_Line("error: could not open " & To_String(benchmark.file_name) &
-                  ": " & Exception_Message(ex));
-         Stream_IO.Close(sdata.file);
-         Destroy(sdata);
+         Put_Line("error: could not read " & To_String(benchmark.file_name) &
+                  ": " & Exception_Name(ex) & ": " & Exception_Message(ex));
+         Stream_IO.Close(file);
+         pool.Destroy;
+         Destroy(pool);
    end Run;
 
 end Benchmark.Trace;

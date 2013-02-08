@@ -1,5 +1,6 @@
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Streams;           use Ada.Streams;
 
 package Benchmark.Trace is
 
@@ -26,8 +27,42 @@ package Benchmark.Trace is
 
 private
 
+   Buffer_Size    : constant := 2 ** 24;
+   Buffer_Count   : constant := 2;
+
+   type Stream_Buffer_Type is record
+      buffer   : Stream_Element_Array(1 .. Buffer_Size);
+      pos      : Stream_Element_Offset := Stream_Element_Offset'Last;
+      last     : Stream_Element_Offset := Stream_Element_Offset'First;
+   end record;
+
+   type Stream_Buffer_Pointer is access all Stream_Buffer_Type;
+
+   type Stream_Buffer_Array is
+      array(1 .. Buffer_Count) of Stream_Buffer_Pointer;
+
+   protected type Buffer_Pool_Type is
+      entry Initialize;
+      entry Allocate(sd : out Stream_Buffer_Pointer);
+      entry Release(sd  : in Stream_Buffer_Pointer);
+      entry Destroy;
+   private
+      available   : Natural;
+      buffers     : Stream_Buffer_Array;
+   end Buffer_Pool_Type;
+
+   type Buffer_Pool_Pointer is access all Buffer_Pool_Type;
+
+   task type Consumer_Type is
+      entry Initialize(m : in Memory_Pointer;
+                       p : in Buffer_Pool_Pointer;
+                       s : in Time_Type);
+      entry Process(b : in Stream_Buffer_Pointer);
+   end Consumer_Type;
+
    type Trace_Type is new Benchmark_Type with record
       file_name   : Unbounded_String := To_Unbounded_String("trace.txt");
+      consumer    : Consumer_Type;
    end record;
 
 end Benchmark.Trace;
