@@ -36,9 +36,9 @@ package body Benchmark.Trace is
 
       entry Initialize when True is
       begin
+         available := buffers'Length;
          for i in buffers'Range loop
             buffers(i) := new Stream_Buffer_Type;
-            available := available + 1;
          end loop;
       end Initialize;
 
