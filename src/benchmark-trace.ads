@@ -42,9 +42,9 @@ private
       array(1 .. Buffer_Count) of Stream_Buffer_Pointer;
 
    protected type Buffer_Pool_Type is
-      entry Initialize;
+      procedure Initialize;
       entry Allocate(sd : out Stream_Buffer_Pointer);
-      entry Release(sd  : in Stream_Buffer_Pointer);
+      procedure Release(sd  : in Stream_Buffer_Pointer);
       entry Destroy;
    private
       available   : Natural;

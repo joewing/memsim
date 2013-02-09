@@ -34,7 +34,7 @@ package body Benchmark.Trace is
 
    protected body Buffer_Pool_Type is
 
-      entry Initialize when True is
+      procedure Initialize is
       begin
          available := buffers'Length;
          for i in buffers'Range loop
@@ -62,7 +62,7 @@ package body Benchmark.Trace is
          sd := null;
       end Allocate;
 
-      entry Release(sd : in Stream_Buffer_Pointer) when True is
+      procedure Release(sd : in Stream_Buffer_Pointer) is
       begin
          for i in buffers'Range loop
             if buffers(i) = null then
