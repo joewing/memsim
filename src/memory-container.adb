@@ -52,6 +52,8 @@ package body Memory.Container is
       if mem.mem /= null then
          Idle(mem.mem.all, cycles);
          mem.time := mem.mem.time;
+      else
+         Advance(mem, cycles);
       end if;
    end Idle;
 

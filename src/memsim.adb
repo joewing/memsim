@@ -47,7 +47,7 @@ procedure MemSim is
                "[size=1024] [iterations=1000] [stride=1] [spacing=100]",
                Benchmark.Stride.Create_Stride'Access),
       BM_Entry("trace",
-               "[file=trace.txt] [spacing=100]",
+               "[file=trace.txt] [spacing=0]",
                Benchmark.Trace.Create_Trace'Access)
    );
 

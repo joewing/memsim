@@ -127,7 +127,9 @@ package body Benchmark.Trace is
          when Idle   =>
             Idle(mem.all, Time_Type(mdata.value));
       end case;
-      Idle(mem.all, spacing);
+      if spacing > 0 then
+         Idle(mem.all, spacing);
+      end if;
    end Process_Action;
 
    procedure Parse_Action(mem       : in Memory_Pointer;
@@ -151,43 +153,50 @@ package body Benchmark.Trace is
                   when 'I'    => mdata.t := Idle;
                   when others => state := State_Action;
                end case;
+               data.pos := data.pos + 1;
             when State_Pre_Address =>
                mdata.value := To_Address(ch);
                if mdata.value < 16 then
                   state := State_Address;
                end if;
+               data.pos := data.pos + 1;
             when State_Address =>
                value := To_Address(ch);
                if value < 16 then
                   mdata.value := mdata.value * 16 + value;
+                  data.pos := data.pos + 1;
                elsif mdata.t = Idle then
                   mdata.size := 1;
                   state := State_Action;
                   Process_Action(mem, spacing, mdata);
                else
                   state := State_Pre_Size;
+                  data.pos := data.pos + 1;
                end if;
             when State_Pre_Size =>
                mdata.size := Natural(To_Address(ch));
                if mdata.size < 16 then
                   state := State_Size;
                end if;
+               data.pos := data.pos + 1;
             when State_Size =>
                value := To_Address(ch);
                if value < 16 then
                   mdata.size := mdata.size * 16 + Natural(value);
+                  data.pos := data.pos + 1;
                else
                   state := State_Action;
                   Process_Action(mem, spacing, mdata);
                end if;
          end case;
-         data.pos := data.pos + 1;
       end loop;
    end Parse_Action;
 
    function Create_Trace return Benchmark_Pointer is
+      result : constant Trace_Pointer := new Trace_Type;
    begin
-      return new Trace_Type;
+      result.spacing := 0;
+      return Benchmark_Pointer(result);
    end Create_Trace;
 
    procedure Set_Argument(benchmark : in out Trace_Type;
