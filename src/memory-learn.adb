@@ -7,29 +7,12 @@ package body Memory.Learn is
                          return Learn_Pointer is
       result : constant Learn_Pointer := new Learn_Type;
    begin
-      result.mem := mem;
+      Set_Memory(result.all, mem);
       for i in result.parameters'Range loop
          result.parameters(i) := 0.5;
       end loop;
       return result;
    end Create_Learn;
-
-   procedure Start(mem : in out Learn_Type) is
-   begin
-      if mem.mem /= null then
-         Start(mem.mem.all);
-         mem.time := mem.mem.time;
-      end if;
-   end Start;
-
-   procedure Commit(mem    : in out Learn_Type;
-                    cycles : out Time_Type) is
-   begin
-      if mem.mem /= null then
-         Commit(mem.mem.all, cycles);
-         mem.time := mem.mem.time;
-      end if;
-   end Commit;
 
    function Get_Expected(mem     : in Learn_Type;
                          address : in Address_Type) return Address_Type is
@@ -82,10 +65,7 @@ package body Memory.Learn is
                   address  : in Address_Type;
                   size     : in Positive) is
    begin
-      if mem.mem /= null then
-         Read(mem.mem.all, address, size);
-         mem.time := mem.mem.time;
-      end if;
+      Read(Container_Type(mem), address, size);
       Update_Parameters(mem, address);
    end Read;
 
@@ -93,27 +73,13 @@ package body Memory.Learn is
                    address : in Address_Type;
                    size    : in Positive) is
    begin
-      if mem.mem /= null then
-         Write(mem.mem.all, address, size);
-         mem.time := mem.mem.time;
-      end if;
+      Write(Container_Type(mem), address, size);
       Update_Parameters(mem, address);
    end Write;
 
-   procedure Idle(mem      : in out Learn_Type;
-                  cycles   : in Time_Type) is
-   begin
-      if mem.mem /= null then
-         Idle(mem.mem.all, cycles);
-         mem.time := mem.mem.time;
-      end if;
-   end Idle;
-
    procedure Show_Access_Stats(mem : in Learn_Type) is
    begin
-      if mem.mem /= null then
-         Show_Access_Stats(mem.mem.all);
-      end if;
+      Show_Access_Stats(Container_Type(mem));
       Put_Line("Parameters:");
       for i in mem.parameters'Range loop
          Put_Line(Natural'Image(i) & ":" & Float'Image(mem.parameters(i)));

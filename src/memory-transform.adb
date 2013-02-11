@@ -1,19 +1,6 @@
 
 package body Memory.Transform is
 
-   procedure Start(mem : in out Transform_Type) is
-   begin
-      Start(mem.mem.all);
-      mem.time := mem.mem.time;
-   end Start;
-
-   procedure Commit(mem    : in out Transform_Type;
-                    cycles : out Time_Type) is
-   begin
-      Commit(mem.mem.all, cycles);
-      mem.time := mem.mem.time;
-   end Commit;
-
    procedure Process(mem      : in out Transform_Type;
                      address  : in Address_Type;
                      size     : in Address_Type;
@@ -32,9 +19,9 @@ package body Memory.Transform is
                nsize : constant Natural := Natural(address + offset - start);
             begin
                if is_write then
-                  Write(mem.mem.all, transformed, nsize);
+                  Write(Container_Type(mem), transformed, nsize);
                else
-                  Read(mem.mem.all, transformed, nsize);
+                  Read(Container_Type(mem), transformed, nsize);
                end if;
                start := address + offset;
                transformed := temp;
@@ -42,7 +29,6 @@ package body Memory.Transform is
          end if;
          offset := offset + 1;
       end loop;
-      mem.time := mem.mem.time;
    end Process;
 
    procedure Read(mem      : in out Transform_Type;
@@ -58,22 +44,5 @@ package body Memory.Transform is
    begin
       Process(mem, address, Address_Type(size), True);
    end Write;
-
-   procedure Idle(mem      : in out Transform_Type;
-                  cycles   : in Time_Type) is
-   begin
-      Idle(mem.mem.all, cycles);
-      mem.time := mem.mem.time;
-   end Idle;
-
-   procedure Show_Access_Stats(mem : in Transform_Type) is
-   begin
-      Show_Access_Stats(mem.mem.all);
-   end Show_Access_Stats;
-
-   procedure Finalize(mem : in out Transform_Type) is
-   begin
-      Destroy(Memory_Pointer(mem.mem));
-   end Finalize;
 
 end Memory.Transform;

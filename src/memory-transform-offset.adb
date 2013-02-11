@@ -5,7 +5,7 @@ package body Memory.Transform.Offset is
                           offset : Integer) return Offset_Pointer is
       result : constant Offset_Pointer := new Offset_Type;
    begin
-      result.mem := mem;
+      Set_Memory(result.all, mem);
       if offset < 0 then
          result.offset := 0 - Address_Type(-offset);
       else

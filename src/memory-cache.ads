@@ -21,6 +21,12 @@ package Memory.Cache is
                    address : in Address_Type;
                    size    : in Positive);
 
+   overriding
+   procedure Show_Access_Stats(mem : in Cache_Type);
+
+   overriding
+   procedure Finalize(mem : in out Cache_Type);
+
 private
 
    type Cache_Data is record
@@ -42,11 +48,4 @@ private
       mem            : access Memory_Type'Class;
    end record;
 
-   overriding
-   procedure Show_Access_Stats(mem : in Cache_Type);
-
-   overriding
-   procedure Finalize(mem : in out Cache_Type);
-
 end Memory.Cache;
-

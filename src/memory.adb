@@ -35,6 +35,17 @@ package body Memory is
       Show_Access_Stats(Memory_Type'Class(mem));
    end Show_Stats;
 
+   procedure Show_Access_Stats(mem : in Memory_Type) is
+   begin
+      null;
+   end Show_Access_Stats;
+
+   procedure Advance(mem      : in out Memory_Type'Class;
+                     cycles   : in Time_Type) is
+   begin
+      mem.time := mem.time + cycles;
+   end Advance;
+
    procedure Deallocate is
       new Ada.Unchecked_Deallocation(Memory_Type'Class, Memory_Pointer);
 
@@ -45,16 +56,4 @@ package body Memory is
       end if;
    end Destroy;
 
-   procedure Advance(mem      : in out Memory_Type;
-                     cycles   : in Time_Type) is
-   begin
-      mem.time := mem.time + cycles;
-   end Advance;
-
-   procedure Show_Access_Stats(mem : in Memory_Type) is
-   begin
-      null;
-   end Show_Access_Stats;
-
 end Memory;
-

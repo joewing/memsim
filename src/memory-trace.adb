@@ -6,28 +6,9 @@ package body Memory.Trace is
    function Create_Trace(mem : Memory_Pointer) return Trace_Pointer is
       result : constant Trace_Pointer := new Trace_Type;
    begin
-      result.mem := mem;
+      Set_Memory(result.all, mem);
       return result;
    end Create_Trace;
-
-   procedure Start(mem : in out Trace_Type) is
-   begin
-      if mem.mem /= null then
-         Start(mem.mem.all);
-         mem.time := mem.mem.time;
-      end if;
-   end Start;
-
-   procedure Commit(mem    : in out Trace_Type;
-                    cycles : out Time_Type) is
-   begin
-      if mem.mem /= null then
-         Commit(mem.mem.all, cycles);
-         mem.time := mem.mem.time;
-      else
-         cycles := 0;
-      end if;
-   end Commit;
 
    function Get_Hex(value : Address_Type) return String is
       result   : String(1 .. 16);
@@ -53,10 +34,7 @@ package body Memory.Trace is
 
    begin
       Put_Line("R" & astr & ":" & sstr);
-      if mem.mem /= null then
-         Read(mem.mem.all, address, size);
-         mem.time := mem.mem.time;
-      end if;
+      Read(Container_Type(mem), address, size);
    end Read;
 
    procedure Write(mem     : in out Trace_Type;
@@ -68,10 +46,7 @@ package body Memory.Trace is
 
    begin
       Put_Line("W" & astr & ":" & sstr);
-      if mem.mem /= null then
-         Write(mem.mem.all, address, size);
-         mem.time := mem.mem.time;
-      end if;
+      Write(Container_Type(mem), address, size);
    end Write;
 
    procedure Idle(mem      : in out Trace_Type;
@@ -81,24 +56,7 @@ package body Memory.Trace is
 
    begin
       Put_Line("I" & cstr);
-      if mem.mem /= null then
-         Idle(mem.mem.all, cycles);
-         mem.time := mem.mem.time;
-      end if;
+      Idle(Container_Type(mem), cycles);
    end Idle;
-
-   procedure Show_Access_Stats(mem : in Trace_Type) is
-   begin
-      if mem.mem /= null then
-         Show_Access_Stats(mem.mem.all);
-      end if;
-   end Show_Access_Stats;
-
-   procedure Finalize(mem : in out Trace_Type) is
-   begin
-      if mem.mem /= null then
-         Destroy(Memory_Pointer(mem.mem));
-      end if;
-   end Finalize;
 
 end Memory.Trace;

@@ -1,18 +1,13 @@
 
+with Memory.Container; use Memory.Container;
+
 package Memory.Trace is
 
-   type Trace_Type is new Memory_Type with private;
+   type Trace_Type is new Container_Type with private;
 
    type Trace_Pointer is access all Trace_Type'Class;
 
    function Create_Trace(mem : Memory_Pointer) return Trace_Pointer;
-
-   overriding
-   procedure Start(mem : in out Trace_Type);
-
-   overriding
-   procedure Commit(mem    : in out Trace_Type;
-                    cycles : out Time_Type);
 
    overriding
    procedure Read(mem      : in out Trace_Type;
@@ -30,14 +25,6 @@ package Memory.Trace is
 
 private
 
-   type Trace_Type is new Memory_Type with record
-      mem : Memory_Pointer;
-   end record;
-
-   overriding
-   procedure Show_Access_Stats(mem : in Trace_Type);
-
-   overriding
-   procedure Finalize(mem : in out Trace_Type);
+   type Trace_Type is new Container_Type with null record;
 
 end Memory.Trace;

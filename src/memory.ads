@@ -34,6 +34,8 @@ package Memory is
 
    procedure Show_Stats(mem : in Memory_Type);
 
+   procedure Show_Access_Stats(mem : in Memory_Type);
+
    procedure Destroy(mem : in out Memory_Pointer);
 
 private
@@ -45,10 +47,7 @@ private
       time           : Time_Type := 0;
    end record;
 
-   procedure Show_Access_Stats(mem : in Memory_Type);
-
-   procedure Advance(mem      : in out Memory_Type;
+   procedure Advance(mem      : in out Memory_Type'Class;
                      cycles   : in Time_Type);
 
 end Memory;
-

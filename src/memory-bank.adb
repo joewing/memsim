@@ -6,6 +6,15 @@ package body Memory.Bank is
       return new Bank_Type;
    end Create_Bank;
 
+   procedure Add_Bank(mem  : in out Bank_Type'Class;
+                      bank : access Memory_Type'Class;
+                      key  : in Address_Type;
+                      mask : in Address_Type) is
+      data : constant Bank_Data := Bank_Data'(bank, key, mask);
+   begin
+      mem.banks.Append(data);
+   end Add_Bank;
+
    function Get_Data(mem      : Bank_Type;
                      address  : Address_Type) return Bank_Data is
       data : Bank_Data;
@@ -86,15 +95,6 @@ package body Memory.Bank is
          Show_Access_Stats(mem.banks.Element(i).mem.all);
       end loop;
    end Show_Access_Stats;
-
-   procedure Add_Bank(mem  : in out Bank_Type;
-                      bank : access Memory_Type'Class;
-                      key  : in Address_Type;
-                      mask : in Address_Type) is
-      data : constant Bank_Data := Bank_Data'(bank, key, mask);
-   begin
-      mem.banks.Append(data);
-   end Add_Bank;
 
    procedure Finalize(mem : in out Bank_Type) is
       data : Bank_Data;

@@ -9,7 +9,7 @@ package body Memory.Stats is
                         return Stats_Pointer is
       result : constant Stats_Pointer := new Stats_Type;
    begin
-      result.mem := mem;
+      Set_Memory(result.all, mem);
       return result;
    end Create_Stats;
 
@@ -55,14 +55,8 @@ package body Memory.Stats is
    procedure Read(mem      : in out Stats_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      cycles : Time_Type := 0;
    begin
-      if mem.mem /= null then
-         Start(mem.mem.all);
-         Read(mem.mem.all, address, size);
-         Commit(mem.mem.all, cycles);
-         Advance(mem, cycles);
-      end if;
+      Read(Container_Type(mem), address, size);
       mem.reads := mem.reads + 1;
       Process(mem, address, size);
    end Read;
@@ -70,23 +64,15 @@ package body Memory.Stats is
    procedure Write(mem     : in out Stats_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      cycles : Time_Type := 0;
    begin
-      if mem.mem /= null then
-         Start(mem.mem.all);
-         Write(mem.mem.all, address, size);
-         Commit(mem.mem.all, cycles);
-         Advance(mem, cycles);
-      end if;
+      Write(Container_Type(mem), address, size);
       mem.writes := mem.writes + 1;
       Process(mem, address, size);
    end Write;
 
    procedure Show_Access_Stats(mem : in Stats_Type) is
    begin
-      if mem.mem /= null then
-         Show_Access_Stats(mem.mem.all);
-      end if;
+      Show_Access_Stats(Container_Type(mem));
       Put_Line("    Reads:      " & Long_Integer'Image(mem.reads));
       Put_Line("    Writes:     " & Long_Integer'Image(mem.writes));
       Put_Line("    Min Address:" & Address_Type'Image(mem.min_address));
@@ -95,12 +81,5 @@ package body Memory.Stats is
       mem.strides.Show    ("   Strides");
       mem.multipliers.Show("   Multipliers");
    end Show_Access_Stats;
-
-   procedure Finalize(mem : in out Stats_Type) is
-   begin
-      if mem.mem /= null then
-         Destroy(Memory_Pointer(mem.mem));
-      end if;
-   end Finalize;
 
 end Memory.Stats;

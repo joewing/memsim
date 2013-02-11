@@ -1,9 +1,10 @@
 
 with Histograms;
+with Memory.Container; use Memory.Container;
 
 package Memory.Stats is
 
-   type Stats_Type is new Memory_Type with private;
+   type Stats_Type is new Container_Type with private;
 
    type Stats_Pointer is access all Stats_Type'Class;
 
@@ -19,13 +20,15 @@ package Memory.Stats is
                    address : in Address_Type;
                    size    : in Positive);
 
+   overriding
+   procedure Show_Access_Stats(mem : in Stats_Type);
+
 private
 
    package Address_Histograms is new Histograms(Address_Type);
    package Stride_Histograms is new Histograms(Integer);
 
-   type Stats_Type is new Memory_Type with record
-      mem            : access Memory_Type'Class := null;
+   type Stats_Type is new Container_Type with record
       last_address   : Address_Type := 0;
       last_stride    : Integer := 0;
       reads          : Long_Integer := 0;
@@ -36,11 +39,5 @@ private
       strides        : Stride_Histograms.Histogram_Type;
       multipliers    : Stride_Histograms.Histogram_Type;
    end record;
-
-   overriding
-   procedure Show_Access_Stats(mem : in Stats_Type);
-
-   overriding
-   procedure Finalize(mem : in out Stats_Type);
 
 end Memory.Stats;

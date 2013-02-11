@@ -5,12 +5,12 @@ package body Memory.Transform.Shift is
                          shift   : Integer) return Shift_Pointer is
       result : constant Shift_Pointer := new Shift_Type;
    begin
+      Set_Memory(result.all, mem);
       if shift < 0 then
          result.shift := Natural(Address_Type'Size + shift);
       else
          result.shift := Natural(shift);
       end if;
-      result.mem := mem;
       return result;
    end Create_Shift;
 

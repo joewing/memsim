@@ -9,6 +9,11 @@ package Memory.Bank is
 
    function Create_Bank return Bank_Pointer;
 
+   procedure Add_Bank(mem  : in out Bank_Type'Class;
+                      bank : access Memory_Type'Class;
+                      key  : in Address_Type;
+                      mask : in Address_Type);
+
    overriding
    procedure Start(mem : in out Bank_Type);
 
@@ -30,10 +35,11 @@ package Memory.Bank is
    procedure Idle(mem      : in out Bank_Type;
                   cycles   : in Time_Type);
 
-   procedure Add_Bank(mem  : in out Bank_Type;
-                      bank : access Memory_Type'Class;
-                      key  : in Address_Type;
-                      mask : in Address_Type);
+   overriding
+   procedure Show_Access_Stats(mem : in Bank_Type);
+
+   overriding
+   procedure Finalize(mem : in out Bank_Type);
 
 private
 
@@ -49,11 +55,4 @@ private
       banks    : Bank_Vectors.Vector;
    end record;
 
-   overriding
-   procedure Show_Access_Stats(mem : in Bank_Type);
-
-   overriding
-   procedure Finalize(mem : in out Bank_Type);
-
 end Memory.Bank;
-

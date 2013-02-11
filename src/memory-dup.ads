@@ -34,6 +34,9 @@ package Memory.Dup is
    overriding
    procedure Show_Stats(mem : in Dup_Type);
 
+   overriding
+   procedure Finalize(mem : in out Dup_Type);
+
 private
 
    package Memory_Vectors is new Vectors(Natural, Memory_Pointer);
@@ -41,8 +44,5 @@ private
    type Dup_Type is new Memory_Type with record
       memories : Memory_Vectors.Vector;
    end record;
-
-   overriding
-   procedure Finalize(mem : in out Dup_Type);
 
 end Memory.Dup;

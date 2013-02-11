@@ -24,6 +24,12 @@ package Memory.Prefetch is
    procedure Idle(mem      : in out Prefetch_Type;
                   cycles   : in Time_Type);
 
+   overriding
+   procedure Show_Access_Stats(mem : in Prefetch_Type);
+
+   overriding
+   procedure Finalize(mem : in out Prefetch_Type);
+
 private
 
    type Prefetch_Type is new Memory_Type with record
@@ -32,11 +38,5 @@ private
       stride      : Address_Type := 1;
       multiplier  : Address_Type := 1;
    end record;
-
-   overriding
-   procedure Show_Access_Stats(mem : in Prefetch_Type);
-
-   overriding
-   procedure Finalize(mem : in out Prefetch_Type);
 
 end Memory.Prefetch;

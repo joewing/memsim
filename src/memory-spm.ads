@@ -19,6 +19,10 @@ package Memory.SPM is
                    address : in Address_Type;
                    size    : in Positive);
 
+   procedure Show_Access_Stats(mem : in SPM_Type);
+
+   procedure Finalize(mem : in out SPM_Type);
+
 private
 
    type SPM_Type is new Memory_Type with record
@@ -26,9 +30,5 @@ private
       size     : Natural;
       latency  : Time_Type;
    end record;
-
-   procedure Show_Access_Stats(mem : in SPM_Type);
-
-   procedure Finalize(mem : in out SPM_Type);
 
 end Memory.SPM;
