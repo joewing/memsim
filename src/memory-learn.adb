@@ -1,63 +1,203 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Numerics.Float_Random;
+with Ada.Numerics.Generic_Elementary_Functions;
 
 package body Memory.Learn is
+
+   package FR renames Ada.Numerics.Float_Random;
+
+   package Float_Funcs is
+      new Ada.Numerics.Generic_Elementary_Functions(Float);
+
+   type Value_Array is array (1 .. Bit_Count) of Float;
+
+   procedure Evaluate_Node(node     : in out Node_Type;
+                           values   : in Value_Array) is
+      sum : Float := node.bias;
+   begin
+      for i in Value_Array'Range loop
+         sum := sum + values(i) * node.weights(i);
+      end loop;
+      node.value := 1.0 / (1.0 + Float_Funcs.Exp(-sum));
+   end Evaluate_Node;
+
+   procedure Evaluate_Layer(layer   : in out Layer_Type;
+                            ins     : in Value_Array) is
+   begin
+      for i in Layer_Type'Range loop
+         Evaluate_Node(layer(i), ins);
+      end loop;
+   end Evaluate_Layer;
+
+   function Get_Values(layer : Layer_Type) return Value_Array is
+      result : Value_Array;
+   begin
+      for i in Layer_Type'Range loop
+         result(i) := layer(i).value;
+      end loop;
+      return result;
+   end Get_Values;
+
+   function Get_Address(layer : Layer_Type) return Address_Type is
+      result : Address_Type := 0;
+   begin
+      for i in Layer_Type'Range loop
+         if layer(i).value > 0.0 then
+            result := result or (2 ** (i - Layer_Type'First));
+         end if;
+      end loop;
+      return result;
+   end Get_Address;
+
+   function Get_Inputs(address : Address_Type) return Value_Array is
+      result : Value_Array;
+   begin
+      for i in Value_Array'Range loop
+         if (address and (2 ** (i - Value_Array'First))) /= 0 then
+            result(i) := 1.0;
+         else
+            result(i) := -1.0;
+         end if;
+      end loop;
+      return result;
+   end Get_Inputs;
+
+   procedure Evaluate_Network(network  : in out Network_Type;
+                              address  : in Address_Type) is
+      values : Value_Array := Get_Inputs(address);
+   begin
+      for i in Network_Type'Range loop
+         Evaluate_Layer(network(i), values);
+         values := Get_Values(network(i));
+      end loop;
+   end Evaluate_Network;
+
+   procedure Initialize_Network(network : in out Network_Type) is
+      generator : Ada.Numerics.Float_Random.Generator;
+   begin
+      for layer in network'Range loop
+         for node in network(layer)'Range loop
+            for i in network(layer)(node).weights'Range loop
+               network(layer)(node).weights(i) := FR.Random(generator) - 0.5;
+            end loop;
+         end loop;
+      end loop;
+      Evaluate_Network(network, 0);
+   end Initialize_Network;
+
+   procedure Get_Expected(network   : in out Network_Type;
+                          address   : in Address_Type;
+                          result    : out Address_Type) is
+   begin
+      Evaluate_Network(network, address);
+      result := Get_Address(network(Network_Type'First));
+   end Get_Expected;
+
+   procedure Update_Network(network    : in out Network_Type;
+                            rate       : in Float;
+                            input      : in Address_Type;
+                            actual     : in Address_Type) is
+
+      function gprime(x : Float) return Float is
+         ex : constant Float := Float_Funcs.Exp(x);
+         b  : constant Float := (1.0 + ex) ** 2;
+      begin
+         return ex / b;
+      end gprime;
+
+      inputs   : constant Value_Array := Get_Inputs(input);
+      outputs  : constant Value_Array := Get_Inputs(actual);
+      change   : Value_Array;
+      update   : Value_Array;
+
+   begin
+
+      -- Get deltas for the output layer.
+      for i in Layer_Type'Range loop
+         declare
+            -- a is the computed output.
+            -- y is the true output.
+            -- w is the sum of the inputs scaled by weight.
+            a : constant Float := network(Network_Type'Last)(i).value;
+            y : constant Float := outputs(i);
+            w : Float := network(Network_Type'Last)(i).bias;
+         begin
+            for j in Layer_Type'Range loop
+               w := w + network(Network_Type'Last - 1)(j).value *
+                        network(Network_Type'Last)(i).weights(j);
+            end loop;
+            change(i) := gprime(w) * (y - a);
+         end;
+      end loop;
+
+      -- Propagate error through the network.
+      for layer in reverse Network_Type'First .. Network_Type'Last loop
+         for j in Layer_Type'Range loop
+            declare
+               a : constant Float := network(layer)(j).value;
+               w : Float := network(layer)(j).bias;
+            begin
+               update(j) := 0.0;
+               for i in Layer_Type'Range loop
+                  declare
+                     -- Weight of entering j from i.
+                     wji : constant Float := network(layer)(j).weights(i);
+                  begin
+                     update(j) := update(j) + wji * change(i);
+                     if layer = Network_Type'First then
+                        w := w + inputs(i) * wji;
+                     else
+                        w := w + network(layer - 1)(i).value * wji;
+                     end if;
+                     network(layer)(j).weights(i) :=
+                        wji + rate * change(i) * a;
+                  end;
+               end loop;
+               update(j) := update(j) * gprime(w);
+            end;
+         end loop;
+         change := update;
+      end loop;
+
+   end Update_Network;
 
    function Create_Learn(mem : access Memory_Type'Class)
                          return Learn_Pointer is
       result : constant Learn_Pointer := new Learn_Type;
    begin
       Set_Memory(result.all, mem);
-      for i in result.parameters'Range loop
-         result.parameters(i) := 0.5;
-      end loop;
+      Initialize_Network(result.network);
       return result;
    end Create_Learn;
 
-   function Get_Expected(mem     : in Learn_Type;
-                         address : in Address_Type) return Address_Type is
-      index    : Integer := mem.parameters'First;
-      result   : Address_Type := 0;
-      score    : Float;
-   begin
-      for dest in 0 .. Address_Type'Size - 1 loop
-         score := 0.0;
-         for src in 0 .. Address_Type'Size - 1 loop
-            if (address and (2 ** src)) /= 0 then
-               score := score + mem.parameters(index);
-            else
-               score := score + 1.0 - mem.parameters(index);
-            end if;
-            index := index + 1;
-         end loop;
-         if score >= 0.5 * Float(Address_Type'Size) then
-            result := result or (2 ** dest);
-         end if;
-      end loop;
-      return result;
-   end Get_Expected;
-
    procedure Update_Parameters(mem     : in out Learn_Type;
                                address : in Address_Type) is
-
-      index    : Natural := mem.parameters'First;
-      actual   : Boolean;
-
    begin
 
-      for dest in 0 .. Address_Type'Size - 1 loop
-         actual := (address and (2 ** dest)) /= 0;
-         for src in 0 .. Address_Type'Size - 1 loop
-            if actual and mem.parameters(index) < 1.0 then
-               mem.parameters(index) := mem.parameters(index) + mem.epsilon;
-            elsif not actual and mem.parameters(index) > 0.0 then
-               mem.parameters(index) := mem.parameters(index) - mem.epsilon;
-            end if;
-            index := index + 1;
-         end loop;
-      end loop;
+      mem.total := mem.total + 1;
+      if mem.expected = address then
+         mem.correct := mem.correct + 1;
+      end if;
+      Put_Line(Address_Type'Image(mem.expected) & " vs " &
+               Address_Type'Image(address));
+      if mem.total = 1000 then
+         Put(Long_Integer'Image(mem.correct) & " /" &
+             Long_Integer'Image(mem.total) & " ->");
+         declare
+            temp : constant Integer
+               := Integer(100.0 * Float(mem.correct) / Float(mem.total));
+         begin
+            Put(Integer'Image(temp));
+         end;
+         New_Line;
+         mem.total := 0;
+         mem.correct := 0;
+      end if;
 
-      mem.expected := Get_Expected(mem, address);
+      Update_Network(mem.network, mem.rate, mem.last, address);
+      Get_Expected(mem.network, address, mem.expected);
+      mem.last := address;
 
    end Update_Parameters;
 
@@ -80,10 +220,6 @@ package body Memory.Learn is
    procedure Show_Access_Stats(mem : in Learn_Type) is
    begin
       Show_Access_Stats(Container_Type(mem));
-      Put_Line("Parameters:");
-      for i in mem.parameters'Range loop
-         Put_Line(Natural'Image(i) & ":" & Float'Image(mem.parameters(i)));
-      end loop;
    end Show_Access_Stats;
 
 end Memory.Learn;

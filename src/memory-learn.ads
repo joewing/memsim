@@ -24,15 +24,27 @@ package Memory.Learn is
 
 private
 
-   Parameter_Depth : constant := 2;
-   Parameter_Count : constant := Address_Type'Size ** Parameter_Depth;
+   Bit_Count : constant := Address_Type'Size;
 
-   type Parameter_Array is array(1 .. Parameter_Count) of Float;
+   type Weight_Array is array(1 .. Bit_Count) of Float;
+
+   type Node_Type is record
+      weights  : Weight_Array;
+      bias     : Float := 0.0;
+      value    : Float := 0.0;
+   end record;
+
+   type Layer_Type is array (1 .. Bit_Count) of Node_Type;
+
+   type Network_Type is array (1 .. 2) of Layer_Type;
 
    type Learn_Type is new Container_Type with record
-      parameters  : Parameter_Array;
       expected    : Address_Type := 0;
-      epsilon     : Float := 0.1;
+      last        : Address_Type := 0;
+      network     : Network_Type;
+      rate        : Float := 0.1;
+      correct     : Long_Integer := 0;
+      total       : Long_Integer := 0;
    end record;
 
 end Memory.Learn;
