@@ -43,7 +43,7 @@ package body Memory.Learn is
       result : Address_Type := 0;
    begin
       for i in Layer_Type'Range loop
-         if layer(i).value > 0.0 then
+         if layer(i).value > 0.5 then
             result := result or (2 ** (i - Layer_Type'First));
          end if;
       end loop;
@@ -57,7 +57,7 @@ package body Memory.Learn is
          if (address and (2 ** (i - Value_Array'First))) /= 0 then
             result(i) := 1.0;
          else
-            result(i) := -1.0;
+            result(i) := 0.0;
          end if;
       end loop;
       return result;
@@ -79,7 +79,8 @@ package body Memory.Learn is
       for layer in network'Range loop
          for node in network(layer)'Range loop
             for i in network(layer)(node).weights'Range loop
-               network(layer)(node).weights(i) := FR.Random(generator) - 0.5;
+               network(layer)(node).weights(i) :=
+                  0.1 * (FR.Random(generator) - 0.5);
             end loop;
          end loop;
       end loop;
@@ -99,13 +100,6 @@ package body Memory.Learn is
                             input      : in Address_Type;
                             actual     : in Address_Type) is
 
-      function gprime(x : Float) return Float is
-         ex : constant Float := Float_Funcs.Exp(x);
-         b  : constant Float := (1.0 + ex) ** 2;
-      begin
-         return ex / b;
-      end gprime;
-
       inputs   : constant Value_Array := Get_Inputs(input);
       outputs  : constant Value_Array := Get_Inputs(actual);
       change   : Value_Array;
@@ -118,16 +112,10 @@ package body Memory.Learn is
          declare
             -- a is the computed output.
             -- y is the true output.
-            -- w is the sum of the inputs scaled by weight.
             a : constant Float := network(Network_Type'Last)(i).value;
             y : constant Float := outputs(i);
-            w : Float := network(Network_Type'Last)(i).bias;
          begin
-            for j in Layer_Type'Range loop
-               w := w + network(Network_Type'Last - 1)(j).value *
-                        network(Network_Type'Last)(i).weights(j);
-            end loop;
-            change(i) := gprime(w) * (y - a);
+            change(i) := a * (1.0 - a) * (y - a);
          end;
       end loop;
 
@@ -135,27 +123,27 @@ package body Memory.Learn is
       for layer in reverse Network_Type'First .. Network_Type'Last loop
          for j in Layer_Type'Range loop
             declare
-               a : constant Float := network(layer)(j).value;
-               w : Float := network(layer)(j).bias;
+               a     : constant Float := network(layer)(j).value;
+               sum   : Float := 0.0;
             begin
-               update(j) := 0.0;
                for i in Layer_Type'Range loop
-                  declare
-                     -- Weight of entering j from i.
-                     wji : constant Float := network(layer)(j).weights(i);
-                  begin
-                     update(j) := update(j) + wji * change(i);
-                     if layer = Network_Type'First then
-                        w := w + inputs(i) * wji;
-                     else
-                        w := w + network(layer - 1)(i).value * wji;
-                     end if;
-                     network(layer)(j).weights(i) :=
-                        wji + rate * change(i) * a;
-                  end;
+                  sum := sum + network(layer)(j).weights(i) * change(i);
                end loop;
-               update(j) := update(j) * gprime(w);
+               update(j) := sum * a * (1.0 - a);
             end;
+            for i in Layer_Type'Range loop
+               declare
+                  wji   : constant Float := network(layer)(j).weights(i);
+                  dw    : Float;
+               begin
+                  if layer = Network_Type'First then
+                     dw := rate * change(j) * inputs(i);
+                  else
+                     dw := rate * change(j) * network(layer - 1)(i).value;
+                  end if;
+                  network(layer)(j).weights(i) := wji + dw;
+               end;
+            end loop;
          end loop;
          change := update;
       end loop;

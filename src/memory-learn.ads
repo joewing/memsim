@@ -42,7 +42,7 @@ private
       expected    : Address_Type := 0;
       last        : Address_Type := 0;
       network     : Network_Type;
-      rate        : Float := 0.1;
+      rate        : Float := 0.5;
       correct     : Long_Integer := 0;
       total       : Long_Integer := 0;
    end record;
