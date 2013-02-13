@@ -82,6 +82,7 @@ package body Benchmark.Trace is
       mem         : Memory_Pointer;
       spacing     : Time_Type;
       buffer      : Stream_Buffer_Pointer;
+      total       : Long_Integer := 0;
    begin
       accept Initialize(m : in Memory_Pointer;
                         p : in Buffer_Pool_Pointer;
@@ -96,6 +97,10 @@ package body Benchmark.Trace is
                buffer := b;
             end Process;
             Parse_Action(mem, spacing, buffer, mdata, state);
+            total := total +
+                     Long_Integer(buffer.last - buffer.buffer'First + 1);
+            Put_Line("Processed" & Long_Integer'Image(total) & " bytes");
+            Show_Stats(mem.all);
             pool.Release(buffer);
          or
             terminate;
@@ -216,7 +221,6 @@ package body Benchmark.Trace is
    procedure Run(benchmark : in out Trace_Type) is
       file     : Stream_IO.File_Type;
       sdata    : Stream_Buffer_Pointer;
-      total    : Long_Integer := 0;
       pool     : Buffer_Pool_Pointer := new Buffer_Pool_Type;
       consumer : Consumer_Type;
    begin
@@ -234,8 +238,6 @@ package body Benchmark.Trace is
             pool.Release(sdata);
             raise Stream_IO.End_Error;
          end if;
-         total := total + Long_Integer(sdata.last - sdata.buffer'First + 1);
-         Put_Line("Read" & Long_Integer'Image(total) & " bytes");
          sdata.pos := sdata.buffer'First;
          consumer.Process(sdata);
       end loop;
