@@ -92,34 +92,22 @@ package body Memory.Cache is
       data := mem.data.Element(oldest);
       if data.dirty then
          Start(mem.mem.all);
-         for i in 0 .. mem.line_size - 1 loop
-            Write(mem.mem.all, data.address + Address_Type(i),
-                  mem.line_size);
-         end loop;
+         Write(mem.mem.all, data.address, mem.line_size);
          Commit(mem.mem.all, cycles);
+         Advance(mem, cycles);
          data.dirty := False;
       end if;
 
       -- Read the new entry.
       Start(mem.mem.all);
       data.address := tag;
-      for i in 0 .. mem.line_size - 1 loop
-         declare
-            full_address : constant Address_Type
-                         := data.address + Address_Type(i);
-         begin
-            if is_read or full_address /= address then
-               Read(mem.mem.all, data.address + Address_Type(i),
-                    mem.line_size);
-            end if;
-         end;
-      end loop;
+      Read(mem.mem.all, data.address, mem.line_size);
       Commit(mem.mem.all, cycles);
+      Advance(mem, cycles);
 
       -- Mark the data as new and return.
       data.age := 0;
       data.dirty := not is_read;
-      Advance(mem, cycles);
 
    end Get_Data;
 
