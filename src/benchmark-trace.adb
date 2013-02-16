@@ -42,6 +42,11 @@ package body Benchmark.Trace is
          end loop;
       end Initialize;
 
+      entry Reset when available = buffers'Length is
+      begin
+         null;
+      end Reset;
+
       entry Destroy when available = buffers'Length is
       begin
          for i in buffers'Range loop
@@ -210,6 +215,8 @@ package body Benchmark.Trace is
    begin
       if Check_Argument(arg, "file") then
          benchmark.file_name := To_Unbounded_String(value);
+      elsif Check_Argument(arg, "iterations") then
+         benchmark.iterations := Long_Integer'Value(value);
       else
          Set_Argument(Benchmark_Type(benchmark), arg);
       end if;
@@ -231,21 +238,29 @@ package body Benchmark.Trace is
       Stream_IO.Open(File => file,
                      Mode => Stream_IO.In_File,
                      Name => To_String(benchmark.file_name));
-      loop
-         pool.Allocate(sdata);
-         Stream_IO.Read(file, sdata.buffer, sdata.last);
-         if sdata.last < sdata.buffer'First then
-            pool.Release(sdata);
-            raise Stream_IO.End_Error;
-         end if;
-         sdata.pos := sdata.buffer'First;
-         consumer.Process(sdata);
+      for count in 1 .. benchmark.iterations loop
+         Reset(benchmark.mem.all);
+         begin
+            loop
+               pool.Allocate(sdata);
+               Stream_IO.Read(file, sdata.buffer, sdata.last);
+               if sdata.last < sdata.buffer'First then
+                  pool.Release(sdata);
+                  raise Stream_IO.End_Error;
+               end if;
+               sdata.pos := sdata.buffer'First;
+               consumer.Process(sdata);
+            end loop;
+         exception
+            when Stream_IO.End_Error =>
+               Stream_IO.Reset(file);
+               pool.Reset;
+         end;
       end loop;
+      Stream_IO.Close(file);
+      pool.Destroy;
+      Destroy(pool);
    exception
-      when Ada.Streams.Stream_IO.End_Error =>
-         Stream_IO.Close(file);
-         pool.Destroy;
-         Destroy(pool);
       when ex: others =>
          Put_Line("error: could not read " & To_String(benchmark.file_name) &
                   ": " & Exception_Name(ex) & ": " & Exception_Message(ex));

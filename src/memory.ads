@@ -12,6 +12,8 @@ package Memory is
 
    type Memory_Pointer is access all Memory_Type'Class;
 
+   procedure Reset(mem : in out Memory_Type);
+
    -- Start a transaction.
    procedure Start(mem : in out Memory_Type);
 

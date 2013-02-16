@@ -45,6 +45,7 @@ private
       procedure Initialize;
       entry Allocate(sd : out Stream_Buffer_Pointer);
       procedure Release(sd  : in Stream_Buffer_Pointer);
+      entry Reset;
       entry Destroy;
    private
       available   : Natural;
@@ -62,6 +63,7 @@ private
 
    type Trace_Type is new Benchmark_Type with record
       file_name   : Unbounded_String := To_Unbounded_String("trace.txt");
+      iterations  : Long_Integer := 1;
    end record;
 
 end Benchmark.Trace;

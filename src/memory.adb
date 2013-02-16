@@ -4,6 +4,11 @@ with Ada.Unchecked_Deallocation;
 
 package body Memory is
 
+   procedure Reset(mem : in out Memory_Type) is
+   begin
+      null;
+   end Reset;
+
    procedure Start(mem : in out Memory_Type) is
    begin
       mem.transactions.Append(mem.time);
