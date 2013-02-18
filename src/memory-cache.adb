@@ -58,8 +58,8 @@ package body Memory.Cache is
       tag         : constant Address_Type := Get_Tag(mem, address);
       first       : constant Natural := Get_First_Index(mem, address);
       last        : constant Natural := Get_Last_Index(mem, address);
-      oldest      : Natural := 0;
-      oldest_age  : Natural := 0;
+      to_replace  : Natural := 0;
+      age         : Natural;
       cycles      : Time_Type := mem.latency;
 
    begin
@@ -84,14 +84,36 @@ package body Memory.Cache is
             data.dirty := data.dirty or not is_read;
             Advance(mem, cycles);
             return;
-         elsif data.age > oldest_age then
-            oldest_age := data.age;
-            oldest := i;
          end if;
       end loop;
 
+      -- Not in the cache.
+      -- Determine which entry to replace.
+      case mem.policy is
+         when LRU =>
+            age := Natural'First;
+            for i in first .. last loop
+               data := mem.data.Element(i);
+               if data.age > age then
+                  age := data.age;
+                  to_replace := i;
+               end if;
+            end loop;
+         when MRU =>
+            age := Natural'Last;
+            for i in first .. last loop
+               data := mem.data.Element(i);
+               if data.age < age then
+                  age := data.age;
+                  to_replace := i;
+               end if;
+            end loop;
+         when Random =>
+            to_replace := RNG.Random(mem.generator) mod (last - first + 1);
+      end case;
+
       -- Not in the cache; evict the oldest entry.
-      data := mem.data.Element(oldest);
+      data := mem.data.Element(to_replace);
       if data.dirty then
          Start(mem.mem.all);
          Write(mem.mem.all, data.address, mem.line_size);

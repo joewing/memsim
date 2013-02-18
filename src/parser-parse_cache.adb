@@ -13,10 +13,8 @@ procedure Parse_Cache(lexer   : in out Lexer_Type;
    type Policy_Map_Array is array(Positive range <>) of Policy_Map_Type;
 
    policies : constant Policy_Map_Array := (
-      (To_Unbounded_String("perfect"),    Cache.Perfect),
       (To_Unbounded_String("lru"),        Cache.LRU),
       (To_Unbounded_String("mru"),        Cache.MRU),
-      (To_Unbounded_String("plru"),       Cache.PLRU),
       (To_Unbounded_String("random"),     Cache.Random)
    );
 
@@ -54,12 +52,20 @@ begin
                elsif name = "latency" then
                   latency := Time_Type'Value(value);
                elsif name = "policy" then
-                  policy := Cache.Invalid;
-                  for p in policies'Range loop
-                     if policies(p).name = value then
-                        policy := policies(p).policy;
+                  declare
+                     found : Boolean := False;
+                  begin
+                     for p in policies'Range loop
+                        if policies(p).name = value then
+                           policy := policies(p).policy;
+                           found := True;
+                           exit;
+                        end if;
+                     end loop;
+                     if not found then
+                        Raise_Error(lexer, "invalid cache replacement policy");
                      end if;
-                  end loop;
+                  end;
                else
                   Raise_Error(lexer, "invalid cache attribute: " & name);
                end if;
@@ -70,9 +76,6 @@ begin
    end loop;
    if mem = null then
       Raise_Error(lexer, "no memory specified in cache");
-   end if;
-   if Cache."="(policy, Cache.Invalid) then
-      Raise_Error(lexer, "invalid cache policy");
    end if;
    result := Memory_Pointer(Cache.Create_Cache(mem,
                                                line_count,

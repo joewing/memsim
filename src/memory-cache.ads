@@ -1,15 +1,14 @@
 
+with Ada.Numerics.Discrete_Random;
+
 package Memory.Cache is
 
    type Cache_Type is new Memory_Type with private;
 
    type Cache_Pointer is access all Cache_Type'Class;
 
-   type Policy_Type is (Invalid,
-                        Perfect,    -- Belady's Algorithm
-                        LRU,        -- Least recently used
+   type Policy_Type is (LRU,        -- Least recently used
                         MRU,        -- Most recently used
-                        PLRU,       -- Pseudo least recently used
                         Random);    -- Random
 
    function Create_Cache(mem           : access Memory_Type'Class;
@@ -48,6 +47,8 @@ private
 
    package Cache_Vectors is new Vectors(Natural, Cache_Data_Pointer);
 
+   package RNG is new Ada.Numerics.Discrete_Random(Natural);
+
    type Cache_Type is new Memory_Type with record
       line_size      : Positive := 8;
       line_count     : Positive := 1;
@@ -55,6 +56,7 @@ private
       latency        : Time_Type := 1;
       data           : Cache_Vectors.Vector;
       policy         : Policy_Type := LRU;
+      generator      : RNG.Generator;
       mem            : access Memory_Type'Class;
    end record;
 
