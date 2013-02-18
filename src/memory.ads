@@ -35,9 +35,9 @@ package Memory is
 
    function Get_Time(mem : Memory_Type) return Time_Type;
 
-   procedure Show_Stats(mem : in Memory_Type);
+   procedure Show_Stats(mem : in out Memory_Type);
 
-   procedure Show_Access_Stats(mem : in Memory_Type);
+   procedure Show_Access_Stats(mem : in out Memory_Type);
 
    function To_String(mem : Memory_Type) return Unbounded_String is abstract;
 

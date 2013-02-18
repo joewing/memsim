@@ -21,7 +21,7 @@ package Memory.Stats is
                    size    : in Positive);
 
    overriding
-   procedure Show_Access_Stats(mem : in Stats_Type);
+   procedure Show_Access_Stats(mem : in out Stats_Type);
 
 private
 

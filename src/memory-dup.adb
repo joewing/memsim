@@ -78,7 +78,7 @@ package body Memory.Dup is
       Update_Time(mem);
    end Idle;
 
-   procedure Show_Stats(mem : in Dup_Type) is
+   procedure Show_Stats(mem : in out Dup_Type) is
    begin
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop
          declare

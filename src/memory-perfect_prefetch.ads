@@ -23,7 +23,7 @@ package Memory.Perfect_Prefetch is
                   cycles   : in Time_Type);
 
    overriding
-   procedure Show_Access_Stats(mem : in Perfect_Prefetch_Type);
+   procedure Show_Access_Stats(mem : in out Perfect_Prefetch_Type);
 
    overriding
    function To_String(mem : Perfect_Prefetch_Type) return Unbounded_String;

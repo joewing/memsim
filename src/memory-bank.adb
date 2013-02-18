@@ -89,7 +89,7 @@ package body Memory.Bank is
       Advance(mem, cycles);
    end Idle;
 
-   procedure Show_Access_Stats(mem : in Bank_Type) is
+   procedure Show_Access_Stats(mem : in out Bank_Type) is
    begin
       for i in mem.banks.First_Index .. mem.banks.Last_Index loop
          Show_Access_Stats(mem.banks.Element(i).mem.all);

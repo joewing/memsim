@@ -32,7 +32,7 @@ package Memory.Dup is
                   cycles   : in Time_Type);
 
    overriding
-   procedure Show_Stats(mem : in Dup_Type);
+   procedure Show_Stats(mem : in out Dup_Type);
 
    overriding
    function To_String(mem : Dup_Type) return Unbounded_String;

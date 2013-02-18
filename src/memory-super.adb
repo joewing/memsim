@@ -96,7 +96,6 @@ package body Memory.Super is
 
    procedure Reset(mem : in out Super_Type) is
    begin
-      Finish_Run(mem);
       Reset(Container_Type(mem));
       if mem.dram /= null then
          Reset(mem.dram.all);
@@ -104,15 +103,15 @@ package body Memory.Super is
       Randomize(mem);
    end Reset;
 
-   procedure Show_Access_Stats(mem : in Super_Type) is
+   procedure Show_Access_Stats(mem : in out Super_Type) is
    begin
+      Finish_Run(mem);
       Put_Line("Best Memory: " & To_String(mem.best_name));
       Put_Line("Best Time:   " & Time_Type'Image(mem.best_time));
    end Show_Access_Stats;
 
    procedure Finalize(mem : in out Super_Type) is
    begin
-      Finish_Run(mem);
       if mem.dram /= null then
          Destroy(mem.dram);
          if mem.dram_container /= null then

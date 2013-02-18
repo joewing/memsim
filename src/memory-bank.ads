@@ -36,7 +36,7 @@ package Memory.Bank is
                   cycles   : in Time_Type);
 
    overriding
-   procedure Show_Access_Stats(mem : in Bank_Type);
+   procedure Show_Access_Stats(mem : in out Bank_Type);
 
    overriding
    function To_String(mem : Bank_Type) return Unbounded_String;

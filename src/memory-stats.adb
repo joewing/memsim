@@ -70,7 +70,7 @@ package body Memory.Stats is
       Process(mem, address, size);
    end Write;
 
-   procedure Show_Access_Stats(mem : in Stats_Type) is
+   procedure Show_Access_Stats(mem : in out Stats_Type) is
    begin
       Show_Access_Stats(Container_Type(mem));
       Put_Line("    Reads:      " & Long_Integer'Image(mem.reads));

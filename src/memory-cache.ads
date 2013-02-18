@@ -31,7 +31,7 @@ package Memory.Cache is
                    size    : in Positive);
 
    overriding
-   procedure Show_Access_Stats(mem : in Cache_Type);
+   procedure Show_Access_Stats(mem : in out Cache_Type);
 
    overriding
    function To_String(mem : Cache_Type) return Unbounded_String;

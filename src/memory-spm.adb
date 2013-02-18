@@ -58,7 +58,7 @@ package body Memory.SPM is
       Advance(mem, cycles);
    end Write;
 
-   procedure Show_Access_Stats(mem : in SPM_Type) is
+   procedure Show_Access_Stats(mem : in out SPM_Type) is
    begin
       Show_Access_Stats(mem.mem.all);
    end Show_Access_Stats;

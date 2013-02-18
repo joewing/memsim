@@ -34,13 +34,13 @@ package body Memory is
       return mem.time;
    end Get_Time;
 
-   procedure Show_Stats(mem : in Memory_Type) is
+   procedure Show_Stats(mem : in out Memory_Type) is
    begin
       Put_Line("Time:" & Time_Type'Image(mem.time) & " cycles");
       Show_Access_Stats(Memory_Type'Class(mem));
    end Show_Stats;
 
-   procedure Show_Access_Stats(mem : in Memory_Type) is
+   procedure Show_Access_Stats(mem : in out Memory_Type) is
    begin
       null;
    end Show_Access_Stats;

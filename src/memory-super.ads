@@ -16,7 +16,7 @@ package Memory.Super is
    procedure Reset(mem : in out Super_Type);
 
    overriding
-   procedure Show_Access_Stats(mem : in Super_Type);
+   procedure Show_Access_Stats(mem : in out Super_Type);
 
    overriding
    procedure Finalize(mem : in out Super_Type);

@@ -157,7 +157,7 @@ package body Memory.Cache is
       end loop;
    end Write;
 
-   procedure Show_Access_Stats(mem : in Cache_Type) is
+   procedure Show_Access_Stats(mem : in out Cache_Type) is
    begin
       Show_Access_Stats(mem.mem.all);
    end Show_Access_Stats;

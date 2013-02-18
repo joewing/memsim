@@ -76,7 +76,7 @@ package body Memory.Container is
       end if;
    end Idle;
 
-   procedure Show_Access_Stats(mem : in Container_Type) is
+   procedure Show_Access_Stats(mem : in out Container_Type) is
    begin
       if mem.mem /= null then
          Show_Access_Stats(mem.mem.all);

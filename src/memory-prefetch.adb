@@ -73,7 +73,7 @@ package body Memory.Prefetch is
       Advance(mem, cycles);
    end Idle;
 
-   procedure Show_Access_Stats(mem : in Prefetch_Type) is
+   procedure Show_Access_Stats(mem : in out Prefetch_Type) is
    begin
       Show_Access_Stats(mem.mem.all);
    end Show_Access_Stats;

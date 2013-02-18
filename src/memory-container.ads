@@ -36,7 +36,7 @@ package Memory.Container is
                   cycles   : in Time_Type);
 
    overriding
-   procedure Show_Access_Stats(mem : in Container_Type);
+   procedure Show_Access_Stats(mem : in out Container_Type);
 
    overriding
    function To_String(mem : Container_Type) return Unbounded_String;

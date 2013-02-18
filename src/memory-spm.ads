@@ -19,7 +19,7 @@ package Memory.SPM is
                    address : in Address_Type;
                    size    : in Positive);
 
-   procedure Show_Access_Stats(mem : in SPM_Type);
+   procedure Show_Access_Stats(mem : in out SPM_Type);
 
    function To_String(mem : SPM_Type) return Unbounded_String;
 

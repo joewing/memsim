@@ -25,7 +25,7 @@ package Memory.Prefetch is
                   cycles   : in Time_Type);
 
    overriding
-   procedure Show_Access_Stats(mem : in Prefetch_Type);
+   procedure Show_Access_Stats(mem : in out Prefetch_Type);
 
    overriding
    function To_String(mem : Prefetch_Type) return Unbounded_String;
