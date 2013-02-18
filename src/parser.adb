@@ -13,9 +13,6 @@ package body Parser is
    procedure Parse_Dup(lexer  : in out Lexer_Type;
                        result : out Memory_Pointer) is separate;
 
-   procedure Parse_Learn(lexer   : in out Lexer_Type;
-                         result  : out Memory_Pointer) is separate;
-
    procedure Parse_Perfect_Prefetch(lexer    : in out Lexer_Type;
                                     result   : out Memory_Pointer) is separate;
 
@@ -51,7 +48,6 @@ package body Parser is
    parser_map : constant Memory_Parser_Array := (
       (To_Unbounded_String("bank"),             Parse_Bank'Access),
       (To_Unbounded_String("cache"),            Parse_Cache'Access),
-      (To_Unbounded_String("learn"),            Parse_Learn'Access),
       (To_Unbounded_String("perfect_prefetch"), Parse_Perfect_Prefetch'Access),
       (To_Unbounded_String("prefetch"),         Parse_Prefetch'Access),
       (To_Unbounded_String("ram"),              Parse_RAM'Access),

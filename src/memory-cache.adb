@@ -162,6 +162,29 @@ package body Memory.Cache is
       Show_Access_Stats(mem.mem.all);
    end Show_Access_Stats;
 
+   function To_String(mem : Cache_Type) return Unbounded_String is
+      result : Unbounded_String;
+   begin
+      Append(result, "(cache ");
+      Append(result, "(line_size" & Positive'Image(mem.line_size) & ")");
+      Append(result, "(line_count" & Positive'Image(mem.line_count) & ")");
+      Append(result, "(associativity" &
+             Positive'Image(mem.associativity) & ")");
+      Append(result, "(latency" & Time_Type'Image(mem.latency) & ")");
+      Append(result, "(policy ");
+      case mem.policy is
+         when LRU    => Append(result, "lru");
+         when MRU    => Append(result, "mru");
+         when FIFO   => Append(result, "fifo");
+         when Random => Append(result, "random");
+      end case;
+      Append(result, ")");
+      Append(result, "(memory ");
+      Append(result, To_String(mem.mem.all));
+      Append(result, "))");
+      return result;
+   end To_String;
+
    procedure Free is
       new Ada.Unchecked_Deallocation(Cache_Data, Cache_Data_Pointer);
 

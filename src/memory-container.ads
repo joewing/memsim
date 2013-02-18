@@ -1,7 +1,12 @@
 
 package Memory.Container is
 
-   type Container_Type is abstract new Memory_Type with private;
+   type Container_Type is new Memory_Type with private;
+
+   type Container_Pointer is access all Container_Type'Class;
+
+   function Create_Container(mem : access Memory_Type'Class)
+                             return Container_Pointer;
 
    procedure Set_Memory(mem   : in out Container_Type'Class;
                         other : access Memory_Type'Class);
@@ -31,12 +36,15 @@ package Memory.Container is
    procedure Show_Access_Stats(mem : in Container_Type);
 
    overriding
+   function To_String(mem : Container_Type) return Unbounded_String;
+
+   overriding
    procedure Finalize(mem : in out Container_Type);
 
 private
 
-   type Container_Type is abstract new Memory_Type with record
-      mem            : access Memory_Type'Class := null;
+   type Container_Type is new Memory_Type with record
+      mem : access Memory_Type'Class := null;
    end record;
 
 end Memory.Container;

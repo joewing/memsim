@@ -20,4 +20,13 @@ package body Memory.Transform.Offset is
       return address + mem.offset;
    end Apply;
 
+   function To_String(mem : Offset_Type) return Unbounded_String is
+      result : Unbounded_String;
+   begin
+      Append(result, "(transform ");
+      Append(result, "(offset" & Address_Type'Image(mem.offset) & ")");
+      Append(result, ")");
+      return result;
+   end To_String;
+
 end Memory.Transform.Offset;

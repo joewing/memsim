@@ -39,6 +39,9 @@ package Memory.Bank is
    procedure Show_Access_Stats(mem : in Bank_Type);
 
    overriding
+   function To_String(mem : Bank_Type) return Unbounded_String;
+
+   overriding
    procedure Finalize(mem : in out Bank_Type);
 
 private

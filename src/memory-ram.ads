@@ -18,6 +18,9 @@ package Memory.RAM is
                    address : in Address_Type;
                    size    : in Positive);
 
+   overriding
+   function To_String(mem : RAM_Type) return Unbounded_String;
+
 private
 
    type RAM_Type is new Memory_Type with record

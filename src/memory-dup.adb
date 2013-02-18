@@ -90,6 +90,21 @@ package body Memory.Dup is
       end loop;
    end Show_Stats;
 
+   function To_String(mem : Dup_Type) return Unbounded_String is
+      result : Unbounded_String;
+   begin
+      Append(result, "(dup ");
+      for i in mem.memories.First_Index .. mem.memories.Last_Index loop
+         declare
+            other : constant Memory_Pointer := mem.memories.Element(i);
+         begin
+            Append(result, To_String(other.all));
+         end;
+      end loop;
+      Append(result, ")");
+      return result;
+   end To_String;
+
    procedure Finalize(mem : in out Dup_Type) is
    begin
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop

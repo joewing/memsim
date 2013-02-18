@@ -28,6 +28,9 @@ package Memory.Prefetch is
    procedure Show_Access_Stats(mem : in Prefetch_Type);
 
    overriding
+   function To_String(mem : Prefetch_Type) return Unbounded_String;
+
+   overriding
    procedure Finalize(mem : in out Prefetch_Type);
 
 private

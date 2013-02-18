@@ -96,6 +96,24 @@ package body Memory.Bank is
       end loop;
    end Show_Access_Stats;
 
+   function To_String(mem : Bank_Type) return Unbounded_String is
+      data     : Bank_Data;
+      result   : Unbounded_String;
+   begin
+      Append(result, "(bank ");
+      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
+         data := mem.banks.Element(i);
+         Append(result, "(");
+         Append(result, "(key" & Address_Type'Image(data.key) & ") ");
+         Append(result, "(mask" & Address_Type'Image(data.mask) & ") ");
+         Append(result, "(memory ");
+         Append(result, To_String(data.mem.all));
+         Append(result, ")");
+      end loop;
+      Append(result, ")");
+      return result;
+   end To_String;
+
    procedure Finalize(mem : in out Bank_Type) is
       data : Bank_Data;
    begin

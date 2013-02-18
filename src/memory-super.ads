@@ -23,9 +23,11 @@ private
    package Random is new Ada.Numerics.Discrete_Random(Natural);
 
    type Super_Type is new Container_Type with record
-      sram_size   : Natural;
-      dram        : Memory_Pointer;
-      generator   : Random.Generator;
+      sram_size      : Natural;
+      sram           : Memory_Pointer := null;
+      dram           : Memory_Pointer := null;
+      dram_container : Container_Pointer := null;
+      generator      : Random.Generator;
    end record;
 
 end Memory.Super;

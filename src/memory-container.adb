@@ -1,12 +1,17 @@
 
 package body Memory.Container is
 
+   function Create_Container(mem : access Memory_Type'Class)
+                             return Container_Pointer is
+      result : constant Container_Pointer := new Container_Type;
+   begin
+      result.mem := mem;
+      return result;
+   end Create_Container;
+
    procedure Set_Memory(mem   : in out Container_Type'Class;
                         other : access Memory_Type'Class) is
    begin
-      if mem.mem /= null then
-         Destroy(Memory_Pointer(mem.mem));
-      end if;
       mem.mem := other;
    end Set_Memory;
 
@@ -66,6 +71,11 @@ package body Memory.Container is
          Show_Access_Stats(mem.mem.all);
       end if;
    end Show_Access_Stats;
+
+   function To_String(mem : Container_Type) return Unbounded_String is
+   begin
+      return To_String(mem.mem.all);
+   end To_String;
 
    procedure Finalize(mem : in out Container_Type) is
    begin

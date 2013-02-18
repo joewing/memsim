@@ -57,6 +57,15 @@ package body Memory.Perfect_Prefetch is
       Show_Access_Stats(mem.mem.all);
    end Show_Access_Stats;
 
+   function To_String(mem : Perfect_Prefetch_Type) return Unbounded_String is
+      result : Unbounded_String;
+   begin
+      Append(result, "(perfect ");
+      Append(result, To_String(mem.mem.all));
+      Append(result, ")");
+      return result;
+   end To_String;
+
    procedure Finalize(mem : in out Perfect_Prefetch_Type) is
    begin
       Destroy(Memory_Pointer(mem.mem));

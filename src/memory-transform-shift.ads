@@ -8,6 +8,9 @@ package Memory.Transform.Shift is
    function Create_Shift(mem     : Memory_Pointer;
                          shift   : Integer) return Shift_Pointer;
 
+   overriding
+   function To_String(mem : Shift_Type) return Unbounded_String;
+
 private
 
    type Shift_Type is new Transform_Type with record

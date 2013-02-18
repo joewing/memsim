@@ -26,6 +26,9 @@ package Memory.Perfect_Prefetch is
    procedure Show_Access_Stats(mem : in Perfect_Prefetch_Type);
 
    overriding
+   function To_String(mem : Perfect_Prefetch_Type) return Unbounded_String;
+
+   overriding
    procedure Finalize(mem : in out Perfect_Prefetch_Type);
 
 private

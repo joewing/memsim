@@ -26,4 +26,14 @@ package body Memory.RAM is
       Advance(mem, mem.latency * Time_Type(count));
    end Write;
 
+   function To_String(mem : RAM_Type) return Unbounded_String is
+      result : Unbounded_String;
+   begin
+      Append(result, "(ram ");
+      Append(result, "(latency" & Time_Type'Image(mem.latency) & ")");
+      Append(result, "(word_size" & Positive'Image(mem.word_size) & ")");
+      Append(result, ")");
+      return result;
+   end To_String;
+
 end Memory.RAM;

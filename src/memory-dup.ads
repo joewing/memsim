@@ -35,6 +35,9 @@ package Memory.Dup is
    procedure Show_Stats(mem : in Dup_Type);
 
    overriding
+   function To_String(mem : Dup_Type) return Unbounded_String;
+
+   overriding
    procedure Finalize(mem : in out Dup_Type);
 
 private

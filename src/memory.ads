@@ -1,6 +1,7 @@
 
 with Ada.Containers.Vectors; use Ada.Containers;
 with Ada.Finalization; use Ada.Finalization;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package Memory is
 
@@ -37,6 +38,8 @@ package Memory is
    procedure Show_Stats(mem : in Memory_Type);
 
    procedure Show_Access_Stats(mem : in Memory_Type);
+
+   function To_String(mem : Memory_Type) return Unbounded_String is abstract;
 
    procedure Destroy(mem : in out Memory_Pointer);
 

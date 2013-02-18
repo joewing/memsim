@@ -78,6 +78,19 @@ package body Memory.Prefetch is
       Show_Access_Stats(mem.mem.all);
    end Show_Access_Stats;
 
+   function To_String(mem : Prefetch_Type) return Unbounded_String is
+      result : Unbounded_String;
+   begin
+      Append(result, "(prefetch ");
+      Append(result, "(stride" & Address_Type'Image(mem.stride) & ")");
+      Append(result, "(multiplier" & Address_Type'Image(mem.multiplier) & ")");
+      Append(result, "(memory ");
+      Append(result, To_String(mem.mem.all));
+      Append(result, ")");
+      Append(result, ")");
+      return result;
+   end To_String;
+
    procedure Finalize(mem : in out Prefetch_Type) is
    begin
       Destroy(Memory_Pointer(mem.mem));

@@ -19,6 +19,10 @@ package Memory.Transform is
                   address  : Address_Type)
                   return Address_Type is abstract;
 
+   overriding
+   function To_String(mem : Transform_Type) return Unbounded_String
+      is abstract;
+
 private
 
    type Transform_Type is abstract new Container_Type with null record;

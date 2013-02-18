@@ -21,6 +21,8 @@ package Memory.SPM is
 
    procedure Show_Access_Stats(mem : in SPM_Type);
 
+   function To_String(mem : SPM_Type) return Unbounded_String;
+
    procedure Finalize(mem : in out SPM_Type);
 
 private

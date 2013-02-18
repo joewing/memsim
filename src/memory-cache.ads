@@ -34,6 +34,9 @@ package Memory.Cache is
    procedure Show_Access_Stats(mem : in Cache_Type);
 
    overriding
+   function To_String(mem : Cache_Type) return Unbounded_String;
+
+   overriding
    procedure Finalize(mem : in out Cache_Type);
 
 private

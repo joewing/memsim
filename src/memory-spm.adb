@@ -63,6 +63,19 @@ package body Memory.SPM is
       Show_Access_Stats(mem.mem.all);
    end Show_Access_Stats;
 
+   function To_String(mem : SPM_Type) return Unbounded_String is
+      result : Unbounded_String;
+   begin
+      Append(result, "(spm ");
+      Append(result, "(size" & Natural'Image(mem.size) & ")");
+      Append(result, "(latency" & Time_Type'Image(mem.latency) & ")");
+      Append(result, "(memory ");
+      Append(result, To_String(mem.mem.all));
+      Append(result, ")");
+      Append(result, ")");
+      return result;
+   end To_String;
+
    procedure Finalize(mem : in out SPM_Type) is
    begin
       Destroy(Memory_Pointer(mem.mem));

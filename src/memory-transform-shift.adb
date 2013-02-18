@@ -23,4 +23,13 @@ package body Memory.Transform.Shift is
       return right or left;
    end Apply;
 
+   function To_String(mem : Shift_Type) return Unbounded_String is
+      result : Unbounded_String;
+   begin
+      Append(result, "(transform ");
+      Append(result, "(shift" & Natural'Image(mem.shift) & ")");
+      Append(result, ")");
+      return result;
+   end To_String;
+
 end Memory.Transform.Shift;
