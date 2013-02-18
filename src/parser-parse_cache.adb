@@ -5,11 +5,27 @@ separate (Parser)
 procedure Parse_Cache(lexer   : in out Lexer_Type;
                       result  : out Memory_Pointer) is
 
+   type Policy_Map_Type is record
+      name     : Unbounded_String;
+      policy   : Cache.Policy_Type;
+   end record;
+
+   type Policy_Map_Array is array(Positive range <>) of Policy_Map_Type;
+
+   policies : constant Policy_Map_Array := (
+      (To_Unbounded_String("perfect"),    Cache.Perfect),
+      (To_Unbounded_String("lru"),        Cache.LRU),
+      (To_Unbounded_String("mru"),        Cache.MRU),
+      (To_Unbounded_String("plru"),       Cache.PLRU),
+      (To_Unbounded_String("random"),     Cache.Random)
+   );
+
    mem            : Memory_Pointer := null;
    line_count     : Positive := 1;
    line_size      : Positive := 1;
    associativity  : Positive := 1;
    latency        : Time_Type := 1;
+   policy         : Cache.Policy_Type := Cache.LRU;
 
 begin
    while Get_Type(lexer) = Open loop
@@ -37,6 +53,13 @@ begin
                   associativity := Positive'Value(value);
                elsif name = "latency" then
                   latency := Time_Type'Value(value);
+               elsif name = "policy" then
+                  policy := Cache.Invalid;
+                  for p in policies'Range loop
+                     if policies(p).name = value then
+                        policy := policies(p).policy;
+                     end if;
+                  end loop;
                else
                   Raise_Error(lexer, "invalid cache attribute: " & name);
                end if;
@@ -48,11 +71,15 @@ begin
    if mem = null then
       Raise_Error(lexer, "no memory specified in cache");
    end if;
+   if Cache."="(policy, Cache.Invalid) then
+      Raise_Error(lexer, "invalid cache policy");
+   end if;
    result := Memory_Pointer(Cache.Create_Cache(mem,
                                                line_count,
                                                line_size,
                                                associativity,
-                                               latency));
+                                               latency,
+                                               policy));
 exception
    when Data_Error =>
       Destroy(mem);

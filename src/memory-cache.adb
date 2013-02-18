@@ -7,7 +7,8 @@ package body Memory.Cache is
                          line_count    : Positive := 1;
                          line_size     : Positive := 8;
                          associativity : Positive := 1;
-                         latency       : Time_Type := 1)
+                         latency       : Time_Type := 1;
+                         policy        : Policy_Type := LRU)
                          return Cache_Pointer is
       result : constant Cache_Pointer := new Cache_Type;
    begin
@@ -16,6 +17,7 @@ package body Memory.Cache is
       result.line_count    := line_count;
       result.associativity := associativity;
       result.latency       := latency;
+      result.policy        := policy;
       return result;
    end Create_Cache;
 

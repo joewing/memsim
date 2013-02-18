@@ -5,11 +5,20 @@ package Memory.Cache is
 
    type Cache_Pointer is access all Cache_Type'Class;
 
+   type Policy_Type is (Invalid,
+                        Perfect,    -- Belady's Algorithm
+                        LRU,        -- Least recently used
+                        MRU,        -- Most recently used
+                        PLRU,       -- Pseudo least recently used
+                        Random);    -- Random
+
    function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 8;
                          associativity : Positive := 1;
-                         latency       : Time_Type := 1) return Cache_Pointer;
+                         latency       : Time_Type := 1;
+                         policy        : Policy_Type := LRU)
+                         return Cache_Pointer;
 
    overriding
    procedure Read(mem      : in out Cache_Type;
@@ -45,6 +54,7 @@ private
       associativity  : Positive := 1;
       latency        : Time_Type := 1;
       data           : Cache_Vectors.Vector;
+      policy         : Policy_Type := LRU;
       mem            : access Memory_Type'Class;
    end record;
 
