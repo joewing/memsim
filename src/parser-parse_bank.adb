@@ -17,7 +17,7 @@ begin
       while Get_Type(lexer) = Open loop
          Match(lexer, Open);
          declare
-            name  : constant String := Get_Value(lexer);
+            name : constant String := Get_Value(lexer);
          begin
             Match(lexer, Literal);
             if name = "memory" then
