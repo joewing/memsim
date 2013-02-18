@@ -74,12 +74,18 @@ package body Memory.Container is
 
    function To_String(mem : Container_Type) return Unbounded_String is
    begin
-      return To_String(mem.mem.all);
+      if mem.mem /= null then
+         return To_String(mem.mem.all);
+      else
+         return Null_Unbounded_String;
+      end if;
    end To_String;
 
    procedure Finalize(mem : in out Container_Type) is
    begin
-      Destroy(Memory_Pointer(mem.mem));
+      if mem.mem /= null then
+         Destroy(Memory_Pointer(mem.mem));
+      end if;
    end Finalize;
 
 end Memory.Container;

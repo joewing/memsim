@@ -16,6 +16,9 @@ package Memory.Super is
    procedure Reset(mem : in out Super_Type);
 
    overriding
+   procedure Show_Access_Stats(mem : in Super_Type);
+
+   overriding
    procedure Finalize(mem : in out Super_Type);
 
 private
@@ -23,11 +26,13 @@ private
    package Random is new Ada.Numerics.Discrete_Random(Natural);
 
    type Super_Type is new Container_Type with record
-      sram_size      : Natural;
-      sram           : Memory_Pointer := null;
-      dram           : Memory_Pointer := null;
-      dram_container : Container_Pointer := null;
+      sram_size      : Natural            := 0;
+      sram           : Memory_Pointer     := null;
+      dram           : Memory_Pointer     := null;
+      dram_container : Container_Pointer  := null;
       generator      : Random.Generator;
+      best_name      : Unbounded_String;
+      best_time      : Time_Type          := Time_Type'Last;
    end record;
 
 end Memory.Super;

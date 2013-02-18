@@ -36,6 +36,7 @@ begin
             end;
          end if;
       end;
+      Match(lexer, Close);
    end loop;
    result := Memory_Pointer(Super.Create_Super(sram_size, dram));
 exception

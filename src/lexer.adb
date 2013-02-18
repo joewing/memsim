@@ -52,6 +52,20 @@ package body Lexer is
       end case;
    end Is_Space;
 
+   function Is_Stop(ch : Character) return Boolean is
+   begin
+      if Is_Space(ch) then
+         return True;
+      else
+         case ch is
+            when '(' | ')' =>
+               return True;
+            when others =>
+               return False;
+         end case;
+      end if;
+   end Is_Stop;
+
    procedure Next(lexer : in out Lexer_Type) is
       ch          : Character;
       in_comment  : Boolean := False;
@@ -73,17 +87,18 @@ package body Lexer is
                return;
             end if;
          else
-            if ch = '(' or ch = ')' then
-               if Length(lexer.buffer) > 0 then
-                  Get_Buffer_Token(lexer);
-                  Append(lexer.buffer, ch);
-                  return;
-               else
-                  Append(lexer.buffer, ch);
-                  Get_Buffer_Token(lexer);
-                  return;
-               end if;
+            if Is_Stop(ch) and Length(lexer.buffer) > 0 then
+               Get_Buffer_Token(lexer);
+               Append(lexer.buffer, ch);
+               return;
             else
+               if Length(lexer.buffer) > 0 then
+                  if Is_Stop(Element(lexer.buffer, 1)) then
+                     Get_Buffer_Token(lexer);
+                     Append(lexer.buffer, ch);
+                     return;
+                  end if;
+               end if;
                Append(lexer.buffer, ch);
             end if;
          end if;
