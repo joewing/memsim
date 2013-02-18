@@ -9,6 +9,7 @@ package Memory.Cache is
 
    type Policy_Type is (LRU,        -- Least recently used
                         MRU,        -- Most recently used
+                        FIFO,       -- First-in first-out
                         Random);    -- Random
 
    function Create_Cache(mem           : access Memory_Type'Class;
@@ -39,7 +40,7 @@ private
 
    type Cache_Data is record
       address  : Address_Type := Address_Type'Last;
-      age      : Natural      := 0;
+      age      : Long_Integer := 0;
       dirty    : Boolean      := False;
    end record;
 

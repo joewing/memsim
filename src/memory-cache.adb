@@ -59,7 +59,7 @@ package body Memory.Cache is
       first       : constant Natural := Get_First_Index(mem, address);
       last        : constant Natural := Get_Last_Index(mem, address);
       to_replace  : Natural := 0;
-      age         : Natural;
+      age         : Long_Integer;
       cycles      : Time_Type := mem.latency;
 
    begin
@@ -80,7 +80,9 @@ package body Memory.Cache is
       for i in first .. last loop
          data := mem.data.Element(i);
          if tag = data.address then
-            data.age := 0;
+            if mem.policy /= FIFO then
+               data.age := 0;
+            end if;
             data.dirty := data.dirty or not is_read;
             Advance(mem, cycles);
             return;
@@ -90,8 +92,8 @@ package body Memory.Cache is
       -- Not in the cache.
       -- Determine which entry to replace.
       case mem.policy is
-         when LRU =>
-            age := Natural'First;
+         when LRU | FIFO =>
+            age := Long_Integer'First;
             for i in first .. last loop
                data := mem.data.Element(i);
                if data.age > age then
@@ -100,7 +102,7 @@ package body Memory.Cache is
                end if;
             end loop;
          when MRU =>
-            age := Natural'Last;
+            age := Long_Integer'Last;
             for i in first .. last loop
                data := mem.data.Element(i);
                if data.age < age then

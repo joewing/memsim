@@ -15,6 +15,7 @@ procedure Parse_Cache(lexer   : in out Lexer_Type;
    policies : constant Policy_Map_Array := (
       (To_Unbounded_String("lru"),        Cache.LRU),
       (To_Unbounded_String("mru"),        Cache.MRU),
+      (To_Unbounded_String("fifo"),       Cache.FIFO),
       (To_Unbounded_String("random"),     Cache.Random)
    );
 
