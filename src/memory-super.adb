@@ -4,13 +4,24 @@ with Memory.Cache;
 
 package body Memory.Super is
 
+   function Log2(n : Natural) return Natural is
+      result   : Natural := 0;
+      i        : Natural := n;
+   begin
+      while i > 0 loop
+         result := result + 1;
+         i := i / 2;
+      end loop;
+      return result;
+   end Log2;
+
    function Create_Cache(mem     : Super_Type;
                          size    : Natural;
                          next    : Memory_Pointer) return Memory_Pointer is
       line_count     : Positive;
       line_size      : Positive;
       latency        : constant Time_Type := 1;
-      associativity  : Positive;
+      associativity  : Natural;
       policy         : Cache.Policy_Type;
       result         : Cache.Cache_Pointer;
    begin
@@ -23,7 +34,8 @@ package body Memory.Super is
       end loop;
 
       -- Select a cache associativity.
-      associativity := 1 + (Random.Random(mem.generator) mod line_count);
+      associativity := Random.Random(mem.generator) mod Log2(line_count);
+      associativity := 2 ** associativity;
 
       -- Select a policy.
       case Random.Random(mem.generator) mod 4 is
@@ -65,9 +77,15 @@ package body Memory.Super is
       -- Create levels of SRAM until we hit the max size.
       temp := Memory_Pointer(mem.dram_container);
       while left > 0 loop
-         size := 1 + (Random.Random(mem.generator) mod left);
-         temp := Create_Memory(mem, size, temp);
-         left := left - size;
+         declare
+            bits_left   : constant Natural := Log2(left);
+            bits        : constant Natural
+               := Random.Random(mem.generator) mod bits_left;
+         begin
+            size := 2 ** bits;
+            temp := Create_Memory(mem, size, temp);
+            left := left - size;
+         end;
       end loop;
       Set_Memory(mem, temp);
 
