@@ -12,8 +12,19 @@ package body Memory.Container is
    procedure Set_Memory(mem   : in out Container_Type'Class;
                         other : access Memory_Type'Class) is
    begin
+      if mem.mem /= null and other /= null then
+         Destroy(Memory_Pointer(mem.mem));
+      end if;
       mem.mem := other;
    end Set_Memory;
+
+   procedure Reset(mem : in out Container_Type) is
+   begin
+      Reset(Memory_Type(mem));
+      if mem.mem /= null then
+         Reset(mem.mem.all);
+      end if;
+   end Reset;
 
    procedure Start(mem : in out Container_Type) is
    begin

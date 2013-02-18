@@ -52,17 +52,11 @@ package body Memory.Super is
       size  : Natural;
    begin
 
-      -- Destroy the previous memory.
-      if mem.sram /= null then
-
-         -- Clear the DRAM container so that deleting the SRAM
-         -- does not cause our DRAM to disappear.
+      -- Clear the DRAM container so that deleting the SRAM
+      -- does not cause our DRAM to disappear.  The SRAM
+      -- will be deleted when a new SRAM is set.
+      if mem.dram_container /= null then
          Set_Memory(mem.dram_container.all, null);
-
-         -- Delete the SRAM.
-         -- This will also delete the dram_container.
-         Destroy(mem.sram);
-
       end if;
 
       -- Create the container for the DRAM.
@@ -75,9 +69,9 @@ package body Memory.Super is
          temp := Create_Memory(mem, size, temp);
          left := left - size;
       end loop;
-      mem.sram := temp;
+      Set_Memory(mem, temp);
 
-      Put_Line(To_String(To_String(mem.sram.all)));
+      Put_Line(To_String(To_String(mem)));
 
    end Randomize;
 
@@ -92,18 +86,20 @@ package body Memory.Super is
    end Create_Super;
 
    procedure Finish_Run(mem : in out Super_Type) is
-      time : constant Time_Type := Get_Time(mem.sram.all);
+      time : constant Time_Type := Get_Time(mem);
    begin
-      if time < mem.best_time then
+      if time > 0 and time < mem.best_time then
          mem.best_time := time;
-         mem.best_name := To_String(mem.sram.all);
+         mem.best_name := To_String(mem);
       end if;
    end Finish_Run;
 
    procedure Reset(mem : in out Super_Type) is
    begin
-      if mem.sram /= null then
-         Finish_Run(mem);
+      Finish_Run(mem);
+      Reset(Container_Type(mem));
+      if mem.dram /= null then
+         Reset(mem.dram.all);
       end if;
       Randomize(mem);
    end Reset;
@@ -116,13 +112,12 @@ package body Memory.Super is
 
    procedure Finalize(mem : in out Super_Type) is
    begin
+      Finish_Run(mem);
       if mem.dram /= null then
          Destroy(mem.dram);
-      end if;
-      if mem.sram /= null then
-         Finish_Run(mem);
-         Set_Memory(mem.dram_container.all, null);
-         Destroy(mem.sram);
+         if mem.dram_container /= null then
+            Set_Memory(mem.dram_container.all, null);
+         end if;
       end if;
    end Finalize;
 

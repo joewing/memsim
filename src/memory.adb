@@ -6,7 +6,7 @@ package body Memory is
 
    procedure Reset(mem : in out Memory_Type) is
    begin
-      null;
+      mem.time := 0;
    end Reset;
 
    procedure Start(mem : in out Memory_Type) is

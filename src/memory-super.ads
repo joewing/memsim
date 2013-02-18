@@ -27,7 +27,6 @@ private
 
    type Super_Type is new Container_Type with record
       sram_size      : Natural            := 0;
-      sram           : Memory_Pointer     := null;
       dram           : Memory_Pointer     := null;
       dram_container : Container_Pointer  := null;
       generator      : Random.Generator;

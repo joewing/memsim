@@ -12,6 +12,9 @@ package Memory.Container is
                         other : access Memory_Type'Class);
 
    overriding
+   procedure Reset(mem : in out Container_Type);
+
+   overriding
    procedure Start(mem : in out Container_Type);
 
    overriding
