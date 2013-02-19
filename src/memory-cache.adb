@@ -185,6 +185,42 @@ package body Memory.Cache is
       return result;
    end To_String;
 
+   function Get_Cost(mem : Cache_Type) return Natural is
+
+      -- Number of transistors to store the data.
+      cells    : constant Natural := 6 * mem.line_count * mem.line_size * 8;
+
+      -- Number of transistors needed for the address decoder.
+      decoder  : constant Natural := 2 * (Address_Type'Size +
+                                          Log2(mem.line_count));
+
+      -- Number of transistors needed to store tags.
+      tag_size : constant Natural := Address_Type'Size / mem.line_size -
+                                     Log2(mem.line_count / mem.associativity);
+      tags     : constant Natural := 6 * tag_size * mem.line_count;
+
+      -- Number of transistors needed to store age data.
+      age      : constant Natural := 6 * (mem.associativity - 1);
+
+      -- Number of transistors needed for comparators.
+      compare  : constant Natural := 8 * (mem.associativity - 1) * tag_size;
+
+      -- Number of transistors for the cache with no policy.
+      base     : constant Natural := cells + decoder + tags + compare;
+
+   begin
+      case mem.policy is
+         when LRU    =>
+            return base + age;
+         when MRU    =>
+            return base + age;
+         when FIFO   =>
+            return base + age;
+         when Random =>
+            return base;
+      end case;
+   end Get_Cost;
+
    procedure Free is
       new Ada.Unchecked_Deallocation(Cache_Data, Cache_Data_Pointer);
 

@@ -19,10 +19,16 @@ package Memory.SPM is
                    address : in Address_Type;
                    size    : in Positive);
 
+   overriding
    procedure Show_Access_Stats(mem : in out SPM_Type);
 
+   overriding
    function To_String(mem : SPM_Type) return Unbounded_String;
 
+   overriding
+   function Get_Cost(mem : SPM_Type) return Natural;
+
+   overriding
    procedure Finalize(mem : in out SPM_Type);
 
 private

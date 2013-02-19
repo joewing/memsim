@@ -114,6 +114,17 @@ package body Memory.Bank is
       return result;
    end To_String;
 
+   function Get_Cost(mem : Bank_Type) return Natural is
+      data     : Bank_Data;
+      result   : Natural := 0;
+   begin
+      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
+         data := mem.banks.Element(i);
+         result := result + Get_Cost(data.mem.all);
+      end loop;
+      return result;
+   end Get_Cost;
+
    procedure Finalize(mem : in out Bank_Type) is
       data : Bank_Data;
    begin

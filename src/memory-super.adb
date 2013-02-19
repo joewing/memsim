@@ -4,17 +4,6 @@ with Memory.Cache;
 
 package body Memory.Super is
 
-   function Log2(n : Natural) return Natural is
-      result   : Natural := 0;
-      i        : Natural := n;
-   begin
-      while i > 0 loop
-         result := result + 1;
-         i := i / 2;
-      end loop;
-      return result;
-   end Log2;
-
    function Create_Cache(mem     : Super_Type;
                          size    : Natural;
                          next    : Memory_Pointer) return Memory_Pointer is

@@ -36,4 +36,9 @@ package body Memory.RAM is
       return result;
    end To_String;
 
+   function Get_Cost(mem : RAM_Type) return Natural is
+   begin
+      return 0;   -- FIXME
+   end Get_Cost;
+
 end Memory.RAM;

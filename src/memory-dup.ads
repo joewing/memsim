@@ -38,6 +38,9 @@ package Memory.Dup is
    function To_String(mem : Dup_Type) return Unbounded_String;
 
    overriding
+   function Get_Cost(mem : Dup_Type) return Natural;
+
+   overriding
    procedure Finalize(mem : in out Dup_Type);
 
 private

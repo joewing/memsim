@@ -31,6 +31,9 @@ package Memory.Prefetch is
    function To_String(mem : Prefetch_Type) return Unbounded_String;
 
    overriding
+   function Get_Cost(mem : Prefetch_Type) return Natural;
+
+   overriding
    procedure Finalize(mem : in out Prefetch_Type);
 
 private

@@ -66,6 +66,11 @@ package body Memory.Perfect_Prefetch is
       return result;
    end To_String;
 
+   function Get_Cost(mem : Perfect_Prefetch_Type) return Natural is
+   begin
+      return Get_Cost(mem.mem.all);
+   end Get_Cost;
+
    procedure Finalize(mem : in out Perfect_Prefetch_Type) is
    begin
       Destroy(Memory_Pointer(mem.mem));

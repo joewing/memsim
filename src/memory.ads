@@ -41,6 +41,8 @@ package Memory is
 
    function To_String(mem : Memory_Type) return Unbounded_String is abstract;
 
+   function Get_Cost(mem : Memory_Type) return Natural is abstract;
+
    procedure Destroy(mem : in out Memory_Pointer);
 
 private
@@ -54,5 +56,7 @@ private
 
    procedure Advance(mem      : in out Memory_Type'Class;
                      cycles   : in Time_Type);
+
+   function Log2(n : Natural) return Natural;
 
 end Memory;

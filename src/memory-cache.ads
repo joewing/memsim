@@ -37,6 +37,9 @@ package Memory.Cache is
    function To_String(mem : Cache_Type) return Unbounded_String;
 
    overriding
+   function Get_Cost(mem : Cache_Type) return Natural;
+
+   overriding
    procedure Finalize(mem : in out Cache_Type);
 
 private

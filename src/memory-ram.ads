@@ -21,6 +21,9 @@ package Memory.RAM is
    overriding
    function To_String(mem : RAM_Type) return Unbounded_String;
 
+   overriding
+   function Get_Cost(mem : RAM_Type) return Natural;
+
 private
 
    type RAM_Type is new Memory_Type with record

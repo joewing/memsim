@@ -76,6 +76,11 @@ package body Memory.SPM is
       return result;
    end To_String;
 
+   function Get_Cost(mem : SPM_Type) return Natural is
+   begin
+      return 6 * mem.size * 8;
+   end Get_Cost;
+
    procedure Finalize(mem : in out SPM_Type) is
    begin
       Destroy(Memory_Pointer(mem.mem));
