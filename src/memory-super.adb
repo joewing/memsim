@@ -1,6 +1,7 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Memory.Cache;
+with Benchmark;
 
 package body Memory.Super is
 
@@ -109,6 +110,35 @@ package body Memory.Super is
       end if;
       Randomize(mem);
    end Reset;
+
+   procedure Read(mem      : in out Super_Type;
+                  address  : in Address_Type;
+                  size     : in Positive) is
+   begin
+      Read(Container_Type(mem), address, size);
+      if Get_Time(mem) >= mem.best_time then
+         raise Benchmark.Timeout;
+      end if;
+   end Read;
+
+   procedure Write(mem     : in out Super_Type;
+                   address : in Address_Type;
+                   size    : in Positive) is
+   begin
+      Write(Container_Type(mem), address, size);
+      if Get_Time(mem) >= mem.best_time then
+         raise Benchmark.Timeout;
+      end if;
+   end Write;
+
+   procedure Idle(mem      : in out Super_Type;
+                  cycles   : in Time_Type) is
+   begin
+      Idle(Container_Type(mem), cycles);
+      if Get_Time(mem) >= mem.best_time then
+         raise Benchmark.Timeout;
+      end if;
+   end Idle;
 
    procedure Show_Access_Stats(mem : in out Super_Type) is
    begin

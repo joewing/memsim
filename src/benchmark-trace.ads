@@ -58,6 +58,7 @@ private
       entry Initialize(m : in Memory_Pointer;
                        p : in Buffer_Pool_Pointer;
                        s : in Time_Type);
+      entry Reset;
       entry Process(b : in Stream_Buffer_Pointer);
    end Consumer_Type;
 

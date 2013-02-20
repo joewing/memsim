@@ -88,6 +88,7 @@ package body Benchmark.Trace is
       spacing     : Time_Type;
       buffer      : Stream_Buffer_Pointer;
       total       : Long_Integer := 0;
+      skip        : Boolean := False;
    begin
       accept Initialize(m : in Memory_Pointer;
                         p : in Buffer_Pool_Pointer;
@@ -101,12 +102,24 @@ package body Benchmark.Trace is
             accept Process(b : in Stream_Buffer_Pointer) do
                buffer := b;
             end Process;
-            Parse_Action(mem, spacing, buffer, mdata, state);
+            if not skip then
+               begin
+                  Parse_Action(mem, spacing, buffer, mdata, state);
+               exception
+                  when Timeout =>
+                     skip := True;
+               end;
+            end if;
             total := total +
                      Long_Integer(buffer.last - buffer.buffer'First + 1);
             Put_Line("Processed" & Long_Integer'Image(total) & " bytes");
             Show_Stats(mem.all);
             pool.Release(buffer);
+         or
+            accept Reset do
+               Reset(mem.all);
+               skip := False;
+            end Reset;
          or
             terminate;
          end select;
@@ -239,7 +252,7 @@ package body Benchmark.Trace is
                      Mode => Stream_IO.In_File,
                      Name => To_String(benchmark.file_name));
       for count in 1 .. benchmark.iterations loop
-         Reset(benchmark.mem.all);
+         consumer.Reset;
          begin
             loop
                pool.Allocate(sdata);
