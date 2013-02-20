@@ -3,7 +3,7 @@ with Ada.Unchecked_Deallocation;
 
 package body Memory.Cache is
 
-   function Create_Cache(mem           : access Memory_Type'Class;
+   function Create_Cache(mem           : not null access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 8;
                          associativity : Positive := 1;
@@ -26,7 +26,7 @@ package body Memory.Cache is
       return (RNG.Random(generator) mod 2) = 1;
    end Random_Boolean;
 
-   function Random_Cache(mem        : access Memory_Type'Class;
+   function Random_Cache(mem        : not null access Memory_Type'Class;
                          generator  : RNG.Generator;
                          max_cost   : Cost_Type)
                          return Cache_Pointer is
@@ -34,7 +34,8 @@ package body Memory.Cache is
    begin
 
       -- Start with everything set to the minimum.
-      result.mem           := mem;
+      -- We set mem last in case we need to delete result.
+      result.mem           := null;
       result.line_size     := 1;
       result.line_count    := 1;
       result.associativity := 1;
@@ -107,7 +108,15 @@ package body Memory.Cache is
 
       end loop;
 
-      return result;
+      -- No point in creating a worthless cache.
+      if result.line_size = 1 and result.line_count = 1 then
+         Destroy(Memory_Pointer(result));
+         return null;
+      else
+         result.mem := mem;
+         return result;
+      end if;
+
    end Random_Cache;
 
    function Get_Tag(mem       : Cache_Type;
@@ -314,7 +323,9 @@ package body Memory.Cache is
             Free(ptr);
          end;
       end loop;
-      Destroy(Memory_Pointer(mem.mem));
+      if mem.mem /= null then
+         Destroy(Memory_Pointer(mem.mem));
+      end if;
    end Finalize;
 
 end Memory.Cache;

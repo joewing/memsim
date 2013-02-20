@@ -9,13 +9,21 @@ package body Memory.Super is
 
    function Create_Cache(mem  : Super_Type;
                          cost : Cost_Type;
-                         next : Memory_Pointer) return Memory_Pointer is
+                         next : not null Memory_Pointer)
+                         return Memory_Pointer is
+      temp : Memory_Pointer;
    begin
-      return Memory_Pointer(Random_Cache(next, mem.generator, cost));
+      temp := Memory_Pointer(Random_Cache(next, mem.generator, cost));
+      if temp /= null then
+         return temp;
+      else
+         return next;
+      end if;
    end Create_Cache;
 
    function Create_Transform(mem    : Super_Type;
-                             next   : Memory_Pointer) return Memory_Pointer is
+                             next   : not null Memory_Pointer)
+                             return Memory_Pointer is
       offset   : Integer;
       shift    : Natural;
       result   : Memory_Pointer;
@@ -40,13 +48,14 @@ package body Memory.Super is
 
    function Create_Memory(mem    : Super_Type;
                           cost   : Cost_Type;
-                          next   : Memory_Pointer) return Memory_Pointer is
+                          next   : not null Memory_Pointer)
+                          return Memory_Pointer is
    begin
       return Create_Cache(mem, cost, Create_Transform(mem, next));
    end Create_Memory;
 
    procedure Randomize(mem : in out Super_Type) is
-      temp     : Memory_Pointer := null;
+      next : Memory_Pointer := null;
    begin
 
       -- Clear the DRAM container so that deleting the SRAM
@@ -60,23 +69,25 @@ package body Memory.Super is
       mem.dram_container := Create_Container(mem.dram);
 
       -- Randomly add more levels.
-      temp := Memory_Pointer(mem.dram_container);
+      next := Memory_Pointer(mem.dram_container);
       loop
          declare
-            left : constant Cost_Type := mem.max_cost - Get_Cost(temp.all);
+            left : constant Cost_Type := mem.max_cost - Get_Cost(next.all);
          begin
-            temp := Create_Memory(mem, left, temp);
+            next := Create_Memory(mem, left, next);
          end;
-         exit when (RNG.Random(mem.generator) mod 2) = 0;
+         if next /= Memory_Pointer(mem.dram_container) then
+            exit when (RNG.Random(mem.generator) mod 2) = 0;
+         end if;
       end loop;
-      Set_Memory(mem, temp);
+      Set_Memory(mem, next);
 
       Put_Line(To_String(To_String(mem)));
 
    end Randomize;
 
    function Create_Super(max_cost   : Cost_Type;
-                         dram       : access Memory_Type'Class)
+                         dram       : not null access Memory_Type'Class)
                          return Super_Pointer is
       result : constant Super_Pointer := new Super_Type;
    begin
@@ -142,6 +153,7 @@ package body Memory.Super is
       Finish_Run(mem);
       Put_Line("Best Memory: " & To_String(mem.best_name));
       Put_Line("Best Time:   " & Time_Type'Image(mem.best_time));
+      Put_Line("Best Cost:   " & Cost_Type'Image(mem.best_cost));
    end Show_Access_Stats;
 
    procedure Finalize(mem : in out Super_Type) is

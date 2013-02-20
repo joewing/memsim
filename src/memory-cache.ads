@@ -10,7 +10,7 @@ package Memory.Cache is
                         FIFO,       -- First-in first-out
                         Random);    -- Random
 
-   function Create_Cache(mem           : access Memory_Type'Class;
+   function Create_Cache(mem           : not null access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 8;
                          associativity : Positive := 1;
@@ -18,7 +18,7 @@ package Memory.Cache is
                          policy        : Policy_Type := LRU)
                          return Cache_Pointer;
 
-   function Random_Cache(mem        : access Memory_Type'Class;
+   function Random_Cache(mem        : not null access Memory_Type'Class;
                          generator  : RNG.Generator;
                          max_cost   : Cost_Type)
                          return Cache_Pointer;

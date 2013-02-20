@@ -34,7 +34,8 @@ package body Memory.Transform.Offset is
 
    function Get_Cost(mem : Offset_Type) return Cost_Type is
    begin
-      return 28 * Address_Type'Size;
+      return 28 * Address_Type'Size +
+             Get_Cost(Container_Type(mem));
    end Get_Cost;
 
 end Memory.Transform.Offset;

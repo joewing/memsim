@@ -8,7 +8,7 @@ package Memory.Super is
    type Super_Pointer is access all Super_Type'Class;
 
    function Create_Super(max_cost   : Cost_Type;
-                         dram       : access Memory_Type'Class)
+                         dram       : not null access Memory_Type'Class)
                          return Super_Pointer;
 
    overriding
