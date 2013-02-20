@@ -1,13 +1,18 @@
 
+with Ada.Numerics.Discrete_Random;
 with Ada.Containers.Vectors; use Ada.Containers;
 with Ada.Finalization; use Ada.Finalization;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package Memory is
 
+   package RNG is new Ada.Numerics.Discrete_Random(Natural);
+
    type Address_Type is mod 2 ** 64;
 
    type Time_Type is new Long_Integer range 0 .. Long_Integer'Last;
+
+   type Cost_Type is new Long_Integer range 0 .. Long_Integer'Last;
 
    type Memory_Type is abstract new Limited_Controlled with private;
 
@@ -41,7 +46,7 @@ package Memory is
 
    function To_String(mem : Memory_Type) return Unbounded_String is abstract;
 
-   function Get_Cost(mem : Memory_Type) return Natural is abstract;
+   function Get_Cost(mem : Memory_Type) return Cost_Type is abstract;
 
    procedure Destroy(mem : in out Memory_Pointer);
 

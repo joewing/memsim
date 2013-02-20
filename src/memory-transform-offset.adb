@@ -32,4 +32,9 @@ package body Memory.Transform.Offset is
       return result;
    end To_String;
 
+   function Get_Cost(mem : Offset_Type) return Cost_Type is
+   begin
+      return 28 * Address_Type'Size;
+   end Get_Cost;
+
 end Memory.Transform.Offset;

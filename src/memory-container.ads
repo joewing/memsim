@@ -42,7 +42,7 @@ package Memory.Container is
    function To_String(mem : Container_Type) return Unbounded_String;
 
    overriding
-   function Get_Cost(mem : Container_Type) return Natural;
+   function Get_Cost(mem : Container_Type) return Cost_Type;
 
    overriding
    procedure Finalize(mem : in out Container_Type);

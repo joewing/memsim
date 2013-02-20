@@ -1,6 +1,4 @@
 
-with Ada.Numerics.Discrete_Random;
-
 package Memory.Cache is
 
    type Cache_Type is new Memory_Type with private;
@@ -20,6 +18,11 @@ package Memory.Cache is
                          policy        : Policy_Type := LRU)
                          return Cache_Pointer;
 
+   function Random_Cache(mem        : access Memory_Type'Class;
+                         generator  : RNG.Generator;
+                         max_cost   : Cost_Type)
+                         return Cache_Pointer;
+
    overriding
    procedure Read(mem      : in out Cache_Type;
                   address  : in Address_Type;
@@ -37,7 +40,7 @@ package Memory.Cache is
    function To_String(mem : Cache_Type) return Unbounded_String;
 
    overriding
-   function Get_Cost(mem : Cache_Type) return Natural;
+   function Get_Cost(mem : Cache_Type) return Cost_Type;
 
    overriding
    procedure Finalize(mem : in out Cache_Type);
@@ -53,8 +56,6 @@ private
    type Cache_Data_Pointer is access Cache_Data;
 
    package Cache_Vectors is new Vectors(Natural, Cache_Data_Pointer);
-
-   package RNG is new Ada.Numerics.Discrete_Random(Natural);
 
    type Cache_Type is new Memory_Type with record
       line_size      : Positive := 8;

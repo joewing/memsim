@@ -10,6 +10,8 @@ package Memory.Transform.Offset is
 
    function To_String(mem : Offset_Type) return Unbounded_String;
 
+   function Get_Cost(mem : Offset_Type) return Cost_Type;
+
 private
 
    type Offset_Type is new Transform_Type with record

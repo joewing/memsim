@@ -26,7 +26,7 @@ package Memory.SPM is
    function To_String(mem : SPM_Type) return Unbounded_String;
 
    overriding
-   function Get_Cost(mem : SPM_Type) return Natural;
+   function Get_Cost(mem : SPM_Type) return Cost_Type;
 
    overriding
    procedure Finalize(mem : in out SPM_Type);

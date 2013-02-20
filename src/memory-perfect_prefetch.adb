@@ -66,7 +66,7 @@ package body Memory.Perfect_Prefetch is
       return result;
    end To_String;
 
-   function Get_Cost(mem : Perfect_Prefetch_Type) return Natural is
+   function Get_Cost(mem : Perfect_Prefetch_Type) return Cost_Type is
    begin
       return Get_Cost(mem.mem.all);
    end Get_Cost;

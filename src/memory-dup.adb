@@ -105,8 +105,8 @@ package body Memory.Dup is
       return result;
    end To_String;
 
-   function Get_Cost(mem : Dup_Type) return Natural is
-      result   : Natural := 0;
+   function Get_Cost(mem : Dup_Type) return Cost_Type is
+      result   : Cost_Type := 0;
    begin
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop
          result := result + Get_Cost(mem.memories.Element(i).all);

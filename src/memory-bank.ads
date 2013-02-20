@@ -42,7 +42,7 @@ package Memory.Bank is
    function To_String(mem : Bank_Type) return Unbounded_String;
 
    overriding
-   function Get_Cost(mem : Bank_Type) return Natural;
+   function Get_Cost(mem : Bank_Type) return Cost_Type;
 
    overriding
    procedure Finalize(mem : in out Bank_Type);

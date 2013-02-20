@@ -92,7 +92,7 @@ package body Memory.Container is
       end if;
    end To_String;
 
-   function Get_Cost(mem : Container_Type) return Natural is
+   function Get_Cost(mem : Container_Type) return Cost_Type is
    begin
       if mem.mem /= null then
          return Get_Cost(mem.mem.all);

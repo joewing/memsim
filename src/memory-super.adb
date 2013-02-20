@@ -1,46 +1,17 @@
 
-with Ada.Text_IO; use Ada.Text_IO;
-with Memory.Cache;
+with Ada.Text_IO;             use Ada.Text_IO;
+with Memory.Cache;            use Memory.Cache;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
-with Memory.Transform.Shift; use Memory.Transform.Shift;
+with Memory.Transform.Shift;  use Memory.Transform.Shift;
 with Benchmark;
 
 package body Memory.Super is
 
-   function Create_Cache(mem     : Super_Type;
-                         size    : Natural;
-                         next    : Memory_Pointer) return Memory_Pointer is
-      line_count     : Positive;
-      line_size      : Positive;
-      latency        : constant Time_Type := 1;
-      associativity  : Natural;
-      policy         : Cache.Policy_Type;
-      result         : Cache.Cache_Pointer;
+   function Create_Cache(mem  : Super_Type;
+                         cost : Cost_Type;
+                         next : Memory_Pointer) return Memory_Pointer is
    begin
-
-      -- Select a random line size and count.
-      loop
-         line_count  := 1 + (Random.Random(mem.generator) mod size);
-         line_size   := size / line_count;
-         exit when line_size * line_count = size;
-      end loop;
-
-      -- Select a cache associativity.
-      associativity := Random.Random(mem.generator) mod Log2(line_count);
-      associativity := 2 ** associativity;
-
-      -- Select a policy.
-      case Random.Random(mem.generator) mod 4 is
-         when 0      => policy := Cache.LRU;
-         when 1      => policy := Cache.MRU;
-         when 2      => policy := Cache.FIFO;
-         when others => policy := Cache.Random;
-      end case;
-
-      result := Cache.Create_Cache(next, line_count, line_size,
-                                   associativity, latency, policy);
-
-      return Memory_Pointer(result);
+      return Memory_Pointer(Random_Cache(next, mem.generator, cost));
    end Create_Cache;
 
    function Create_Transform(mem    : Super_Type;
@@ -49,18 +20,18 @@ package body Memory.Super is
       shift    : Natural;
       result   : Memory_Pointer;
    begin
-      case Random.Random(mem.generator) mod 4 is
+      case RNG.Random(mem.generator) mod 4 is
          when 0 =>      -- None
             result := next;
          when 1 =>      -- Offset
-            offset := Integer(Random.Random(mem.generator)) - Integer'Last / 2;
+            offset := Integer(RNG.Random(mem.generator)) - Integer'Last / 2;
             result := Memory_Pointer(Create_Offset(next, offset));
          when 2 =>      -- Shift
-            shift := Random.Random(mem.generator) mod Address_Type'Size;
+            shift := RNG.Random(mem.generator) mod Address_Type'Size;
             result := Memory_Pointer(Create_Shift(next, shift));
          when others => -- Offset + Shift
-            offset := Integer(Random.Random(mem.generator)) - Integer'Last / 2;
-            shift := Random.Random(mem.generator) mod Address_Type'Size;
+            offset := Integer(RNG.Random(mem.generator)) - Integer'Last / 2;
+            shift := RNG.Random(mem.generator) mod Address_Type'Size;
             result := Memory_Pointer(Create_Offset(next, offset));
             result := Memory_Pointer(Create_Shift(result, shift));
       end case;
@@ -68,16 +39,14 @@ package body Memory.Super is
    end Create_Transform;
 
    function Create_Memory(mem    : Super_Type;
-                          size   : Natural;
+                          cost   : Cost_Type;
                           next   : Memory_Pointer) return Memory_Pointer is
    begin
-      return Create_Cache(mem, size, Create_Transform(mem, next));
+      return Create_Cache(mem, cost, Create_Transform(mem, next));
    end Create_Memory;
 
    procedure Randomize(mem : in out Super_Type) is
-      temp  : Memory_Pointer := null;
-      left  : Natural := mem.sram_size;
-      size  : Natural;
+      temp     : Memory_Pointer := null;
    begin
 
       -- Clear the DRAM container so that deleting the SRAM
@@ -90,18 +59,15 @@ package body Memory.Super is
       -- Create the container for the DRAM.
       mem.dram_container := Create_Container(mem.dram);
 
-      -- Create levels of SRAM until we hit the max size.
+      -- Randomly add more levels.
       temp := Memory_Pointer(mem.dram_container);
-      while left > 0 loop
+      loop
          declare
-            bits_left   : constant Natural := Log2(left);
-            bits        : constant Natural
-               := Random.Random(mem.generator) mod bits_left;
+            left : constant Cost_Type := mem.max_cost - Get_Cost(temp.all);
          begin
-            size := 2 ** bits;
-            temp := Create_Memory(mem, size, temp);
-            left := left - size;
+            temp := Create_Memory(mem, left, temp);
          end;
+         exit when (RNG.Random(mem.generator) mod 2) = 0;
       end loop;
       Set_Memory(mem, temp);
 
@@ -109,22 +75,27 @@ package body Memory.Super is
 
    end Randomize;
 
-   function Create_Super(sram_size  : Natural;
+   function Create_Super(max_cost   : Cost_Type;
                          dram       : access Memory_Type'Class)
                          return Super_Pointer is
       result : constant Super_Pointer := new Super_Type;
    begin
-      result.sram_size := sram_size;
+      result.max_cost := max_cost;
       result.dram := Memory_Pointer(dram);
       return result;
    end Create_Super;
 
    procedure Finish_Run(mem : in out Super_Type) is
       time : constant Time_Type := Get_Time(mem);
+      cost : constant Cost_Type := Get_Cost(mem);
    begin
-      if time > 0 and time < mem.best_time then
-         mem.best_time := time;
-         mem.best_name := To_String(mem);
+      if time > 0 then
+         if time < mem.best_time or else
+            (time = mem.best_time and cost < mem.best_cost) then
+            mem.best_time := time;
+            mem.best_cost := cost;
+            mem.best_name := To_String(mem);
+         end if;
       end if;
    end Finish_Run;
 

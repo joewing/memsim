@@ -114,9 +114,9 @@ package body Memory.Bank is
       return result;
    end To_String;
 
-   function Get_Cost(mem : Bank_Type) return Natural is
+   function Get_Cost(mem : Bank_Type) return Cost_Type is
       data     : Bank_Data;
-      result   : Natural := 0;
+      result   : Cost_Type := 0;
    begin
       for i in mem.banks.First_Index .. mem.banks.Last_Index loop
          data := mem.banks.Element(i);

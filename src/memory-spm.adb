@@ -76,9 +76,9 @@ package body Memory.SPM is
       return result;
    end To_String;
 
-   function Get_Cost(mem : SPM_Type) return Natural is
+   function Get_Cost(mem : SPM_Type) return Cost_Type is
    begin
-      return 6 * mem.size * 8;
+      return 6 * 8 * Cost_Type(mem.size);
    end Get_Cost;
 
    procedure Finalize(mem : in out SPM_Type) is

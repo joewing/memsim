@@ -22,7 +22,7 @@ package Memory.RAM is
    function To_String(mem : RAM_Type) return Unbounded_String;
 
    overriding
-   function Get_Cost(mem : RAM_Type) return Natural;
+   function Get_Cost(mem : RAM_Type) return Cost_Type;
 
 private
 

@@ -1,5 +1,4 @@
 
-with Ada.Numerics.Discrete_Random;
 with Memory.Container; use Memory.Container;
 
 package Memory.Super is
@@ -8,7 +7,7 @@ package Memory.Super is
 
    type Super_Pointer is access all Super_Type'Class;
 
-   function Create_Super(sram_size  : Natural;
+   function Create_Super(max_cost   : Cost_Type;
                          dram       : access Memory_Type'Class)
                          return Super_Pointer;
 
@@ -37,15 +36,14 @@ package Memory.Super is
 
 private
 
-   package Random is new Ada.Numerics.Discrete_Random(Natural);
-
    type Super_Type is new Container_Type with record
-      sram_size      : Natural            := 0;
+      max_cost       : Cost_Type          := 1e6;
       dram           : Memory_Pointer     := null;
       dram_container : Container_Pointer  := null;
-      generator      : Random.Generator;
+      generator      : RNG.Generator;
       best_name      : Unbounded_String;
       best_time      : Time_Type          := Time_Type'Last;
+      best_cost      : Cost_Type          := Cost_Type'Last;
    end record;
 
 end Memory.Super;
