@@ -44,12 +44,6 @@ package body Memory.Cache is
       return Get_Index(mem, address);
    end Get_First_Index;
 
-   function Get_Last_Index(mem      : Cache_Type;
-                           address  : Address_Type) return Natural is
-   begin
-      return Get_First_Index(mem, address) + mem.associativity - 1;
-   end Get_Last_Index;
-
    procedure Get_Data(mem      : in out Cache_Type;
                       address  : in Address_Type;
                       is_read  : in Boolean) is
@@ -57,7 +51,7 @@ package body Memory.Cache is
       data        : Cache_Data_Pointer;
       tag         : constant Address_Type := Get_Tag(mem, address);
       first       : constant Natural := Get_First_Index(mem, address);
-      last        : constant Natural := Get_Last_Index(mem, address);
+      last        : constant Natural := first + mem.associativity - 1;
       to_replace  : Natural := 0;
       age         : Long_Integer;
       cycles      : Time_Type := mem.latency;
@@ -76,7 +70,12 @@ package body Memory.Cache is
       end loop;
 
       -- First check if this address is already in the cache.
-      -- Here we keep track of the oldest entry.
+      -- Here we also keep track of the line to be replaced.
+      if mem.policy = MRU then
+         age := Long_Integer'Last;
+      else
+         age := Long_Integer'First;
+      end if;
       for i in first .. last loop
          data := mem.data.Element(i);
          if tag = data.address then
@@ -86,33 +85,22 @@ package body Memory.Cache is
             data.dirty := data.dirty or not is_read;
             Advance(mem, cycles);
             return;
+         elsif mem.policy = MRU then
+            if data.age < age then
+               to_replace := i;
+               age := data.age;
+            end if;
+         else
+            if data.age > age then
+               to_replace := i;
+               age := data.age;
+            end if;
          end if;
       end loop;
 
-      -- Not in the cache.
-      -- Determine which entry to replace.
-      case mem.policy is
-         when LRU | FIFO =>
-            age := Long_Integer'First;
-            for i in first .. last loop
-               data := mem.data.Element(i);
-               if data.age > age then
-                  age := data.age;
-                  to_replace := i;
-               end if;
-            end loop;
-         when MRU =>
-            age := Long_Integer'Last;
-            for i in first .. last loop
-               data := mem.data.Element(i);
-               if data.age < age then
-                  age := data.age;
-                  to_replace := i;
-               end if;
-            end loop;
-         when Random =>
-            to_replace := RNG.Random(mem.generator) mod (last - first + 1);
-      end case;
+      if mem.policy = Random then
+         to_replace := RNG.Random(mem.generator) mod (last - first + 1);
+      end if;
 
       -- Not in the cache; evict the oldest entry.
       data := mem.data.Element(to_replace);

@@ -25,6 +25,9 @@ package body Memory.Transform.Offset is
    begin
       Append(result, "(transform ");
       Append(result, "(offset" & Address_Type'Image(mem.offset) & ")");
+      Append(result, "(memory ");
+      Append(result, To_String(Container_Type(mem)));
+      Append(result, ")");
       Append(result, ")");
       return result;
    end To_String;

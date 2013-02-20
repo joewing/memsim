@@ -1,6 +1,8 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Memory.Cache;
+with Memory.Transform.Offset; use Memory.Transform.Offset;
+with Memory.Transform.Shift; use Memory.Transform.Shift;
 with Benchmark;
 
 package body Memory.Super is
@@ -41,11 +43,35 @@ package body Memory.Super is
       return Memory_Pointer(result);
    end Create_Cache;
 
+   function Create_Transform(mem    : Super_Type;
+                             next   : Memory_Pointer) return Memory_Pointer is
+      offset   : Integer;
+      shift    : Natural;
+      result   : Memory_Pointer;
+   begin
+      case Random.Random(mem.generator) mod 4 is
+         when 0 =>      -- None
+            result := next;
+         when 1 =>      -- Offset
+            offset := Integer(Random.Random(mem.generator)) - Integer'Last / 2;
+            result := Memory_Pointer(Create_Offset(next, offset));
+         when 2 =>      -- Shift
+            shift := Random.Random(mem.generator) mod Address_Type'Size;
+            result := Memory_Pointer(Create_Shift(next, shift));
+         when others => -- Offset + Shift
+            offset := Integer(Random.Random(mem.generator)) - Integer'Last / 2;
+            shift := Random.Random(mem.generator) mod Address_Type'Size;
+            result := Memory_Pointer(Create_Offset(next, offset));
+            result := Memory_Pointer(Create_Shift(result, shift));
+      end case;
+      return result;
+   end Create_Transform;
+
    function Create_Memory(mem    : Super_Type;
                           size   : Natural;
                           next   : Memory_Pointer) return Memory_Pointer is
    begin
-      return Create_Cache(mem, size, next);
+      return Create_Cache(mem, size, Create_Transform(mem, next));
    end Create_Memory;
 
    procedure Randomize(mem : in out Super_Type) is

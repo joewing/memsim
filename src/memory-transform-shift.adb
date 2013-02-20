@@ -28,6 +28,9 @@ package body Memory.Transform.Shift is
    begin
       Append(result, "(transform ");
       Append(result, "(shift" & Natural'Image(mem.shift) & ")");
+      Append(result, "(memory ");
+      Append(result, To_String(Container_Type(mem)));
+      Append(result, ")");
       Append(result, ")");
       return result;
    end To_String;
