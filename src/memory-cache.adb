@@ -19,6 +19,10 @@ package body Memory.Cache is
       result.associativity := associativity;
       result.latency       := latency;
       result.policy        := policy;
+      result.data.Set_Length(Count_Type(result.line_count));
+      for i in 0 .. result.line_count - 1 loop
+         result.data.Replace_Element(i, new Cache_Data);
+      end loop;
       return result;
    end Create_Cache;
 
@@ -112,6 +116,10 @@ package body Memory.Cache is
          Destroy(Memory_Pointer(result));
          return null;
       else
+         result.data.Set_Length(Count_Type(result.line_count));
+         for i in 0 .. result.line_count - 1 loop
+            result.data.Replace_Element(i, new Cache_Data);
+         end loop;
          return Memory_Pointer(result);
       end if;
 
@@ -188,6 +196,11 @@ package body Memory.Cache is
          param := (param + 1) mod 8;
       end loop;
 
+      mem.data.Set_Length(Count_Type(mem.line_count));
+      for i in line_count .. mem.line_count - 1 loop
+         mem.data.Replace_Element(i, new Cache_Data);
+      end loop;
+
       Assert(Get_Cost(mem) <= max_cost, "Invalid cache permutation");
 
    end Permute;
@@ -201,18 +214,14 @@ package body Memory.Cache is
 
    function Get_Index(mem     : Cache_Type;
                       address : Address_Type) return Natural is
-      set_size    : constant Natural := mem.line_size * mem.associativity;
-      set_count   : constant Natural := mem.line_count / mem.associativity;
-      base        : constant Address_Type := address / Address_Type(set_size);
+      line_size   : constant Address_Type := Address_Type(mem.line_size);
+      line_count  : constant Address_Type := Address_Type(mem.line_count);
+      assoc       : constant Address_Type := Address_Type(mem.associativity);
+      set_count   : constant Address_Type := line_count / assoc;
+      base        : constant Address_Type := address / line_size;
    begin
-      return Natural(base mod Address_Type(set_count)) * set_size;
+      return Natural(base mod set_count);
    end Get_Index;
-
-   function Get_First_Index(mem     : Cache_Type;
-                            address : Address_Type) return Natural is
-   begin
-      return Get_Index(mem, address);
-   end Get_First_Index;
 
    procedure Get_Data(mem      : in out Cache_Type;
                       address  : in Address_Type;
@@ -220,22 +229,18 @@ package body Memory.Cache is
 
       data        : Cache_Data_Pointer;
       tag         : constant Address_Type := Get_Tag(mem, address);
-      first       : constant Natural := Get_First_Index(mem, address);
-      last        : constant Natural := first + mem.associativity - 1;
+      first       : constant Natural := Get_Index(mem, address);
+      line        : Natural;
       to_replace  : Natural := 0;
       age         : Long_Integer;
       cycles      : Time_Type := mem.latency;
 
    begin
 
-      -- Make sure the vector is big enough.
-      for i in Natural(Cache_Vectors.Length(mem.data)) .. last loop
-         Cache_Vectors.Append(mem.data, new Cache_Data);
-      end loop;
-
       -- Update the age of all items in this set.
-      for i in first .. last loop
-         data := Cache_Vectors.Element(mem.data, i);
+      for i in 0 .. mem.associativity - 1 loop
+         line := first + i * mem.line_count / mem.associativity;
+         data := mem.data.Element(line);
          data.age := data.age + 1;
       end loop;
 
@@ -246,8 +251,9 @@ package body Memory.Cache is
       else
          age := Long_Integer'First;
       end if;
-      for i in first .. last loop
-         data := mem.data.Element(i);
+      for i in 0 .. mem.associativity - 1 loop
+         line := first + i * mem.line_count / mem.associativity;
+         data := mem.data.Element(line);
          if tag = data.address then
             if mem.policy /= FIFO then
                data.age := 0;
@@ -257,19 +263,20 @@ package body Memory.Cache is
             return;
          elsif mem.policy = MRU then
             if data.age < age then
-               to_replace := i;
+               to_replace := line;
                age := data.age;
             end if;
          else
             if data.age > age then
-               to_replace := i;
+               to_replace := line;
                age := data.age;
             end if;
          end if;
       end loop;
 
       if mem.policy = Random then
-         to_replace := RNG.Random(mem.generator.all) mod (last - first + 1);
+         line := RNG.Random(mem.generator.all) mod mem.associativity;
+         to_replace := first + line * mem.line_count / mem.associativity;
       end if;
 
       -- Not in the cache; evict the oldest entry.
@@ -344,7 +351,7 @@ package body Memory.Cache is
       lines    : constant Cost_Type := Cost_Type(mem.line_count);
       lsize    : constant Cost_Type := Cost_Type(mem.line_size);
       assoc    : constant Cost_Type := Cost_Type(mem.associativity);
-      cells    : constant Cost_Type := 6 * lines * lsize * 8;
+      cells    : constant Cost_Type := 6 * lines * lsize * 8 * assoc;
 
       -- Number of transistors needed for the address decoder.
       decoder  : constant Cost_Type := 2 * (Address_Type'Size +
