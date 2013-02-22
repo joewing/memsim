@@ -89,7 +89,7 @@ package body Memory.Super is
                Destroy(Memory_Pointer(temp));
                mem.chain.Delete(pos);
             end if;
-         when 1      =>    -- Remove a stage (unless there are none).
+         when 1 .. 3 =>    -- Remove a stage (unless there are none).
             if len = 0 then
                temp := Create_Memory(mem, left);
                if temp /= null then
@@ -152,8 +152,9 @@ package body Memory.Super is
       cost : constant Cost_Type := Get_Cost(mem);
       temp : Container_Pointer;
       next : Memory_Pointer;
-      prob : Float;
-      rand : Float;
+      base : constant Natural := 2 ** 16;
+      prob : Natural;
+      rand : constant Natural := RNG.Random(mem.generator.all) mod base;
    begin
 
       -- Keep track of the best memory.
@@ -165,18 +166,16 @@ package body Memory.Super is
       end if;
 
       -- Determine the probability of reverting to the old state.
-      if time + mem.last_time > 0 then
-         prob := Float(mem.last_time) / Float(time + mem.last_time);
+      if mem.last_time /= Time_Type'Last then
+         prob := Natural((Time_Type(base) * mem.last_time) /
+                         (time + mem.last_time));
       else
-         prob := 0.5;
+         prob := base / 2;
       end if;
-
-      -- Draw a random number to determine if we should revert.
-      rand := Float(RNG.Random(mem.generator.all)) / Float(Natural'Last);
 
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
-      if rand > prob then
+      if mem.last_time = Time_Type'Last or rand > prob then
 
          -- Keep this memory.
          mem.last_time := time;
@@ -244,6 +243,30 @@ package body Memory.Super is
       Randomize(mem);
 
    end Reset;
+
+   procedure Read(mem      : in out Super_Type;
+                  address  : in Address_Type;
+                  size     : in Positive) is
+   begin
+      Read(Container_Type(mem), address, size);
+      if mem.best_time < Time_Type'Last then
+         if Get_Time(mem) > mem.best_time * 128 then
+null;--            raise Prune_Error;
+         end if;
+      end if;
+   end Read;
+
+   procedure Write(mem     : in out Super_Type;
+                   address : in Address_Type;
+                   size    : in Positive) is
+   begin
+      Write(Container_Type(mem), address, size);
+      if mem.best_time < Time_Type'Last then
+         if Get_Time(mem) > mem.best_time * 128 then
+null;--            raise Prune_Error;
+         end if;
+      end if;
+   end Write;
 
    procedure Show_Access_Stats(mem : in out Super_Type) is
    begin

@@ -11,6 +11,8 @@ package Memory is
 
    type Generator_Pointer is access all RNG.Generator;
 
+   Prune_Error : exception;
+
    procedure Destroy is new Ada.Unchecked_Deallocation(RNG.Generator,
                                                        Generator_Pointer);
 

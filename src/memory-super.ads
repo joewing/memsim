@@ -20,6 +20,16 @@ package Memory.Super is
    procedure Reset(mem : in out Super_Type);
 
    overriding
+   procedure Read(mem      : in out Super_Type;
+                  address  : in Address_Type;
+                  size     : in Positive);
+
+   overriding
+   procedure Write(mem     : in out Super_Type;
+                   address : in Address_Type;
+                   size    : in Positive);
+
+   overriding
    procedure Show_Access_Stats(mem : in out Super_Type);
 
    overriding
