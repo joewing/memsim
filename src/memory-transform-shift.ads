@@ -8,6 +8,17 @@ package Memory.Transform.Shift is
    function Create_Shift(mem     : Memory_Pointer;
                          shift   : Integer) return Shift_Pointer;
 
+   function Random_Shift(generator  : RNG.Generator;
+                         max_cost   : Cost_Type) return Memory_Pointer;
+
+   overriding
+   function Clone(mem : Shift_Type) return Memory_Pointer;
+
+   overriding
+   procedure Permute(mem         : in out Shift_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type);
+
    overriding
    function To_String(mem : Shift_Type) return Unbounded_String;
 

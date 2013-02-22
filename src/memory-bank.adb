@@ -6,6 +6,12 @@ package body Memory.Bank is
       return new Bank_Type;
    end Create_Bank;
 
+   function Clone(mem : Bank_Type) return Memory_Pointer is
+      result : constant Bank_Pointer := new Bank_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
+
    procedure Add_Bank(mem  : in out Bank_Type'Class;
                       bank : access Memory_Type'Class;
                       key  : in Address_Type;
@@ -124,6 +130,16 @@ package body Memory.Bank is
       end loop;
       return result;
    end Get_Cost;
+
+   procedure Adjust(mem : in out Bank_Type) is
+      data : Bank_Data;
+   begin
+      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
+         data := mem.banks.Element(i);
+         data.mem := Clone(data.mem.all);
+         mem.banks.Replace_Element(i, data);
+      end loop;
+   end Adjust;
 
    procedure Finalize(mem : in out Bank_Type) is
       data : Bank_Data;

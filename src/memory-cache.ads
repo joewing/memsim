@@ -1,7 +1,9 @@
 
+with Memory.Container; use Memory.Container;
+
 package Memory.Cache is
 
-   type Cache_Type is new Memory_Type with private;
+   type Cache_Type is new Container_Type with private;
 
    type Cache_Pointer is access all Cache_Type'Class;
 
@@ -10,7 +12,7 @@ package Memory.Cache is
                         FIFO,       -- First-in first-out
                         Random);    -- Random
 
-   function Create_Cache(mem           : not null access Memory_Type'Class;
+   function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 8;
                          associativity : Positive := 1;
@@ -18,10 +20,17 @@ package Memory.Cache is
                          policy        : Policy_Type := LRU)
                          return Cache_Pointer;
 
-   function Random_Cache(mem        : not null access Memory_Type'Class;
-                         generator  : RNG.Generator;
+   function Random_Cache(generator  : RNG.Generator;
                          max_cost   : Cost_Type)
-                         return Cache_Pointer;
+                         return Memory_Pointer;
+
+   overriding
+   function Clone(mem : Cache_Type) return Memory_Pointer;
+
+   overriding
+   procedure Permute(mem         : in out Cache_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type);
 
    overriding
    procedure Read(mem      : in out Cache_Type;
@@ -34,13 +43,13 @@ package Memory.Cache is
                    size    : in Positive);
 
    overriding
-   procedure Show_Access_Stats(mem : in out Cache_Type);
-
-   overriding
    function To_String(mem : Cache_Type) return Unbounded_String;
 
    overriding
    function Get_Cost(mem : Cache_Type) return Cost_Type;
+
+   overriding
+   procedure Adjust(mem : in out Cache_Type);
 
    overriding
    procedure Finalize(mem : in out Cache_Type);
@@ -57,15 +66,14 @@ private
 
    package Cache_Vectors is new Vectors(Natural, Cache_Data_Pointer);
 
-   type Cache_Type is new Memory_Type with record
+   type Cache_Type is new Container_Type with record
       line_size      : Positive := 8;
       line_count     : Positive := 1;
       associativity  : Positive := 1;
       latency        : Time_Type := 1;
       data           : Cache_Vectors.Vector;
       policy         : Policy_Type := LRU;
-      generator      : RNG.Generator;
-      mem            : access Memory_Type'Class;
+      generator      : Generator_Pointer := new RNG.Generator;
    end record;
 
 end Memory.Cache;

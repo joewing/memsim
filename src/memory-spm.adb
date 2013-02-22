@@ -6,11 +6,17 @@ package body Memory.SPM is
                        latency   : Time_Type := 1) return SPM_Pointer is
       result : constant SPM_Pointer := new SPM_Type;
    begin
-      result.mem := mem;
+      Set_Memory(result.all, mem);
       result.size := size;
       result.latency := latency;
       return result;
    end Create_SPM;
+
+   function Clone(mem : SPM_Type) return Memory_Pointer is
+      result : constant SPM_Pointer := new SPM_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
 
    procedure Read(mem      : in out SPM_Type;
                   address  : in Address_Type;
@@ -18,18 +24,18 @@ package body Memory.SPM is
       cycles : Time_Type := mem.latency;
    begin
       if address >= Address_Type(mem.size) then
-         Start(mem.mem.all);
-         Read(mem.mem.all, address, size);
-         Commit(mem.mem.all, cycles);
+         Forward_Start(mem);
+         Forward_Read(mem, address, size);
+         Forward_Commit(mem, cycles);
       elsif address + Address_Type(size) > Address_Type(mem.size) then
          declare
             naddr : constant Address_Type := Address_Type(mem.size);
             diff  : constant Address_Type := naddr - address;
             nsize : constant Positive := mem.size - Positive(diff);
          begin
-            Start(mem.mem.all);
-            Read(mem.mem.all, naddr, nsize);
-            Commit(mem.mem.all, cycles);
+            Forward_Start(mem);
+            Forward_Read(mem, naddr, nsize);
+            Forward_Commit(mem, cycles);
          end;
       end if;
       Advance(mem, cycles);
@@ -41,27 +47,22 @@ package body Memory.SPM is
       cycles : Time_Type := mem.latency;
    begin
       if address >= Address_Type(mem.size) then
-         Start(mem.mem.all);
-         Write(mem.mem.all, address, size);
-         Commit(mem.mem.all, cycles);
+         Forward_Start(mem);
+         Forward_Write(mem, address, size);
+         Forward_Commit(mem, cycles);
       elsif address + Address_Type(size) > Address_Type(mem.size) then
          declare
             naddr : constant Address_Type := Address_Type(mem.size);
             diff  : constant Address_Type := naddr - address;
             nsize : constant Positive := mem.size - Positive(diff);
          begin
-            Start(mem.mem.all);
-            Write(mem.mem.all, naddr, nsize);
-            Commit(mem.mem.all, cycles);
+            Forward_Start(mem);
+            Forward_Write(mem, naddr, nsize);
+            Forward_Commit(mem, cycles);
          end;
       end if;
       Advance(mem, cycles);
    end Write;
-
-   procedure Show_Access_Stats(mem : in out SPM_Type) is
-   begin
-      Show_Access_Stats(mem.mem.all);
-   end Show_Access_Stats;
 
    function To_String(mem : SPM_Type) return Unbounded_String is
       result : Unbounded_String;
@@ -70,7 +71,7 @@ package body Memory.SPM is
       Append(result, "(size" & Natural'Image(mem.size) & ")");
       Append(result, "(latency" & Time_Type'Image(mem.latency) & ")");
       Append(result, "(memory ");
-      Append(result, To_String(mem.mem.all));
+      Append(result, To_String(Container_Type(mem)));
       Append(result, ")");
       Append(result, ")");
       return result;
@@ -80,10 +81,5 @@ package body Memory.SPM is
    begin
       return 6 * 8 * Cost_Type(mem.size);
    end Get_Cost;
-
-   procedure Finalize(mem : in out SPM_Type) is
-   begin
-      Destroy(Memory_Pointer(mem.mem));
-   end Finalize;
 
 end Memory.SPM;

@@ -10,6 +10,12 @@ package body Memory.Trace is
       return result;
    end Create_Trace;
 
+   function Clone(mem : Trace_Type) return Memory_Pointer is
+      result : constant Trace_Pointer := new Trace_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
+
    function Get_Hex(value : Address_Type) return String is
       result   : String(1 .. 16);
       left     : Address_Type := value;

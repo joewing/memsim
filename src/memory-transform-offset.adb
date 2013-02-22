@@ -14,6 +14,35 @@ package body Memory.Transform.Offset is
       return result;
    end Create_Offset;
 
+   function Random_Offset(generator : RNG.Generator;
+                          max_cost  : Cost_Type) return Memory_Pointer is
+      result   : Offset_Pointer := new Offset_Type;
+   begin
+      if Get_Cost(result.all) > max_cost then
+         Destroy(Memory_Pointer(result));
+         return null;
+      end if;
+      result.offset := 8;
+      return Memory_Pointer(result);
+   end Random_Offset;
+
+   function Clone(mem : Offset_Type) return Memory_Pointer is
+      result : constant Offset_Pointer := new Offset_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
+
+   procedure Permute(mem         : in out Offset_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type) is
+   begin
+      if (RNG.Random(generator) mod 2) = 0 then
+         mem.offset := mem.offset + 1;
+      else
+         mem.offset := mem.offset - 1;
+      end if;
+   end Permute;
+
    function Apply(mem      : Offset_Type;
                   address  : Address_Type) return Address_Type is
    begin

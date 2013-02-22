@@ -8,6 +8,12 @@ package body Memory.Dup is
       return new Dup_Type;
    end Create_Dup;
 
+   function Clone(mem : Dup_Type) return Memory_Pointer is
+      result : constant Dup_Pointer := new Dup_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
+
    procedure Add_Memory(mem   : in out Dup_Type;
                         other : access Memory_Type'Class) is
    begin
@@ -113,6 +119,15 @@ package body Memory.Dup is
       end loop;
       return result;
    end Get_Cost;
+
+   procedure Adjust(mem : in out Dup_Type) is
+      ptr : Memory_Pointer;
+   begin
+      for i in mem.memories.First_Index .. mem.memories.Last_Index loop
+         ptr := Clone(mem.memories.Element(i).all);
+         mem.memories.Replace_Element(i, ptr);
+      end loop;
+   end;
 
    procedure Finalize(mem : in out Dup_Type) is
    begin

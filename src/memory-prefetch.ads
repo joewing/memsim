@@ -10,6 +10,8 @@ package Memory.Prefetch is
                             multiplier : Address_Type := 1)
                             return Prefetch_Pointer;
 
+   function Clone(mem : Prefetch_Type) return Memory_Pointer;
+
    overriding
    procedure Read(mem      : in out Prefetch_Type;
                   address  : in Address_Type;
@@ -32,6 +34,9 @@ package Memory.Prefetch is
 
    overriding
    function Get_Cost(mem : Prefetch_Type) return Cost_Type;
+
+   overriding
+   procedure Adjust(mem : in out Prefetch_Type);
 
    overriding
    procedure Finalize(mem : in out Prefetch_Type);

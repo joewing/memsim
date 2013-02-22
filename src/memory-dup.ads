@@ -7,6 +7,9 @@ package Memory.Dup is
 
    function Create_Dup return Dup_Pointer;
 
+   overriding
+   function Clone(mem : Dup_Type) return Memory_Pointer;
+
    procedure Add_Memory(mem   : in out Dup_Type;
                         other : access Memory_Type'Class);
 
@@ -39,6 +42,9 @@ package Memory.Dup is
 
    overriding
    function Get_Cost(mem : Dup_Type) return Cost_Type;
+
+   overriding
+   procedure Adjust(mem : in out Dup_Type);
 
    overriding
    procedure Finalize(mem : in out Dup_Type);

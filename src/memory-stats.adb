@@ -13,6 +13,12 @@ package body Memory.Stats is
       return result;
    end Create_Stats;
 
+   function Clone(mem : Stats_Type) return Memory_Pointer is
+      result : constant Stats_Pointer := new Stats_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
+
    function Compute_Multiple(last, current : Integer) return Integer is
    begin
       if last /= 0 then

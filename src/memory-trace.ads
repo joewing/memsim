@@ -10,6 +10,9 @@ package Memory.Trace is
    function Create_Trace(mem : Memory_Pointer) return Trace_Pointer;
 
    overriding
+   function Clone(mem : Trace_Type) return Memory_Pointer;
+
+   overriding
    procedure Read(mem      : in out Trace_Type;
                   address  : in Address_Type;
                   size     : in Positive);

@@ -9,6 +9,13 @@ package body Memory.Perfect_Prefetch is
       return result;
    end Create_Perfect_Prefetch;
 
+   function Clone(mem : Perfect_Prefetch_Type) return Memory_Pointer is
+      result : constant Perfect_Prefetch_Pointer :=
+               new Perfect_Prefetch_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
+
    procedure Read(mem      : in out Perfect_Prefetch_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
@@ -70,6 +77,11 @@ package body Memory.Perfect_Prefetch is
    begin
       return Get_Cost(mem.mem.all);
    end Get_Cost;
+
+   procedure Adjust(mem : in out Perfect_Prefetch_Type) is
+   begin
+      mem.mem := Clone(mem.mem.all);
+   end Adjust;
 
    procedure Finalize(mem : in out Perfect_Prefetch_Type) is
    begin

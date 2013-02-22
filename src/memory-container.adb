@@ -1,22 +1,16 @@
 
 package body Memory.Container is
 
-   function Create_Container(mem : access Memory_Type'Class)
-                             return Container_Pointer is
-      result : constant Container_Pointer := new Container_Type;
-   begin
-      result.mem := mem;
-      return result;
-   end Create_Container;
-
    procedure Set_Memory(mem   : in out Container_Type'Class;
                         other : access Memory_Type'Class) is
    begin
-      if mem.mem /= null and other /= null then
-         Destroy(Memory_Pointer(mem.mem));
-      end if;
       mem.mem := other;
    end Set_Memory;
+
+   function Get_Memory(mem : Container_Type'Class) return Memory_Pointer is
+   begin
+      return Memory_Pointer(mem.mem);
+   end Get_Memory;
 
    procedure Reset(mem : in out Container_Type) is
    begin
@@ -76,6 +70,51 @@ package body Memory.Container is
       end if;
    end Idle;
 
+   procedure Forward_Start(mem : in out Container_Type'Class) is
+   begin
+      if mem.mem /= null then
+         Start(mem.mem.all);
+      end if;
+   end Forward_Start;
+
+   procedure Forward_Commit(mem     : in out Container_Type'Class;
+                            cycles  : out Time_Type) is
+   begin
+      if mem.mem /= null then
+         Commit(mem.mem.all, cycles);
+      else
+         cycles := 0;
+      end if;
+   end Forward_Commit;
+
+   procedure Forward_Read(mem       : in out Container_Type'Class;
+                          address   : in Address_Type;
+                          size      : in Positive) is
+   begin
+      if mem.mem /= null then
+         Read(mem.mem.all, address, size);
+      end if;
+   end Forward_Read;
+
+   procedure Forward_Write(mem      : in out Container_Type'Class;
+                           address  : in Address_Type;
+                           size     : in Positive) is
+   begin
+      if mem.mem /= null then
+         Write(mem.mem.all, address, size);
+      end if;
+   end Forward_Write;
+
+   procedure Forward_Idle(mem    : in out Container_Type'Class;
+                          cycles : in Time_Type) is
+   begin
+      if mem.mem /= null then
+         Idle(mem.mem.all, cycles);
+      else
+         Advance(mem, cycles);
+      end if;
+   end Forward_Idle;
+
    procedure Show_Access_Stats(mem : in out Container_Type) is
    begin
       if mem.mem /= null then
@@ -100,6 +139,13 @@ package body Memory.Container is
          return 0;
       end if;
    end Get_Cost;
+
+   procedure Adjust(mem : in out Container_Type) is
+   begin
+      if mem.mem /= null then
+         mem.mem := Clone(mem.mem.all);
+      end if;
+   end Adjust;
 
    procedure Finalize(mem : in out Container_Type) is
    begin

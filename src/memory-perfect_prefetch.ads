@@ -9,6 +9,9 @@ package Memory.Perfect_Prefetch is
                                     return Perfect_Prefetch_Pointer;
 
    overriding
+   function Clone(mem : Perfect_Prefetch_Type) return Memory_Pointer;
+
+   overriding
    procedure Read(mem      : in out Perfect_Prefetch_Type;
                   address  : in Address_Type;
                   size     : in Positive);
@@ -30,6 +33,9 @@ package Memory.Perfect_Prefetch is
 
    overriding
    function Get_Cost(mem : Perfect_Prefetch_Type) return Cost_Type;
+
+   overriding
+   procedure Adjust(mem : in out Perfect_Prefetch_Type);
 
    overriding
    procedure Finalize(mem : in out Perfect_Prefetch_Type);

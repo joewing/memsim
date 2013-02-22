@@ -6,6 +6,11 @@ package Memory.Transform is
    type Transform_Type is abstract new Container_Type with private;
 
    overriding
+   procedure Permute(mem         : in out Transform_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type) is abstract;
+
+   overriding
    procedure Read(mem      : in out Transform_Type;
                   address  : in Address_Type;
                   size     : in Positive);

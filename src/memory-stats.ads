@@ -11,6 +11,9 @@ package Memory.Stats is
    function Create_Stats(mem : access Memory_Type'Class) return Stats_Pointer;
 
    overriding
+   function Clone(mem : Stats_Type) return Memory_Pointer;
+
+   overriding
    procedure Read(mem      : in out Stats_Type;
                   address  : in Address_Type;
                   size     : in Positive);

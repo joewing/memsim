@@ -3,7 +3,7 @@ with Ada.Unchecked_Deallocation;
 
 package body Memory.Cache is
 
-   function Create_Cache(mem           : not null access Memory_Type'Class;
+   function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 8;
                          associativity : Positive := 1;
@@ -12,7 +12,7 @@ package body Memory.Cache is
                          return Cache_Pointer is
       result : constant Cache_Pointer := new Cache_Type;
    begin
-      result.mem           := mem;
+      Set_Memory(result.all, mem);
       result.line_size     := line_size;
       result.line_count    := line_count;
       result.associativity := associativity;
@@ -26,16 +26,13 @@ package body Memory.Cache is
       return (RNG.Random(generator) mod 2) = 1;
    end Random_Boolean;
 
-   function Random_Cache(mem        : not null access Memory_Type'Class;
-                         generator  : RNG.Generator;
+   function Random_Cache(generator  : RNG.Generator;
                          max_cost   : Cost_Type)
-                         return Cache_Pointer is
+                         return Memory_Pointer is
       result : Cache_Pointer := new Cache_Type;
    begin
 
       -- Start with everything set to the minimum.
-      -- We set mem last in case we need to delete result.
-      result.mem           := null;
       result.line_size     := 1;
       result.line_count    := 1;
       result.associativity := 1;
@@ -113,11 +110,83 @@ package body Memory.Cache is
          Destroy(Memory_Pointer(result));
          return null;
       else
-         result.mem := mem;
-         return result;
+         return Memory_Pointer(result);
       end if;
 
    end Random_Cache;
+
+   function Clone(mem : Cache_Type) return Memory_Pointer is
+      result : constant Cache_Pointer := new Cache_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
+
+   procedure Permute(mem         : in out Cache_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type) is
+
+      param          : Natural := RNG.Random(generator) mod 8;
+      line_size      : constant Positive := mem.line_size;
+      line_count     : constant Positive := mem.line_count;
+      associativity  : constant Positive := mem.associativity;
+      policy         : constant Policy_Type := mem.policy;
+
+   begin
+
+      -- Loop until we either change a parameter or we are unable to
+      -- change any parameter.
+      for i in 1 .. 8 loop
+         case param is
+            when 0 =>      -- Increase line size
+               mem.line_size := line_size * 2;
+               exit when Get_Cost(mem) <= max_cost;
+               mem.line_size := line_size;
+            when 1 =>      -- Decrease line size
+               if line_size > 1 then
+                  mem.line_size := line_size / 2;
+                  exit when Get_Cost(mem) <= max_cost;
+                  mem.line_size := line_size;
+               end if;
+            when 2 =>      -- Increase line count
+               mem.line_count := line_count * 2;
+               exit when Get_Cost(mem) <= max_cost;
+               mem.line_count := line_count;
+            when 3 =>      -- Decrease line count
+               if line_count > 1 then
+                  mem.line_count := line_count / 2;
+                  if mem.associativity > mem.line_count then
+                     mem.associativity := mem.line_count;
+                  end if;
+                  exit;
+               end if;
+            when 4 =>      -- Increase associativity
+               if associativity < line_count then
+                  mem.associativity := associativity * 2;
+                  exit when Get_Cost(mem) <= max_cost;
+                  mem.associativity := associativity;
+               end if;
+            when 5 =>      -- Decrease associativity
+               if associativity > 1 then
+                  mem.associativity := associativity / 2;
+                  exit;
+               end if;
+            when 6 =>      -- Increase policy
+               if policy /= Policy_Type'Last then
+                  mem.policy := Policy_Type'Succ(policy);
+                  exit when Get_Cost(mem) <= max_cost;
+                  mem.policy := policy;
+               end if;
+            when others => -- Decrease policy
+               if policy /= Policy_Type'First then
+                  mem.policy := Policy_Type'Pred(policy);
+                  exit when Get_Cost(mem) <= max_cost;
+                  mem.policy := policy;
+               end if;
+         end case;
+         param := (param + 1) mod 8;
+      end loop;
+
+   end Permute;
 
    function Get_Tag(mem       : Cache_Type;
                     address   : Address_Type) return Address_Type is
@@ -197,24 +266,24 @@ package body Memory.Cache is
       end loop;
 
       if mem.policy = Random then
-         to_replace := RNG.Random(mem.generator) mod (last - first + 1);
+         to_replace := RNG.Random(mem.generator.all) mod (last - first + 1);
       end if;
 
       -- Not in the cache; evict the oldest entry.
       data := mem.data.Element(to_replace);
       if data.dirty then
-         Start(mem.mem.all);
-         Write(mem.mem.all, data.address, mem.line_size);
-         Commit(mem.mem.all, cycles);
+         Forward_Start(mem);
+         Forward_Write(mem, data.address, mem.line_size);
+         Forward_Commit(mem, cycles);
          Advance(mem, cycles);
          data.dirty := False;
       end if;
 
       -- Read the new entry.
-      Start(mem.mem.all);
+      Forward_Start(mem);
       data.address := tag;
-      Read(mem.mem.all, data.address, mem.line_size);
-      Commit(mem.mem.all, cycles);
+      Forward_Read(mem, data.address, mem.line_size);
+      Forward_Commit(mem, cycles);
       Advance(mem, cycles);
 
       -- Mark the data as new and return.
@@ -243,11 +312,6 @@ package body Memory.Cache is
       end loop;
    end Write;
 
-   procedure Show_Access_Stats(mem : in out Cache_Type) is
-   begin
-      Show_Access_Stats(mem.mem.all);
-   end Show_Access_Stats;
-
    function To_String(mem : Cache_Type) return Unbounded_String is
       result : Unbounded_String;
    begin
@@ -266,7 +330,7 @@ package body Memory.Cache is
       end case;
       Append(result, ")");
       Append(result, "(memory ");
-      Append(result, To_String(mem.mem.all));
+      Append(result, To_String(Container_Type(mem)));
       Append(result, "))");
       return result;
    end To_String;
@@ -298,18 +362,31 @@ package body Memory.Cache is
       -- Number of transistors for the cache with no policy.
       base     : constant Cost_Type := cells + decoder + tags + compare;
 
+      -- Cost of the contained memory.
+      con      : constant Cost_Type := Get_Cost(Container_Type(mem));
+
    begin
       case mem.policy is
          when LRU    =>
-            return base + age;
+            return base + age + con;
          when MRU    =>
-            return base + age;
+            return base + age + con;
          when FIFO   =>
-            return base + age;
+            return base + age + con;
          when Random =>
-            return base;
+            return base + con;
       end case;
    end Get_Cost;
+
+   procedure Adjust(mem : in out Cache_Type) is
+      ptr : Cache_Data_Pointer;
+   begin
+      for i in mem.data.First_Index .. mem.data.Last_Index loop
+         ptr := new Cache_Data'(mem.data.Element(i).all);
+         mem.data.Replace_Element(i, ptr);
+      end loop;
+      mem.generator := new RNG.Generator;
+   end Adjust;
 
    procedure Free is
       new Ada.Unchecked_Deallocation(Cache_Data, Cache_Data_Pointer);
@@ -323,9 +400,7 @@ package body Memory.Cache is
             Free(ptr);
          end;
       end loop;
-      if mem.mem /= null then
-         Destroy(Memory_Pointer(mem.mem));
-      end if;
+      Destroy(mem.generator);
    end Finalize;
 
 end Memory.Cache;

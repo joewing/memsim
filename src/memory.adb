@@ -1,8 +1,14 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Unchecked_Deallocation;
 
 package body Memory is
+
+   procedure Permute(mem         : in out Memory_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type) is
+   begin
+      null;
+   end Permute;
 
    procedure Reset(mem : in out Memory_Type) is
    begin

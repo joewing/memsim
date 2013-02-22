@@ -9,6 +9,9 @@ package Memory.Bank is
 
    function Create_Bank return Bank_Pointer;
 
+   overriding
+   function Clone(mem : Bank_Type) return Memory_Pointer;
+
    procedure Add_Bank(mem  : in out Bank_Type'Class;
                       bank : access Memory_Type'Class;
                       key  : in Address_Type;
@@ -43,6 +46,9 @@ package Memory.Bank is
 
    overriding
    function Get_Cost(mem : Bank_Type) return Cost_Type;
+
+   overriding
+   procedure Adjust(mem : in out Bank_Type);
 
    overriding
    procedure Finalize(mem : in out Bank_Type);

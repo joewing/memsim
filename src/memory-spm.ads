@@ -1,13 +1,18 @@
 
+with Memory.Container; use Memory.Container;
+
 package Memory.SPM is
 
-   type SPM_Type is new Memory_Type with private;
+   type SPM_Type is new Container_Type with private;
 
    type SPM_Pointer is access all SPM_Type'Class;
 
    function Create_SPM(mem       : access Memory_Type'Class;
                        size      : Natural;
                        latency   : Time_Type := 1) return SPM_Pointer;
+
+   overriding
+   function Clone(mem : SPM_Type) return Memory_Pointer;
 
    overriding
    procedure Read(mem      : in out SPM_Type;
@@ -20,21 +25,14 @@ package Memory.SPM is
                    size    : in Positive);
 
    overriding
-   procedure Show_Access_Stats(mem : in out SPM_Type);
-
-   overriding
    function To_String(mem : SPM_Type) return Unbounded_String;
 
    overriding
    function Get_Cost(mem : SPM_Type) return Cost_Type;
 
-   overriding
-   procedure Finalize(mem : in out SPM_Type);
-
 private
 
-   type SPM_Type is new Memory_Type with record
-      mem      : access Memory_Type'Class;
+   type SPM_Type is new Container_Type with record
       size     : Natural;
       latency  : Time_Type;
    end record;

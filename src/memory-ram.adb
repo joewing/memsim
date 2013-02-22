@@ -10,6 +10,12 @@ package body Memory.RAM is
       return result;
    end Create_RAM;
 
+   function Clone(mem : RAM_Type) return Memory_Pointer is
+      result : constant RAM_Pointer := new RAM_Type'(mem);
+   begin
+      return Memory_Pointer(result);
+   end Clone;
+
    procedure Read(mem      : in out RAM_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
