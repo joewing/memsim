@@ -33,6 +33,13 @@ package body Memory.Dup is
       mem.time := max_time;
    end Update_Time;
 
+   procedure Reset(mem : in out Dup_Type) is
+   begin
+      for i in mem.memories.First_Index .. mem.memories.Last_Index loop
+         Reset(mem.memories.Element(i).all);
+      end loop;
+   end Reset;
+
    procedure Start(mem : in out Dup_Type) is
    begin
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop

@@ -4,7 +4,6 @@ with Ada.Assertions;          use Ada.Assertions;
 with Memory.Cache;            use Memory.Cache;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
-with Benchmark;
 
 package body Memory.Super is
 
@@ -138,13 +137,13 @@ package body Memory.Super is
 
    function Create_Super(mem        : not null access Memory_Type'Class;
                          max_cost   : Cost_Type;
-                         state      : Integer)
+                         seed       : Integer)
                          return Super_Pointer is
       result : constant Super_Pointer := new Super_Type;
    begin
       result.max_cost := max_cost;
       result.dram := Memory_Pointer(mem);
-      RNG.Reset(result.generator.all, state);
+      RNG.Reset(result.generator.all, seed);
       return result;
    end Create_Super;
 
@@ -245,35 +244,6 @@ package body Memory.Super is
       Randomize(mem);
 
    end Reset;
-
-   procedure Read(mem      : in out Super_Type;
-                  address  : in Address_Type;
-                  size     : in Positive) is
-   begin
-      Read(Container_Type(mem), address, size);
-      if Get_Time(mem) > mem.best_time then
-         raise Benchmark.Timeout;
-      end if;
-   end Read;
-
-   procedure Write(mem     : in out Super_Type;
-                   address : in Address_Type;
-                   size    : in Positive) is
-   begin
-      Write(Container_Type(mem), address, size);
-      if Get_Time(mem) > mem.best_time then
-         raise Benchmark.Timeout;
-      end if;
-   end Write;
-
-   procedure Idle(mem      : in out Super_Type;
-                  cycles   : in Time_Type) is
-   begin
-      Idle(Container_Type(mem), cycles);
-      if Get_Time(mem) > mem.best_time then
-         raise Benchmark.Timeout;
-      end if;
-   end Idle;
 
    procedure Show_Access_Stats(mem : in out Super_Type) is
    begin

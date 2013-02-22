@@ -91,7 +91,6 @@ package body Benchmark.Trace is
       spacing     : Time_Type;
       buffer      : Stream_Buffer_Pointer;
       total       : Byte_Count_Type := 0;
-      skip        : Boolean := False;
    begin
       accept Initialize(m : in Memory_Pointer;
                         p : in Buffer_Pool_Pointer;
@@ -105,14 +104,7 @@ package body Benchmark.Trace is
             accept Process(b : in Stream_Buffer_Pointer) do
                buffer := b;
             end Process;
-            if not skip then
-               begin
-                  Parse_Action(mem, spacing, buffer, mdata, state);
-               exception
-                  when Timeout =>
-                     skip := True;
-               end;
-            end if;
+            Parse_Action(mem, spacing, buffer, mdata, state);
             total := total +
                      Byte_Count_Type(buffer.last - buffer.buffer'First + 1);
             Put_Line("Processed" & Byte_Count_Type'Image(total) & " bytes");
@@ -121,7 +113,6 @@ package body Benchmark.Trace is
          or
             accept Reset do
                Reset(mem.all);
-               skip := False;
             end Reset;
          or
             terminate;

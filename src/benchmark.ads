@@ -14,8 +14,7 @@ package Benchmark is
 
    type Benchmark_Pointer is access all Benchmark_Type'Class;
 
-   Invalid_Argument  : exception;
-   Timeout           : exception;
+   Invalid_Argument : exception;
 
    procedure Run(benchmark : in out Benchmark_Type'Class;
                  mem       : in Memory_Pointer);

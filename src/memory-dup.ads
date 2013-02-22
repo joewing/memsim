@@ -14,6 +14,9 @@ package Memory.Dup is
                         other : access Memory_Type'Class);
 
    overriding
+   procedure Reset(mem : in out Dup_Type);
+
+   overriding
    procedure Start(mem : in out Dup_Type);
 
    overriding
