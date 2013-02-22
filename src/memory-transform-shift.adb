@@ -79,4 +79,12 @@ package body Memory.Transform.Shift is
       return result;
    end To_String;
 
+   function Get_Cost(mem : Shift_Type) return Cost_Type is
+   begin
+      -- A shift just moves wires around, but we give it a small
+      -- cost just to avoid memories that are more complicated
+      -- than necessary.
+      return 1;
+   end Get_Cost;
+
 end Memory.Transform.Shift;

@@ -27,6 +27,9 @@ package Memory.Transform.Shift is
    overriding
    function To_String(mem : Shift_Type) return Unbounded_String;
 
+   overriding
+   function Get_Cost(mem : Shift_Type) return Cost_Type;
+
 private
 
    type Shift_Type is new Transform_Type with record
