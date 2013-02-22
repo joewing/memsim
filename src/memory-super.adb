@@ -1,5 +1,6 @@
 
 with Ada.Text_IO;             use Ada.Text_IO;
+with Ada.Assertions;          use Ada.Assertions;
 with Memory.Cache;            use Memory.Cache;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
@@ -98,6 +99,7 @@ package body Memory.Super is
       Set_Memory(mem, next);
 
       Put_Line(To_String(To_String(mem)));
+      Assert(Get_Cost(mem) <= mem.max_cost, "Invalid randomize");
 
    end Randomize;
 
@@ -135,13 +137,11 @@ package body Memory.Super is
          -- This memory is better than the last or we decide to
          -- select a worse memory this time.
          -- The last chain will be destroyed later.
-Put_Line("keep");
          mem.last_time := time;
          mem.last_cost := Get_Cost(mem);
 
       else
 
-Put_Line("revert");
          -- This memory is not as good as the last and we do not
          -- want a worse memory this time.
          -- In this case, we need to destroy chain and copy last_chain
@@ -168,6 +168,7 @@ Put_Line("revert");
 
    procedure Reset(mem : in out Super_Type) is
       temp : Container_Pointer;
+      next : Memory_Pointer;
    begin
 
       -- Reset the time.
@@ -189,6 +190,15 @@ Put_Line("revert");
          temp := Container_Pointer(Clone(temp.all));
          mem.last_chain.Append(temp);
       end loop;
+
+      -- Fix links.
+      next := mem.dram;
+      for i in reverse mem.chain.First_Index .. mem.chain.Last_Index loop
+         temp := mem.chain.Element(i);
+         Set_Memory(temp.all, next);
+         next := Memory_Pointer(temp);
+      end loop;
+      Set_Memory(mem, next);
 
       -- Make a random modification to the memory.
       Randomize(mem);

@@ -1,5 +1,6 @@
 
 with Ada.Unchecked_Deallocation;
+with Ada.Assertions; use Ada.Assertions;
 
 package body Memory.Cache is
 
@@ -106,6 +107,7 @@ package body Memory.Cache is
       end loop;
 
       -- No point in creating a worthless cache.
+      Assert(Get_Cost(result.all) <= max_cost, "Invalid cache");
       if result.line_size = 1 and result.line_count = 1 then
          Destroy(Memory_Pointer(result));
          return null;
@@ -185,6 +187,8 @@ package body Memory.Cache is
          end case;
          param := (param + 1) mod 8;
       end loop;
+
+      Assert(Get_Cost(mem) <= max_cost, "Invalid cache permutation");
 
    end Permute;
 
