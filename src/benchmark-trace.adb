@@ -251,6 +251,8 @@ package body Benchmark.Trace is
                      Mode => Stream_IO.In_File,
                      Name => To_String(benchmark.file_name));
       for count in 1 .. benchmark.iterations loop
+         Put_Line("Iteration" & Long_Integer'Image(count) & " /" &
+                  Long_Integer'Image(benchmark.iterations));
          consumer.Reset;
          begin
             loop
