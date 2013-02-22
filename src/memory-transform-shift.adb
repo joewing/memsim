@@ -84,7 +84,7 @@ package body Memory.Transform.Shift is
       -- A shift just moves wires around, but we give it a small
       -- cost just to avoid memories that are more complicated
       -- than necessary.
-      return 1;
+      return 1 + Get_Cost(Container_Type(mem));
    end Get_Cost;
 
 end Memory.Transform.Shift;
