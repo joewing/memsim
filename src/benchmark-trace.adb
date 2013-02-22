@@ -7,6 +7,8 @@ with Ada.Unchecked_Deallocation;
 
 package body Benchmark.Trace is
 
+   type Byte_Count_Type is mod 2 ** 64;
+
    type Access_Type is (Read, Write, Idle);
 
    type Memory_Access is record
@@ -88,7 +90,7 @@ package body Benchmark.Trace is
       mem         : Memory_Pointer;
       spacing     : Time_Type;
       buffer      : Stream_Buffer_Pointer;
-      total       : Long_Integer := 0;
+      total       : Byte_Count_Type := 0;
       skip        : Boolean := False;
    begin
       accept Initialize(m : in Memory_Pointer;
@@ -112,8 +114,8 @@ package body Benchmark.Trace is
                end;
             end if;
             total := total +
-                     Long_Integer(buffer.last - buffer.buffer'First + 1);
-            Put_Line("Processed" & Long_Integer'Image(total) & " bytes");
+                     Byte_Count_Type(buffer.last - buffer.buffer'First + 1);
+            Put_Line("Processed" & Byte_Count_Type'Image(total) & " bytes");
             Show_Stats(mem.all);
             pool.Release(buffer);
          or
