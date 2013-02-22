@@ -30,6 +30,36 @@ package body Memory.Super is
       return Memory_Pointer(result);
    end Clone;
 
+   procedure Reduce(mem : in out Super_Type) is
+      updated  : Boolean := True;
+      a, b     : Container_Pointer;
+   begin
+      while updated loop
+         updated := False;
+         for i in mem.chain.First_Index .. mem.chain.Last_Index - 1 loop
+            a := mem.chain.Element(i);
+            b := mem.chain.Element(i + 1);
+            if a.all in Offset_Type'Class and b.all in Offset_Type'Class then
+               Set_Offset(Offset_Pointer(a).all,
+                          Get_Offset(Offset_Pointer(a).all) +
+                          Get_Offset(Offset_Pointer(b).all));
+               Destroy(Memory_Pointer(b));
+               mem.chain.Delete(i + 1);
+               updated := True;
+               exit;
+            elsif a.all in Shift_Type'Class and b.all in Shift_Type'Class then
+               Set_Shift(Shift_Pointer(a).all,
+                         Get_Shift(Shift_Pointer(a).all) +
+                         Get_Shift(Shift_Pointer(b).all));
+               Destroy(Memory_Pointer(b));
+               mem.chain.Delete(i + 1);
+               updated := True;
+               exit;
+            end if;
+         end loop;
+      end loop;
+   end Reduce;
+
    procedure Randomize(mem : in out Super_Type) is
       next  : Memory_Pointer := null;
       temp  : Container_Pointer := null;
@@ -86,6 +116,9 @@ package body Memory.Super is
             end if;
       end case;
 
+      -- Remove redundant memories.
+      Reduce(mem);
+
       -- Link the memories together.
       next := mem.dram;
       for i in reverse mem.chain.First_Index .. mem.chain.Last_Index loop
@@ -103,13 +136,15 @@ package body Memory.Super is
 
    end Randomize;
 
-   function Create_Super(max_cost   : Cost_Type;
-                         dram       : not null access Memory_Type'Class)
+   function Create_Super(mem        : not null access Memory_Type'Class;
+                         max_cost   : Cost_Type;
+                         state      : Integer)
                          return Super_Pointer is
       result : constant Super_Pointer := new Super_Type;
    begin
       result.max_cost := max_cost;
-      result.dram := Memory_Pointer(dram);
+      result.dram := Memory_Pointer(mem);
+      RNG.Reset(result.generator.all, state);
       return result;
    end Create_Super;
 

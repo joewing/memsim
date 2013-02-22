@@ -7,6 +7,7 @@ procedure Parse_Super(lexer   : in out Lexer_Type;
 
    max_cost    : Cost_Type := 1e6;
    dram        : Memory_Pointer := null;
+   state       : Integer := 0;
 
 begin
 
@@ -30,6 +31,8 @@ begin
                Match(lexer, Literal);
                if name = "max_cost" then
                   max_cost := Cost_Type'Value(value);
+               elsif name = "state" then
+                  state := Integer'Value(value);
                else
                   Raise_Error(lexer, "invalid attribute in super: " & name);
                end if;
@@ -38,7 +41,7 @@ begin
       end;
       Match(lexer, Close);
    end loop;
-   result := Memory_Pointer(Super.Create_Super(max_cost, dram));
+   result := Memory_Pointer(Super.Create_Super(dram, max_cost, state));
 exception
    when Data_Error =>
       if dram /= null then

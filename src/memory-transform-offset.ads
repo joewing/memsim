@@ -11,6 +11,11 @@ package Memory.Transform.Offset is
    function Random_Offset(generator : RNG.Generator;
                           max_cost  : Cost_Type) return Memory_Pointer;
 
+   function Get_Offset(mem : Offset_Type) return Address_Type;
+
+   procedure Set_Offset(mem      : in out Offset_Type;
+                        offset   : in Address_Type);
+
    overriding
    function Clone(mem : Offset_Type) return Memory_Pointer;
 

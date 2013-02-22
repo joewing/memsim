@@ -26,6 +26,17 @@ package body Memory.Transform.Shift is
       return Memory_Pointer(result);
    end Random_Shift;
 
+   function Get_Shift(mem : Shift_Type) return Natural is
+   begin
+      return mem.shift;
+   end Get_Shift;
+
+   procedure Set_Shift(mem    : in out Shift_Type;
+                       shift  : in Natural) is
+   begin
+      mem.shift := shift mod Address_Type'Size;
+   end Set_Shift;
+
    function Clone(mem : Shift_Type) return Memory_Pointer is
       result : constant Shift_Pointer := new Shift_Type'(mem);
    begin

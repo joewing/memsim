@@ -11,6 +11,11 @@ package Memory.Transform.Shift is
    function Random_Shift(generator  : RNG.Generator;
                          max_cost   : Cost_Type) return Memory_Pointer;
 
+   function Get_Shift(mem : Shift_Type) return Natural;
+
+   procedure Set_Shift(mem    : in out Shift_Type;
+                       shift  : in Natural);
+
    overriding
    function Clone(mem : Shift_Type) return Memory_Pointer;
 

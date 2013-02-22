@@ -22,9 +22,24 @@ package body Memory.Transform.Offset is
          Destroy(Memory_Pointer(result));
          return null;
       end if;
-      result.offset := 8;
+      if (RNG.Random(generator) mod 2) = 0 then
+         result.offset := 0 - Address_Type(1);
+      else
+         result.offset := 1;
+      end if;
       return Memory_Pointer(result);
    end Random_Offset;
+
+   function Get_Offset(mem : Offset_Type) return Address_Type is
+   begin
+      return mem.offset;
+   end Get_Offset;
+
+   procedure Set_Offset(mem      : in out Offset_Type;
+                        offset   : in Address_Type) is
+   begin
+      mem.offset := offset;
+   end Set_Offset;
 
    function Clone(mem : Offset_Type) return Memory_Pointer is
       result : constant Offset_Pointer := new Offset_Type'(mem);
