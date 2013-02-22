@@ -205,8 +205,7 @@ package body Memory.Cache is
       set_count   : constant Natural := mem.line_count / mem.associativity;
       base        : constant Address_Type := address / Address_Type(set_size);
    begin
-      return Natural((Long_Integer(base) mod Long_Integer(set_count)))
-               * set_size;
+      return Natural(base mod Address_Type(set_count)) * set_size;
    end Get_Index;
 
    function Get_First_Index(mem     : Cache_Type;
