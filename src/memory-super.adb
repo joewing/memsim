@@ -220,7 +220,7 @@ package body Memory.Super is
                    size    : in Positive) is
    begin
       Write(Container_Type(mem), address, size);
-      if Get_Time(mem) >= mem.best_time then
+      if Get_Time(mem) > mem.best_time then
          raise Benchmark.Timeout;
       end if;
    end Write;
@@ -229,7 +229,7 @@ package body Memory.Super is
                   cycles   : in Time_Type) is
    begin
       Idle(Container_Type(mem), cycles);
-      if Get_Time(mem) >= mem.best_time then
+      if Get_Time(mem) > mem.best_time then
          raise Benchmark.Timeout;
       end if;
    end Idle;
