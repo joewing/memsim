@@ -118,6 +118,8 @@ package body Memory.Super is
       cost : constant Cost_Type := Get_Cost(mem);
       temp : Container_Pointer;
       next : Memory_Pointer;
+      prob : Float;
+      rand : Float;
    begin
 
       -- Keep track of the best memory.
@@ -128,24 +130,28 @@ package body Memory.Super is
          mem.best_name := To_String(mem);
       end if;
 
+      -- Determine the probability of reverting to the old state.
+      if time + mem.last_time > 0 then
+         prob := Float(mem.last_time) / Float(time + mem.last_time);
+      else
+         prob := 0.5;
+      end if;
+
+      -- Draw a random number to determine if we should revert.
+      rand := Float(RNG.Random(mem.generator.all)) / Float(Natural'Last);
+
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
-      if time < mem.last_time or else
-            (time = mem.last_time and cost < mem.last_cost) or else
-            (RNG.Random(mem.generator.all) mod 8) = 0 then
+      if rand > prob then
 
-         -- This memory is better than the last or we decide to
-         -- select a worse memory this time.
-         -- The last chain will be destroyed later.
+         -- Keep this memory.
          mem.last_time := time;
          mem.last_cost := Get_Cost(mem);
 
       else
 
-         -- This memory is not as good as the last and we do not
-         -- want a worse memory this time.
-         -- In this case, we need to destroy chain and copy last_chain
-         -- to chain.
+         -- Revert to the previous memory.
+         -- Destroy chain and copy last_chain to chain.
          for i in mem.chain.First_Index .. mem.chain.Last_Index loop
             temp := mem.chain.Element(i);
             Set_Memory(temp.all, null);
