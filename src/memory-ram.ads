@@ -8,6 +8,7 @@ package Memory.RAM is
    function Create_RAM(latency   : Time_Type := 1;
                        word_size : Positive  := 8) return RAM_Pointer;
 
+   overriding
    function Clone(mem : RAM_Type) return Memory_Pointer;
 
    overriding

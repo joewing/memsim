@@ -44,7 +44,7 @@ package body Memory.RAM is
 
    function Get_Cost(mem : RAM_Type) return Cost_Type is
    begin
-      return 0;   -- FIXME
+      return 0;
    end Get_Cost;
 
 end Memory.RAM;
