@@ -13,6 +13,9 @@ package body Parser is
    procedure Parse_Dup(lexer  : in out Lexer_Type;
                        result : out Memory_Pointer) is separate;
 
+   procedure Parse_Flash(lexer   : in out Lexer_Type;
+                         result  : out Memory_Pointer) is separate;
+
    procedure Parse_Perfect_Prefetch(lexer    : in out Lexer_Type;
                                     result   : out Memory_Pointer) is separate;
 
@@ -50,6 +53,7 @@ package body Parser is
       (To_Unbounded_String("cache"),            Parse_Cache'Access),
       (To_Unbounded_String("perfect_prefetch"), Parse_Perfect_Prefetch'Access),
       (To_Unbounded_String("prefetch"),         Parse_Prefetch'Access),
+      (To_Unbounded_String("flash"),            Parse_Flash'Access),
       (To_Unbounded_String("ram"),              Parse_RAM'Access),
       (To_Unbounded_String("stats"),            Parse_Stats'Access),
       (To_Unbounded_String("super"),            Parse_Super'Access),

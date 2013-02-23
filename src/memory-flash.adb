@@ -15,19 +15,20 @@ package body Memory.Flash is
    end Create_Flash;
 
    function Clone(mem : Flash_Type) return Memory_Pointer is
-      result : constant Flast_Pointer := new Flash_Type'(mem);
+      result : constant Flash_Pointer := new Flash_Type'(mem);
    begin
       return Memory_Pointer(result);
-   end Close;
+   end Clone;
 
    procedure Read(mem      : in out Flash_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
+      count : Positive := (size + mem.word_size - 1) / mem.word_size;
    begin
-      if (address mod mem.word_size) /= 0 then
+      if (address mod Address_Type(mem.word_size)) /= 0 then
          count := count + 1;
       end if;
-      Advance(mem, count * mem.read_latency);
+      Advance(mem, Time_Type(count) * mem.read_latency);
    end Read;
 
    procedure Write(mem     : in out Flash_Type;
@@ -35,10 +36,10 @@ package body Memory.Flash is
                    size    : in Positive) is
       count : Positive := (size + mem.block_size - 1) / mem.block_size;
    begin
-      if (address mod mem.block_size) /= 0 then
+      if (address mod Address_Type(mem.block_size)) /= 0 then
          count := count + 1;
       end if;
-      Advance(mem, count * mem.write_latency);
+      Advance(mem, Time_Type(count) * mem.write_latency);
    end Write;
 
    function To_String(mem : Flash_Type) return Unbounded_String is
