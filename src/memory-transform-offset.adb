@@ -68,7 +68,17 @@ package body Memory.Transform.Offset is
       result : Unbounded_String;
    begin
       Append(result, "(transform ");
-      Append(result, "(offset" & Address_Type'Image(mem.offset) & ")");
+      Append(result, "(offset");
+      if 0 - mem.offset < mem.offset then
+         declare
+            temp : constant String := Address_Type'Image(0 - mem.offset);
+         begin
+            Append(result, " -" & temp(temp'First + 1 .. temp'Last));
+         end;
+      else
+         Append(result, Address_Type'Image(mem.offset));
+      end if;
+      Append(result, ")");
       Append(result, "(memory ");
       Append(result, To_String(Container_Type(mem)));
       Append(result, ")");
