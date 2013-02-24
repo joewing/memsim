@@ -64,6 +64,8 @@ package Memory is
 
    procedure Destroy(mem : in out Memory_Pointer);
 
+   function Get_Time(mem : access Memory_Type'Class) return Time_Type;
+
 private
 
    package Transaction_Vectors is new Vectors(Natural, Time_Type);

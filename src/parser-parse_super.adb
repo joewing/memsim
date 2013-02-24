@@ -1,5 +1,5 @@
 
-with Memory.Super;
+with Memory.Super_Time;
 
 separate (Parser)
 procedure Parse_Super(lexer   : in out Lexer_Type;
@@ -41,7 +41,7 @@ begin
       end;
       Match(lexer, Close);
    end loop;
-   result := Memory_Pointer(Super.Create_Super(dram, max_cost, seed));
+   result := Memory_Pointer(Super_Time.Create_Super(dram, max_cost, seed));
 exception
    when Data_Error =>
       if dram /= null then

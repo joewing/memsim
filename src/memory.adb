@@ -78,4 +78,9 @@ package body Memory is
       end if;
    end Destroy;
 
+   function Get_Time(mem : access Memory_Type'Class) return Time_Type is
+   begin
+      return Get_Time(mem.all);
+   end Get_Time;
+
 end Memory;

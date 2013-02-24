@@ -2,6 +2,9 @@
 with Ada.Containers.Vectors;
 with Memory.Container; use Memory.Container;
 
+generic
+   type Value_Type is range <>;
+   with function Get_Value(mem : access Memory_Type'Class) return Value_Type;
 package Memory.Super is
 
    type Super_Type is new Container_Type with private;
@@ -48,12 +51,12 @@ private
       dram           : Memory_Pointer        := null;
       generator      : Generator_Pointer     := new RNG.Generator;
       best_name      : Unbounded_String      := Null_Unbounded_String;
-      best_time      : Time_Type             := Time_Type'Last;
       best_cost      : Cost_Type             := Cost_Type'Last;
+      best_value     : Value_Type            := Value_Type'Last;
       chain          : Memory_Vectors.Vector;
       last_chain     : Memory_Vectors.Vector;
       last_cost      : Cost_Type             := Cost_Type'Last;
-      last_time      : Time_Type             := Time_Type'Last;
+      last_value     : Value_Type            := Value_Type'Last;
    end record;
 
 end Memory.Super;

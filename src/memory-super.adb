@@ -148,37 +148,38 @@ package body Memory.Super is
    end Create_Super;
 
    procedure Finish_Run(mem : in out Super_Type) is
-      time : constant Time_Type := Get_Time(mem);
-      cost : constant Cost_Type := Get_Cost(mem);
-      temp : Container_Pointer;
-      next : Memory_Pointer;
-      base : constant Natural := 2 ** 16;
-      prob : Natural;
-      rand : constant Natural := RNG.Random(mem.generator.all) mod base;
+      time  : constant Time_Type := Get_Time(mem);
+      cost  : constant Cost_Type := Get_Cost(mem);
+      temp  : Container_Pointer;
+      next  : Memory_Pointer;
+      base  : constant Natural := 2 ** 16;
+      prob  : Natural;
+      rand  : constant Natural := RNG.Random(mem.generator.all) mod base;
+      value : constant Value_Type := Get_Value(mem'Access);
    begin
 
       -- Keep track of the best memory.
-      if time < mem.best_time or else
-         (time = mem.best_time and cost < mem.best_cost) then
-         mem.best_time := time;
-         mem.best_cost := cost;
-         mem.best_name := To_String(mem);
+      if value < mem.best_value or else
+         (value = mem.best_value and cost < mem.best_cost) then
+         mem.best_value := value;
+         mem.best_cost  := cost;
+         mem.best_name  := To_String(mem);
       end if;
 
       -- Determine the probability of reverting to the old state.
-      if mem.last_time /= Time_Type'Last then
-         prob := Natural((Time_Type(base) * mem.last_time) /
-                         (time + mem.last_time));
+      if mem.last_value /= Value_Type'Last then
+         prob := Natural((Value_Type(base) * mem.last_value) /
+                         (value + mem.last_value));
       else
          prob := base / 2;
       end if;
 
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
-      if mem.last_time = Time_Type'Last or rand > prob then
+      if mem.last_value = Value_Type'Last or rand > prob then
 
          -- Keep this memory.
-         mem.last_time := time;
+         mem.last_value := value;
          mem.last_cost := Get_Cost(mem);
 
       else
@@ -249,11 +250,6 @@ package body Memory.Super is
                   size     : in Positive) is
    begin
       Read(Container_Type(mem), address, size);
-      if mem.best_time < Time_Type'Last then
-         if Get_Time(mem) > mem.best_time * 128 then
-null;--            raise Prune_Error;
-         end if;
-      end if;
    end Read;
 
    procedure Write(mem     : in out Super_Type;
@@ -261,18 +257,13 @@ null;--            raise Prune_Error;
                    size    : in Positive) is
    begin
       Write(Container_Type(mem), address, size);
-      if mem.best_time < Time_Type'Last then
-         if Get_Time(mem) > mem.best_time * 128 then
-null;--            raise Prune_Error;
-         end if;
-      end if;
    end Write;
 
    procedure Show_Access_Stats(mem : in out Super_Type) is
    begin
       Finish_Run(mem);
       Put_Line("Best Memory: " & To_String(mem.best_name));
-      Put_Line("Best Time:   " & Time_Type'Image(mem.best_time));
+      Put_Line("Best Value:  " & Value_Type'Image(mem.best_value));
       Put_Line("Best Cost:   " & Cost_Type'Image(mem.best_cost));
    end Show_Access_Stats;
 
