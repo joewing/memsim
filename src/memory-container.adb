@@ -57,7 +57,6 @@ package body Memory.Container is
          Write(mem.mem.all, address, size);
          mem.time := mem.mem.time;
       end if;
-      mem.writes := mem.writes + 1;
    end Write;
 
    procedure Idle(mem      : in out Container_Type;
@@ -116,11 +115,6 @@ package body Memory.Container is
       end if;
    end Forward_Idle;
 
-   procedure Increment_Writes(mem : in out Container_Type'Class) is
-   begin
-      mem.writes := mem.writes + 1;
-   end Increment_Writes;
-
    procedure Show_Access_Stats(mem : in out Container_Type) is
    begin
       if mem.mem /= null then
@@ -145,6 +139,15 @@ package body Memory.Container is
          return 0;
       end if;
    end Get_Cost;
+
+   function Get_Writes(mem : Container_Type) return Long_Integer is
+   begin
+      if mem.mem /= null then
+         return Get_Writes(mem.mem.all);
+      else
+         return 0;
+      end if;
+   end Get_Writes;
 
    procedure Adjust(mem : in out Container_Type) is
    begin

@@ -30,13 +30,17 @@ package Memory.Flash is
    overriding
    function Get_Cost(mem : Flash_Type) return Cost_Type;
 
+   overriding
+   function Get_Writes(mem : Flash_Type) return Long_Integer;
+
 private
 
    type Flash_Type is new Memory_Type with record
-      word_size      : Positive  := 8;
-      block_size     : Positive  := 256;
-      read_latency   : Time_Type := 10;
-      write_latency  : Time_Type := 1000;
+      word_size      : Positive     := 8;
+      block_size     : Positive     := 256;
+      read_latency   : Time_Type    := 10;
+      write_latency  : Time_Type    := 1000;
+      writes         : Long_Integer := 0;
    end record;
 
 end Memory.Flash;

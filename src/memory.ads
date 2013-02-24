@@ -54,7 +54,7 @@ package Memory is
 
    function Get_Time(mem : Memory_Type) return Time_Type;
 
-   function Get_Writes(mem : Memory_Type) return Long_Integer;
+   function Get_Writes(mem : Memory_Type) return Long_Integer is abstract;
 
    procedure Show_Stats(mem : in out Memory_Type);
 
@@ -77,7 +77,6 @@ private
    type Memory_Type is abstract new Controlled with record
       transactions   : Transaction_Vectors.Vector;
       time           : Time_Type := 0;
-      writes         : Long_Integer := 0;
    end record;
 
    procedure Advance(mem      : in out Memory_Type'Class;

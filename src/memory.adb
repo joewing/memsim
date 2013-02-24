@@ -13,7 +13,6 @@ package body Memory is
    procedure Reset(mem : in out Memory_Type) is
    begin
       mem.time := 0;
-      mem.writes := 0;
    end Reset;
 
    procedure Start(mem : in out Memory_Type) is
@@ -40,11 +39,6 @@ package body Memory is
    begin
       return mem.time;
    end Get_Time;
-
-   function Get_Writes(mem : Memory_Type) return Long_Integer is
-   begin
-      return mem.writes;
-   end Get_Writes;
 
    procedure Show_Stats(mem : in out Memory_Type) is
    begin

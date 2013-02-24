@@ -1,7 +1,9 @@
 
+with Memory.Container; use Memory.Container;
+
 package Memory.Prefetch is
 
-   type Prefetch_Type is new Memory_Type with private;
+   type Prefetch_Type is new Container_Type with private;
 
    type Prefetch_Pointer is access all Prefetch_Type'Class;
 
@@ -27,24 +29,14 @@ package Memory.Prefetch is
                   cycles   : in Time_Type);
 
    overriding
-   procedure Show_Access_Stats(mem : in out Prefetch_Type);
-
-   overriding
    function To_String(mem : Prefetch_Type) return Unbounded_String;
 
    overriding
    function Get_Cost(mem : Prefetch_Type) return Cost_Type;
 
-   overriding
-   procedure Adjust(mem : in out Prefetch_Type);
-
-   overriding
-   procedure Finalize(mem : in out Prefetch_Type);
-
 private
 
-   type Prefetch_Type is new Memory_Type with record
-      mem         : access Memory_Type'Class;
+   type Prefetch_Type is new Container_Type with record
       pending     : Time_Type := 0;
       stride      : Address_Type := 1;
       multiplier  : Address_Type := 1;

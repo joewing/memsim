@@ -47,6 +47,9 @@ package Memory.Dup is
    function Get_Cost(mem : Dup_Type) return Cost_Type;
 
    overriding
+   function Get_Writes(mem : Dup_Type) return Long_Integer;
+
+   overriding
    procedure Adjust(mem : in out Dup_Type);
 
    overriding

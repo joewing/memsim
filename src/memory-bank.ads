@@ -18,6 +18,9 @@ package Memory.Bank is
                       mask : in Address_Type);
 
    overriding
+   procedure Reset(mem : in out Bank_Type);
+
+   overriding
    procedure Start(mem : in out Bank_Type);
 
    overriding
@@ -46,6 +49,9 @@ package Memory.Bank is
 
    overriding
    function Get_Cost(mem : Bank_Type) return Cost_Type;
+
+   overriding
+   function Get_Writes(mem : Bank_Type) return Long_Integer;
 
    overriding
    procedure Adjust(mem : in out Bank_Type);

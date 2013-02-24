@@ -148,7 +148,6 @@ package body Memory.Super is
    end Create_Super;
 
    procedure Finish_Run(mem : in out Super_Type) is
-      time  : constant Time_Type := Get_Time(mem);
       cost  : constant Cost_Type := Get_Cost(mem);
       temp  : Container_Pointer;
       next  : Memory_Pointer;

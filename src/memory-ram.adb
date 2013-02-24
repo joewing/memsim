@@ -48,4 +48,9 @@ package body Memory.RAM is
       return 0;
    end Get_Cost;
 
+   function Get_Writes(mem : RAM_Type) return Long_Integer is
+   begin
+      return mem.writes;
+   end Get_Writes;
+
 end Memory.RAM;

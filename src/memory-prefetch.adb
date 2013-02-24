@@ -7,9 +7,9 @@ package body Memory.Prefetch is
                             return Prefetch_Pointer is
       result : constant Prefetch_Pointer := new Prefetch_Type;
    begin
-      result.mem        := mem;
       result.stride     := stride;
       result.multiplier := multiplier;
+      Set_Memory(result.all, mem);
       return result;
    end Create_Prefetch;
 
@@ -29,18 +29,18 @@ package body Memory.Prefetch is
       Advance(mem, mem.pending);
 
       -- Fetch the requested address.
-      Start(mem.mem.all);
-      Read(mem.mem.all, address, size);
-      Commit(mem.mem.all, cycles);
+      Forward_Start(mem);
+      Forward_Read(mem, address, size);
+      Forward_Commit(mem, cycles);
 
       -- Prefetch the next address and save the time needed for the fetch.
       declare
          next_address : Address_Type;
       begin
          next_address := address * mem.multiplier + mem.stride;
-         Start(mem.mem.all);
-         Read(mem.mem.all, next_address, 1);
-         Commit(mem.mem.all, mem.pending);
+         Forward_Start(mem);
+         Forward_Read(mem, next_address, 1);
+         Forward_Commit(mem, mem.pending);
       end;
 
       -- Add the time required to fetch the requested address.
@@ -59,14 +59,12 @@ package body Memory.Prefetch is
       mem.pending := 0;
 
       -- Write the requested address.
-      Start(mem.mem.all);
-      Write(mem.mem.all, address, size);
-      Commit(mem.mem.all, cycles);
+      Forward_Start(mem);
+      Forward_Write(mem, address, size);
+      Forward_Commit(mem, cycles);
 
       -- Update the time.
       Advance(mem, cycles);
-
-      mem.writes := mem.writes + 1;
 
    end Write;
 
@@ -81,11 +79,6 @@ package body Memory.Prefetch is
       Advance(mem, cycles);
    end Idle;
 
-   procedure Show_Access_Stats(mem : in out Prefetch_Type) is
-   begin
-      Show_Access_Stats(mem.mem.all);
-   end Show_Access_Stats;
-
    function To_String(mem : Prefetch_Type) return Unbounded_String is
       result : Unbounded_String;
    begin
@@ -93,7 +86,7 @@ package body Memory.Prefetch is
       Append(result, "(stride" & Address_Type'Image(mem.stride) & ")");
       Append(result, "(multiplier" & Address_Type'Image(mem.multiplier) & ")");
       Append(result, "(memory ");
-      Append(result, To_String(mem.mem.all));
+      Append(result, To_String(Container_Type(mem)));
       Append(result, ")");
       Append(result, ")");
       return result;
@@ -101,17 +94,7 @@ package body Memory.Prefetch is
 
    function Get_Cost(mem : Prefetch_Type) return Cost_Type is
    begin
-      return Get_Cost(mem.mem.all);
+      return Get_Cost(Container_Type(mem));
    end Get_Cost;
-
-   procedure Adjust(mem : in out Prefetch_Type) is
-   begin
-      mem.mem := Clone(mem.mem.all);
-   end Adjust;
-
-   procedure Finalize(mem : in out Prefetch_Type) is
-   begin
-      Destroy(Memory_Pointer(mem.mem));
-   end Finalize;
 
 end Memory.Prefetch;

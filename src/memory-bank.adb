@@ -34,12 +34,17 @@ package body Memory.Bank is
       raise Bank_Error;
    end Get_Data;
 
-   procedure Start(mem : in out Bank_Type) is
-      data : Bank_Data;
+   procedure Reset(mem : in out Bank_Type) is
    begin
       for i in mem.banks.First_Index .. mem.banks.Last_Index loop
-         data := mem.banks.Element(i);
-         Start(data.mem.all);
+         Reset(mem.banks.Element(i).mem.all);
+      end loop;
+   end Reset;
+
+   procedure Start(mem : in out Bank_Type) is
+   begin
+      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
+         Start(mem.banks.Element(i).mem.all);
       end loop;
    end Start;
 
@@ -84,7 +89,6 @@ package body Memory.Bank is
       Write(data.mem.all, address, size);
       Commit(data.mem.all, cycles);
       Advance(mem, cycles);
-      mem.writes := mem.writes + 1;
    end Write;
 
    procedure Idle(mem      : in out Bank_Type;
@@ -131,6 +135,15 @@ package body Memory.Bank is
       end loop;
       return result;
    end Get_Cost;
+
+   function Get_Writes(mem : Bank_Type) return Long_Integer is
+      result : Long_Integer := 0;
+   begin
+      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
+         result := result + Get_Writes(mem.banks.Element(i).mem.all);
+      end loop;
+      return result;
+   end Get_Writes;
 
    procedure Adjust(mem : in out Bank_Type) is
       data : Bank_Data;

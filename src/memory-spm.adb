@@ -62,7 +62,6 @@ package body Memory.SPM is
          end;
       end if;
       Advance(mem, cycles);
-      Increment_Writes(mem);
    end Write;
 
    function To_String(mem : SPM_Type) return Unbounded_String is

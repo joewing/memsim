@@ -27,11 +27,15 @@ package Memory.RAM is
    overriding
    function Get_Cost(mem : RAM_Type) return Cost_Type;
 
+   overriding
+   function Get_Writes(mem : RAM_Type) return Long_Integer;
+
 private
 
    type RAM_Type is new Memory_Type with record
-      latency     : Time_Type := 1;
-      word_size   : Positive  := 8;
+      latency     : Time_Type    := 1;
+      word_size   : Positive     := 8;
+      writes      : Long_Integer := 0;
    end record;
 
 end Memory.RAM;

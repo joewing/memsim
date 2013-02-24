@@ -62,4 +62,9 @@ package body Memory.Flash is
       return 0;
    end Get_Cost;
 
+   function Get_Writes(mem : Flash_Type) return Long_Integer is
+   begin
+      return mem.writes;
+   end Get_Writes;
+
 end Memory.Flash;

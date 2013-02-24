@@ -1,7 +1,9 @@
 
+with Memory.Container; use Memory.Container;
+
 package Memory.Perfect_Prefetch is
 
-   type Perfect_Prefetch_Type is new Memory_Type with private;
+   type Perfect_Prefetch_Type is new Container_Type with private;
 
    type Perfect_Prefetch_Pointer is access all Perfect_Prefetch_Type'Class;
 
@@ -26,24 +28,14 @@ package Memory.Perfect_Prefetch is
                   cycles   : in Time_Type);
 
    overriding
-   procedure Show_Access_Stats(mem : in out Perfect_Prefetch_Type);
-
-   overriding
    function To_String(mem : Perfect_Prefetch_Type) return Unbounded_String;
 
    overriding
    function Get_Cost(mem : Perfect_Prefetch_Type) return Cost_Type;
 
-   overriding
-   procedure Adjust(mem : in out Perfect_Prefetch_Type);
-
-   overriding
-   procedure Finalize(mem : in out Perfect_Prefetch_Type);
-
 private
 
-   type Perfect_Prefetch_Type is new Memory_Type with record
-      mem         : access Memory_Type'Class;
+   type Perfect_Prefetch_Type is new Container_Type with record
       pending     : Time_Type := 0;
    end record;
 

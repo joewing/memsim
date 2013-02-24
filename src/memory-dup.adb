@@ -80,7 +80,6 @@ package body Memory.Dup is
          Write(mem.memories.Element(i).all, address, size);
       end loop;
       Update_Time(mem);
-      mem.writes := mem.writes + 1;
    end Write;
 
    procedure Idle(mem      : in out Dup_Type;
@@ -127,6 +126,15 @@ package body Memory.Dup is
       end loop;
       return result;
    end Get_Cost;
+
+   function Get_Writes(mem : Dup_Type) return Long_Integer is
+      result : Long_Integer := 0;
+   begin
+      for i in mem.memories.First_Index .. mem.memories.Last_Index loop
+         result := result + Get_Writes(mem.memories.Element(i).all);
+      end loop;
+      return result;
+   end Get_Writes;
 
    procedure Adjust(mem : in out Dup_Type) is
       ptr : Memory_Pointer;

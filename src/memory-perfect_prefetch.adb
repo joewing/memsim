@@ -5,7 +5,7 @@ package body Memory.Perfect_Prefetch is
                                     return Perfect_Prefetch_Pointer is
       result : constant Perfect_Prefetch_Pointer := new Perfect_Prefetch_Type;
    begin
-      result.mem := mem;
+      Set_Memory(result.all, mem);
       return result;
    end Create_Perfect_Prefetch;
 
@@ -26,9 +26,9 @@ package body Memory.Perfect_Prefetch is
          mem.pending := 0;
       end if;
 
-      Start(mem.mem.all);
-      Read(mem.mem.all, address, size);
-      Commit(mem.mem.all, mem.pending);
+      Forward_Start(mem);
+      Forward_Read(mem, address, size);
+      Forward_Commit(mem, mem.pending);
 
    end Read;
 
@@ -38,15 +38,13 @@ package body Memory.Perfect_Prefetch is
       cycles : Time_Type := 0;
    begin
 
-      Start(mem.mem.all);
-      Write(mem.mem.all, address, size);
-      Commit(mem.mem.all, cycles);
+      Forward_Start(mem);
+      Forward_Write(mem, address, size);
+      Forward_Commit(mem, cycles);
 
       Advance(mem, mem.pending);
       Advance(mem, cycles);
       mem.pending := 0;
-
-      mem.writes := mem.writes + 1;
 
    end Write;
 
@@ -61,33 +59,18 @@ package body Memory.Perfect_Prefetch is
       Advance(mem, cycles);
    end Idle;
 
-   procedure Show_Access_Stats(mem : in out Perfect_Prefetch_Type) is
-   begin
-      Show_Access_Stats(mem.mem.all);
-   end Show_Access_Stats;
-
    function To_String(mem : Perfect_Prefetch_Type) return Unbounded_String is
       result : Unbounded_String;
    begin
       Append(result, "(perfect ");
-      Append(result, To_String(mem.mem.all));
+      Append(result, To_String(Container_Type(mem)));
       Append(result, ")");
       return result;
    end To_String;
 
    function Get_Cost(mem : Perfect_Prefetch_Type) return Cost_Type is
    begin
-      return Get_Cost(mem.mem.all);
+      return Get_Cost(Container_Type(mem));
    end Get_Cost;
-
-   procedure Adjust(mem : in out Perfect_Prefetch_Type) is
-   begin
-      mem.mem := Clone(mem.mem.all);
-   end Adjust;
-
-   procedure Finalize(mem : in out Perfect_Prefetch_Type) is
-   begin
-      Destroy(Memory_Pointer(mem.mem));
-   end Finalize;
 
 end Memory.Perfect_Prefetch;

@@ -320,7 +320,6 @@ package body Memory.Cache is
       for i in 0 .. extra loop
          Get_Data(mem, address + Address_Type(i * mem.line_size), False);
       end loop;
-      Increment_Writes(mem);
    end Write;
 
    function To_String(mem : Cache_Type) return Unbounded_String is
