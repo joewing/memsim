@@ -35,7 +35,6 @@ private
       last_address   : Address_Type := 0;
       last_stride    : Integer := 0;
       reads          : Long_Integer := 0;
-      writes         : Long_Integer := 0;
       min_address    : Address_Type := Address_Type'Last;
       max_address    : Address_Type := Address_Type'First;
       addresses      : Address_Histograms.Histogram_Type;

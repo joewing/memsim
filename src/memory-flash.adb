@@ -40,6 +40,7 @@ package body Memory.Flash is
          count := count + 1;
       end if;
       Advance(mem, Time_Type(count) * mem.write_latency);
+      mem.writes := mem.writes + 1;
    end Write;
 
    function To_String(mem : Flash_Type) return Unbounded_String is

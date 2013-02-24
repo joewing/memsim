@@ -1,13 +1,17 @@
 
 with Memory.Super_Time;
+with Memory.Super_Writes;
 
 separate (Parser)
 procedure Parse_Super(lexer   : in out Lexer_Type;
                       result  : out Memory_Pointer) is
 
+   type Opt_Type is (Opt_Time, Opt_Writes);
+
    max_cost    : Cost_Type := 1e6;
    dram        : Memory_Pointer := null;
    seed        : Integer := 0;
+   opt         : Opt_Type := Opt_Time;
 
 begin
 
@@ -33,6 +37,15 @@ begin
                   max_cost := Cost_Type'Value(value);
                elsif name = "seed" then
                   seed := Integer'Value(value);
+               elsif name = "optimize" then
+                  if value = "time" then
+                     opt := Opt_Time;
+                  elsif value = "writes" then
+                     opt := Opt_Writes;
+                  else
+                     Raise_Error(lexer, "invalid optimization target: " &
+                                 value);
+                  end if;
                else
                   Raise_Error(lexer, "invalid attribute in super: " & name);
                end if;
@@ -41,7 +54,14 @@ begin
       end;
       Match(lexer, Close);
    end loop;
-   result := Memory_Pointer(Super_Time.Create_Super(dram, max_cost, seed));
+   case opt is
+      when Opt_Time =>
+         result := Memory_Pointer(Super_Time.Create_Super(dram, max_cost,
+                                                          seed));
+      when Opt_Writes =>
+         result := Memory_Pointer(Super_Writes.Create_Super(dram, max_cost,
+                                                            seed));
+   end case;
 exception
    when Data_Error =>
       if dram /= null then

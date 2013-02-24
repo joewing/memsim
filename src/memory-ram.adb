@@ -30,6 +30,7 @@ package body Memory.RAM is
       count : constant Positive := (size + mem.word_size - 1) / mem.word_size;
    begin
       Advance(mem, mem.latency * Time_Type(count));
+      mem.writes := mem.writes + 1;
    end Write;
 
    function To_String(mem : RAM_Type) return Unbounded_String is

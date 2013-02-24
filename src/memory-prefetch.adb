@@ -66,6 +66,8 @@ package body Memory.Prefetch is
       -- Update the time.
       Advance(mem, cycles);
 
+      mem.writes := mem.writes + 1;
+
    end Write;
 
    procedure Idle(mem      : in out Prefetch_Type;

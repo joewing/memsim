@@ -57,6 +57,7 @@ package body Memory.Container is
          Write(mem.mem.all, address, size);
          mem.time := mem.mem.time;
       end if;
+      mem.writes := mem.writes + 1;
    end Write;
 
    procedure Idle(mem      : in out Container_Type;
@@ -114,6 +115,11 @@ package body Memory.Container is
          Advance(mem, cycles);
       end if;
    end Forward_Idle;
+
+   procedure Increment_Writes(mem : in out Container_Type'Class) is
+   begin
+      mem.writes := mem.writes + 1;
+   end Increment_Writes;
 
    procedure Show_Access_Stats(mem : in out Container_Type) is
    begin

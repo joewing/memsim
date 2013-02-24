@@ -43,6 +43,7 @@ package body Memory.Transform is
                    size    : in Positive) is
    begin
       Process(mem, address, Address_Type(size), True);
+      Increment_Writes(mem);
    end Write;
 
 end Memory.Transform;

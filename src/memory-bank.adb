@@ -84,6 +84,7 @@ package body Memory.Bank is
       Write(data.mem.all, address, size);
       Commit(data.mem.all, cycles);
       Advance(mem, cycles);
+      mem.writes := mem.writes + 1;
    end Write;
 
    procedure Idle(mem      : in out Bank_Type;

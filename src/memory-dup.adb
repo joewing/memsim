@@ -80,6 +80,7 @@ package body Memory.Dup is
          Write(mem.memories.Element(i).all, address, size);
       end loop;
       Update_Time(mem);
+      mem.writes := mem.writes + 1;
    end Write;
 
    procedure Idle(mem      : in out Dup_Type;

@@ -50,6 +50,8 @@ package Memory.Container is
    procedure Forward_Idle(mem       : in out Container_Type'Class;
                           cycles    : in Time_Type);
 
+   procedure Increment_Writes(mem : in out Container_Type'Class);
+
    overriding
    procedure Show_Access_Stats(mem : in out Container_Type);
 

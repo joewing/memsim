@@ -46,6 +46,8 @@ package body Memory.Perfect_Prefetch is
       Advance(mem, cycles);
       mem.pending := 0;
 
+      mem.writes := mem.writes + 1;
+
    end Write;
 
    procedure Idle(mem      : in out Perfect_Prefetch_Type;

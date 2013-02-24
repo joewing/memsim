@@ -72,7 +72,6 @@ package body Memory.Stats is
                    size    : in Positive) is
    begin
       Write(Container_Type(mem), address, size);
-      mem.writes := mem.writes + 1;
       Process(mem, address, size);
    end Write;
 
@@ -80,7 +79,7 @@ package body Memory.Stats is
    begin
       Show_Access_Stats(Container_Type(mem));
       Put_Line("    Reads:      " & Long_Integer'Image(mem.reads));
-      Put_Line("    Writes:     " & Long_Integer'Image(mem.writes));
+      Put_Line("    Writes:     " & Long_Integer'Image(Get_Writes(mem)));
       Put_Line("    Min Address:" & Address_Type'Image(mem.min_address));
       Put_Line("    Max Address:" & Address_Type'Image(mem.max_address));
       mem.addresses.Show  ("    Addresses");

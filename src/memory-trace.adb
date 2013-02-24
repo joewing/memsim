@@ -53,6 +53,7 @@ package body Memory.Trace is
    begin
       Put_Line("W" & astr & ":" & sstr);
       Write(Container_Type(mem), address, size);
+      Increment_Writes(mem);
    end Write;
 
    procedure Idle(mem      : in out Trace_Type;
