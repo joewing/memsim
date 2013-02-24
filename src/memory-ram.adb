@@ -19,16 +19,22 @@ package body Memory.RAM is
    procedure Read(mem      : in out RAM_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      count : constant Positive := (size + mem.word_size - 1) / mem.word_size;
+      count : Positive := (size + mem.word_size - 1) / mem.word_size;
    begin
+      if (address mod Address_Type(mem.word_size)) /= 0 then
+         count := count + 1;
+      end if;
       Advance(mem, mem.latency * Time_Type(count));
    end Read;
 
    procedure Write(mem     : in out RAM_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      count : constant Positive := (size + mem.word_size - 1) / mem.word_size;
+      count : Positive := (size + mem.word_size - 1) / mem.word_size;
    begin
+      if (address mod Address_Type(mem.word_size)) /= 0 then
+         count := count + 1;
+      end if;
       Advance(mem, mem.latency * Time_Type(count));
       mem.writes := mem.writes + 1;
    end Write;
