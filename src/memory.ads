@@ -1,6 +1,5 @@
 
 with Ada.Numerics.Discrete_Random;
-with Ada.Containers.Vectors; use Ada.Containers;
 with Ada.Finalization; use Ada.Finalization;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Unchecked_Deallocation;
@@ -34,13 +33,6 @@ package Memory is
 
    procedure Reset(mem : in out Memory_Type);
 
-   -- Start a transaction.
-   procedure Start(mem : in out Memory_Type);
-
-   -- Commit a transaction.
-   procedure Commit(mem    : in out Memory_Type;
-                    cycles : out Time_Type);
-
    procedure Read(mem      : in out Memory_Type;
                   address  : in Address_Type;
                   size     : in Positive) is abstract;
@@ -72,10 +64,7 @@ package Memory is
 
 private
 
-   package Transaction_Vectors is new Vectors(Natural, Time_Type);
-
    type Memory_Type is abstract new Controlled with record
-      transactions   : Transaction_Vectors.Vector;
       time           : Time_Type := 0;
    end record;
 

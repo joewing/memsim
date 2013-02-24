@@ -41,54 +41,24 @@ package body Memory.Bank is
       end loop;
    end Reset;
 
-   procedure Start(mem : in out Bank_Type) is
-   begin
-      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
-         Start(mem.banks.Element(i).mem.all);
-      end loop;
-   end Start;
-
-   procedure Commit(mem    : in out Bank_Type;
-                    cycles : out Time_Type) is
-      max_cycles  : Time_Type := 0;
-   begin
-      for i in mem.banks.First_Index .. mem.banks.Last_Index loop
-         declare
-            data     : constant Bank_Data := mem.banks.Element(i);
-            bcycles  : Time_Type;
-         begin
-            Commit(data.mem.all, bcycles);
-            if bcycles > max_cycles then
-               max_cycles := bcycles;
-            end if;
-         end;
-      end loop;
-      Advance(mem, max_cycles);
-      cycles := max_cycles;
-   end Commit;
-
    procedure Read(mem      : in out Bank_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      data     : constant Bank_Data := Get_Data(mem, address);
-      cycles   : Time_Type;
+      data        : constant Bank_Data := Get_Data(mem, address);
+      start_time  : constant Time_Type := Get_Time(data.mem.all);
    begin
-      Start(data.mem.all);
       Read(data.mem.all, address, size);
-      Commit(data.mem.all, cycles);
-      Advance(mem, cycles);
+      Advance(mem, Get_Time(data.mem.all) - start_time);
    end Read;
 
    procedure Write(mem     : in out Bank_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      data     : constant Bank_Data := Get_Data(mem, address);
-      cycles   : Time_Type;
+      data        : constant Bank_Data := Get_Data(mem, address);
+      start_time  : constant Time_Type := Get_Time(data.mem.all);
    begin
-      Start(data.mem.all);
       Write(data.mem.all, address, size);
-      Commit(data.mem.all, cycles);
-      Advance(mem, cycles);
+      Advance(mem, Get_Time(data.mem.all) - start_time);
    end Write;
 
    procedure Idle(mem      : in out Bank_Type;

@@ -1,4 +1,6 @@
 
+with Ada.Containers.Vectors; use Ada.Containers;
+
 package Memory.Bank is
 
    type Bank_Type is new Memory_Type with private;
@@ -19,13 +21,6 @@ package Memory.Bank is
 
    overriding
    procedure Reset(mem : in out Bank_Type);
-
-   overriding
-   procedure Start(mem : in out Bank_Type);
-
-   overriding
-   procedure Commit(mem    : in out Bank_Type;
-                    cycles : out Time_Type);
 
    overriding
    procedure Read(mem      : in out Bank_Type;

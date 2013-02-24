@@ -40,28 +40,6 @@ package body Memory.Dup is
       end loop;
    end Reset;
 
-   procedure Start(mem : in out Dup_Type) is
-   begin
-      for i in mem.memories.First_Index .. mem.memories.Last_Index loop
-         Start(mem.memories.Element(i).all);
-      end loop;
-   end Start;
-
-   procedure Commit(mem    : in out Dup_Type;
-                    cycles : out Time_Type) is
-      total : Time_Type := 0;
-   begin
-      for i in mem.memories.First_Index .. mem.memories.Last_Index loop
-         declare
-            temp : Time_Type;
-         begin
-            Commit(mem.memories.Element(i).all, temp);
-            total := total + temp;
-         end;
-      end loop;
-      cycles := total;
-   end Commit;
-
    procedure Read(mem      : in out Dup_Type;
                   address  : in Address_Type;
                   size     : in Positive) is

@@ -15,20 +15,6 @@ package body Memory is
       mem.time := 0;
    end Reset;
 
-   procedure Start(mem : in out Memory_Type) is
-   begin
-      mem.transactions.Append(mem.time);
-   end Start;
-
-   procedure Commit(mem    : in out Memory_Type;
-                    cycles : out Time_Type) is
-      start_time : Time_Type;
-   begin
-      start_time := mem.transactions.Last_Element;
-      cycles := mem.time - start_time;
-      mem.transactions.Delete_Last;
-   end Commit;
-
    procedure Idle(mem      : in out Memory_Type;
                   cycles   : in Time_Type) is
    begin

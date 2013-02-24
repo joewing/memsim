@@ -22,36 +22,29 @@ package body Memory.Prefetch is
    procedure Read(mem      : in out Prefetch_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      cycles : Time_Type;
    begin
 
       -- Add any time left from the last prefetch.
       Advance(mem, mem.pending);
 
       -- Fetch the requested address.
-      Forward_Start(mem);
-      Forward_Read(mem, address, size);
-      Forward_Commit(mem, cycles);
+      Read(Container_Type(mem), address, size);
 
       -- Prefetch the next address and save the time needed for the fetch.
       declare
          next_address : Address_Type;
       begin
          next_address := address * mem.multiplier + mem.stride;
-         Forward_Start(mem);
+         Start(mem);
          Forward_Read(mem, next_address, 1);
-         Forward_Commit(mem, mem.pending);
+         Commit(mem, mem.pending);
       end;
-
-      -- Add the time required to fetch the requested address.
-      Advance(mem, cycles);
 
    end Read;
 
    procedure Write(mem     : in out Prefetch_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      cycles : Time_Type;
    begin
 
       -- Add any time left from the last prefetch.
@@ -59,12 +52,7 @@ package body Memory.Prefetch is
       mem.pending := 0;
 
       -- Write the requested address.
-      Forward_Start(mem);
-      Forward_Write(mem, address, size);
-      Forward_Commit(mem, cycles);
-
-      -- Update the time.
-      Advance(mem, cycles);
+      Write(Container_Type(mem), address, size);
 
    end Write;
 

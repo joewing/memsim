@@ -1,4 +1,6 @@
 
+with Ada.Containers.Vectors; use Ada.Containers;
+
 package Memory.Dup is
 
    type Dup_Type is new Memory_Type with private;
@@ -15,13 +17,6 @@ package Memory.Dup is
 
    overriding
    procedure Reset(mem : in out Dup_Type);
-
-   overriding
-   procedure Start(mem : in out Dup_Type);
-
-   overriding
-   procedure Commit(mem    : in out Dup_Type;
-                    cycles : out Time_Type);
 
    overriding
    procedure Read(mem      : in out Dup_Type;

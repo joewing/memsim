@@ -26,24 +26,19 @@ package body Memory.Perfect_Prefetch is
          mem.pending := 0;
       end if;
 
-      Forward_Start(mem);
+      Start(mem);
       Forward_Read(mem, address, size);
-      Forward_Commit(mem, mem.pending);
+      Commit(mem, mem.pending);
 
    end Read;
 
    procedure Write(mem     : in out Perfect_Prefetch_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      cycles : Time_Type := 0;
    begin
 
-      Forward_Start(mem);
-      Forward_Write(mem, address, size);
-      Forward_Commit(mem, cycles);
-
+      Write(Container_Type(mem), address, size);
       Advance(mem, mem.pending);
-      Advance(mem, cycles);
       mem.pending := 0;
 
    end Write;

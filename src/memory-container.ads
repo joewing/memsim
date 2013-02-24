@@ -14,13 +14,6 @@ package Memory.Container is
    procedure Reset(mem : in out Container_Type);
 
    overriding
-   procedure Start(mem : in out Container_Type);
-
-   overriding
-   procedure Commit(mem    : in out Container_Type;
-                    cycles : out Time_Type);
-
-   overriding
    procedure Read(mem      : in out Container_Type;
                   address  : in Address_Type;
                   size     : in Positive);
@@ -34,10 +27,10 @@ package Memory.Container is
    procedure Idle(mem      : in out Container_Type;
                   cycles   : in Time_Type);
 
-   procedure Forward_Start(mem : in out Container_Type'Class);
+   procedure Start(mem : in out Container_Type'Class);
 
-   procedure Forward_Commit(mem     : in out Container_Type'Class;
-                            cycles  : out Time_Type);
+   procedure Commit(mem    : in out Container_Type'Class;
+                    cycles : out Time_Type);
 
    procedure Forward_Read(mem       : in out Container_Type'Class;
                           address   : in Address_Type;
@@ -71,7 +64,8 @@ package Memory.Container is
 private
 
    type Container_Type is abstract new Memory_Type with record
-      mem : access Memory_Type'Class := null;
+      mem         : access Memory_Type'Class := null;
+      start_time  : Time_Type                := 0;
    end record;
 
 end Memory.Container;

@@ -20,42 +20,29 @@ package body Memory.Container is
       end if;
    end Reset;
 
-   procedure Start(mem : in out Container_Type) is
-   begin
-      if mem.mem /= null then
-         Start(mem.mem.all);
-         mem.time := mem.mem.time;
-      end if;
-   end Start;
-
-   procedure Commit(mem    : in out Container_Type;
-                    cycles : out Time_Type) is
-   begin
-      if mem.mem /= null then
-         Commit(mem.mem.all, cycles);
-         mem.time := mem.mem.time;
-      else
-         cycles := 0;
-      end if;
-   end Commit;
-
    procedure Read(mem      : in out Container_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
+      cycles : Time_Type;
    begin
       if mem.mem /= null then
+         Start(mem);
          Read(mem.mem.all, address, size);
-         mem.time := mem.mem.time;
+         Commit(mem, cycles);
+         Advance(mem, cycles);
       end if;
    end Read;
 
    procedure Write(mem     : in out Container_Type;
                    address : in Address_Type;
                    size    : in Positive) is
+      cycles : Time_Type;
    begin
       if mem.mem /= null then
+         Start(mem);
          Write(mem.mem.all, address, size);
-         mem.time := mem.mem.time;
+         Commit(mem, cycles);
+         Advance(mem, cycles);
       end if;
    end Write;
 
@@ -64,28 +51,30 @@ package body Memory.Container is
    begin
       if mem.mem /= null then
          Idle(mem.mem.all, cycles);
-         mem.time := mem.mem.time;
+         Advance(mem, cycles);
       else
          Advance(mem, cycles);
       end if;
    end Idle;
 
-   procedure Forward_Start(mem : in out Container_Type'Class) is
+   procedure Start(mem : in out Container_Type'Class) is
    begin
       if mem.mem /= null then
-         Start(mem.mem.all);
-      end if;
-   end Forward_Start;
-
-   procedure Forward_Commit(mem     : in out Container_Type'Class;
-                            cycles  : out Time_Type) is
-   begin
-      if mem.mem /= null then
-         Commit(mem.mem.all, cycles);
+         mem.start_time := Get_Time(mem.mem.all);
       else
-         cycles := 0;
+         mem.start_time := mem.time;
       end if;
-   end Forward_Commit;
+   end Start;
+
+   procedure Commit(mem    : in out Container_Type'Class;
+                    cycles : out Time_Type) is
+   begin
+      if mem.mem /= null then
+         cycles := Get_Time(mem.mem.all) - mem.start_time;
+      else
+         cycles := mem.time - mem.start_time;
+      end if;
+   end Commit;
 
    procedure Forward_Read(mem       : in out Container_Type'Class;
                           address   : in Address_Type;

@@ -233,7 +233,6 @@ package body Memory.Cache is
       line        : Natural;
       to_replace  : Natural := 0;
       age         : Long_Integer;
-      cycles      : Time_Type := mem.latency;
 
    begin
 
@@ -259,7 +258,7 @@ package body Memory.Cache is
                data.age := 0;
             end if;
             data.dirty := data.dirty or not is_read;
-            Advance(mem, cycles);
+            Advance(mem, mem.latency);
             return;
          elsif mem.policy = MRU then
             if data.age < age then
@@ -282,19 +281,13 @@ package body Memory.Cache is
       -- Not in the cache; evict the oldest entry.
       data := mem.data.Element(to_replace);
       if data.dirty then
-         Forward_Start(mem);
-         Forward_Write(mem, data.address, mem.line_size);
-         Forward_Commit(mem, cycles);
-         Advance(mem, cycles);
+         Write(Container_Type(mem), data.address, mem.line_size);
          data.dirty := False;
       end if;
 
       -- Read the new entry.
-      Forward_Start(mem);
       data.address := tag;
-      Forward_Read(mem, data.address, mem.line_size);
-      Forward_Commit(mem, cycles);
-      Advance(mem, cycles);
+      Read(Container_Type(mem), data.address, mem.line_size);
 
       -- Mark the data as new and return.
       data.age := 0;

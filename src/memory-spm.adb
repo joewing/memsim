@@ -70,47 +70,39 @@ package body Memory.SPM is
    procedure Read(mem      : in out SPM_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      cycles : Time_Type := mem.latency;
    begin
       if address >= Address_Type(mem.size) then
-         Forward_Start(mem);
-         Forward_Read(mem, address, size);
-         Forward_Commit(mem, cycles);
+         Read(Container_Type(mem), address, size);
       elsif address + Address_Type(size) > Address_Type(mem.size) then
          declare
             naddr : constant Address_Type := Address_Type(mem.size);
             last  : constant Address_Type := address + Address_Type(size);
             nsize : constant Positive := Positive(last - naddr);
          begin
-            Forward_Start(mem);
-            Forward_Read(mem, naddr, nsize);
-            Forward_Commit(mem, cycles);
+            Read(Container_Type(mem), naddr, nsize);
          end;
+      else
+         Advance(mem, mem.latency);
       end if;
-      Advance(mem, cycles);
    end Read;
 
    procedure Write(mem     : in out SPM_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      cycles : Time_Type := mem.latency;
    begin
       if address >= Address_Type(mem.size) then
-         Forward_Start(mem);
-         Forward_Write(mem, address, size);
-         Forward_Commit(mem, cycles);
+         Write(Container_Type(mem), address, size);
       elsif address + Address_Type(size) > Address_Type(mem.size) then
          declare
             naddr : constant Address_Type := Address_Type(mem.size);
             diff  : constant Address_Type := naddr - address;
             nsize : constant Positive := mem.size - Positive(diff);
          begin
-            Forward_Start(mem);
-            Forward_Write(mem, naddr, nsize);
-            Forward_Commit(mem, cycles);
+            Write(Container_Type(mem), naddr, nsize);
          end;
+      else
+         Advance(mem, mem.latency);
       end if;
-      Advance(mem, cycles);
    end Write;
 
    function To_String(mem : SPM_Type) return Unbounded_String is
