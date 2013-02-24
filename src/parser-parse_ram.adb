@@ -32,6 +32,6 @@ begin
    end loop;
    result := Memory_Pointer(RAM.Create_RAM(latency, word_size));
 exception
-   when Data_Error =>
+   when Data_Error | Constraint_Error =>
       Raise_Error(lexer, "invalid value in ram");
 end Parse_RAM;

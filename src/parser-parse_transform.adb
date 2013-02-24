@@ -66,7 +66,7 @@ begin
 
 exception
 
-   when Data_Error =>
+   when Data_Error | Constraint_Error =>
       Raise_Error(lexer, "invalid value in transform");
 
 end Parse_Transform;

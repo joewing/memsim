@@ -43,6 +43,6 @@ begin
    end if;
    result := Memory_Pointer(SPM.Create_SPM(mem, size, latency));
 exception
-   when Data_Error =>
+   when Data_Error | Constraint_Error =>
       Raise_Error(lexer, "invalid value in spm");
 end Parse_SPM;

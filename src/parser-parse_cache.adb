@@ -85,7 +85,7 @@ begin
                                                latency,
                                                policy));
 exception
-   when Data_Error =>
+   when Data_Error | Constraint_Error =>
       Destroy(mem);
       Raise_Error(lexer, "invalid value in cache");
    when Parse_Error =>

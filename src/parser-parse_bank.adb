@@ -50,7 +50,7 @@ begin
    end loop;
    result := Memory_Pointer(bank);
 exception
-   when Data_Error =>
+   when Data_Error | Constraint_Error =>
       Destroy(Memory_Pointer(bank));
       Raise_Error(lexer, "invalid value in bank");
    when Parse_Error =>

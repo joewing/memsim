@@ -43,7 +43,7 @@ begin
    result := Memory_Pointer(Prefetch.Create_Prefetch(mem, stride,
                                                      multiplier));
 exception
-   when Data_Error =>
+   when Data_Error | Constraint_Error =>
       Destroy(mem);
       Raise_Error(lexer, "invalid value in prefetch");
    when Parse_Error =>

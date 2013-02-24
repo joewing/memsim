@@ -40,6 +40,6 @@ begin
    result := Memory_Pointer(Flash.Create_Flash(word_size, block_size,
                                                read_latency, write_latency));
 exception
-   when Data_Error =>
+   when Data_Error | Constraint_Error =>
       Raise_Error(lexer, "invalid value in flash");
 end Parse_Flash;

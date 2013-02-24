@@ -63,7 +63,7 @@ begin
                                                             seed));
    end case;
 exception
-   when Data_Error =>
+   when Data_Error | Constraint_Error =>
       if dram /= null then
          Destroy(dram);
       end if;
