@@ -11,8 +11,17 @@ package Memory.SPM is
                        size      : Natural;
                        latency   : Time_Type := 1) return SPM_Pointer;
 
+   function Random_SPM(generator : RNG.Generator;
+                       max_cost  : Cost_Type)
+                       return Memory_Pointer;
+
    overriding
    function Clone(mem : SPM_Type) return Memory_Pointer;
+
+   overriding
+   procedure Permute(mem         : in out SPM_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type);
 
    overriding
    procedure Read(mem      : in out SPM_Type;

@@ -2,6 +2,7 @@
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Assertions;          use Ada.Assertions;
 with Memory.Cache;            use Memory.Cache;
+with Memory.SPM;              use Memory.SPM;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
 
@@ -17,6 +18,8 @@ package body Memory.Super is
             result := Random_Shift(mem.generator.all, cost);
          when 1      =>    -- Offset
             result := Random_Offset(mem.generator.all, cost);
+         when 2      =>    -- SPM
+            result := Random_SPM(mem.generator.all, cost);
          when others =>    -- Cache
             result := Random_Cache(mem.generator.all, cost);
       end case;

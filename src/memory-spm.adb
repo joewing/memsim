@@ -12,11 +12,60 @@ package body Memory.SPM is
       return result;
    end Create_SPM;
 
+   function Random_SPM(generator : RNG.Generator;
+                       max_cost  : Cost_Type)
+                       return Memory_Pointer is
+      result : SPM_Pointer := new SPM_Type;
+   begin
+
+      result.latency := 1;
+      result.size := 1;
+      loop
+
+         result.size := result.size * 2;
+         if Get_Cost(result.all) > max_cost then
+            result.size := result.size / 2;
+            exit;
+         end if;
+
+         exit when (RNG.Random(generator) mod 8) = 0;
+
+      end loop;
+
+      if Get_Cost(result.all) > max_cost then
+         Destroy(Memory_Pointer(result));
+         return null;
+      else
+         return Memory_Pointer(result);
+      end if;
+
+   end Random_SPM;
+
    function Clone(mem : SPM_Type) return Memory_Pointer is
       result : constant SPM_Pointer := new SPM_Type'(mem);
    begin
       return Memory_Pointer(result);
    end Clone;
+
+   procedure Permute(mem         : in out SPM_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type) is
+      action : Natural := RNG.Random(generator) mod 2;
+   begin
+
+      for i in 1 .. 2 loop
+         if action = 0 then         -- Increment.
+            mem.size := mem.size * 2;
+            exit when Get_Cost(mem) <= max_cost;
+            mem.size := mem.size / 2;
+         elsif mem.size > 1 then    -- Decrement.
+            mem.size := mem.size / 2;
+            exit;
+         end if;
+         action := (action + 1) mod 2;
+      end loop;
+
+   end Permute;
 
    procedure Read(mem      : in out SPM_Type;
                   address  : in Address_Type;
@@ -30,8 +79,8 @@ package body Memory.SPM is
       elsif address + Address_Type(size) > Address_Type(mem.size) then
          declare
             naddr : constant Address_Type := Address_Type(mem.size);
-            diff  : constant Address_Type := naddr - address;
-            nsize : constant Positive := mem.size - Positive(diff);
+            last  : constant Address_Type := address + Address_Type(size);
+            nsize : constant Positive := Positive(last - naddr);
          begin
             Forward_Start(mem);
             Forward_Read(mem, naddr, nsize);
@@ -79,7 +128,7 @@ package body Memory.SPM is
 
    function Get_Cost(mem : SPM_Type) return Cost_Type is
    begin
-      return 6 * 8 * Cost_Type(mem.size);
+      return 6 * 8 * Cost_Type(mem.size) + Get_Cost(Container_Type(mem));
    end Get_Cost;
 
 end Memory.SPM;

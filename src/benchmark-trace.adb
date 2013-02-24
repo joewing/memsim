@@ -1,7 +1,6 @@
 
 with Ada.Text_IO;                use Ada.Text_IO;
 with Ada.Exceptions;             use Ada.Exceptions;
-with Ada.Assertions;             use Ada.Assertions;
 with Ada.Streams.Stream_IO;
 with Ada.Unchecked_Deallocation;
 
@@ -131,7 +130,7 @@ package body Benchmark.Trace is
       when ex: others =>
          Put_Line("error: " & Exception_Name(ex) & ": " &
                   Exception_Message(ex));
-         Assert(False);
+         raise;
    end Consumer_Type;
 
    function To_Address(ch : Character) return Address_Type is
