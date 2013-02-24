@@ -78,10 +78,12 @@ following memory packages are available:
  - *Memory.Bank*: A memory bank which can contain multiple memories.
  - *Memory.Cache*: A write-back cache with various parameters.
  - *Memory.Dup*: Duplicate accesses to other memories.
+ - *Memory.Flash*: A RAM with a separate write block size.
  - *Memory.Prefetch*: A memory prefetcher (assumes prefetches are free).
  - *Memory.RAM*: A simple RAM with constant access time.
  - *Memory.SPM*: A scratchpad memory.
  - *Memory.Stats*: A memory to track memory access statistics.
+ - *Memory.Super*: A memory hierarchy optimizer.
  - *Memory.Trace*: A memory to write a memory access trace.
  - *Memory.Transform*: Base class for memory address transformers.
  - *Memory.Transform.Offset*: Transform memory addresses by an offset.
