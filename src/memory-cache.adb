@@ -1,6 +1,7 @@
 
 with Ada.Unchecked_Deallocation;
 with Ada.Assertions; use Ada.Assertions;
+with Random_Enum;
 
 package body Memory.Cache is
 
@@ -9,7 +10,8 @@ package body Memory.Cache is
                          line_size     : Positive := 8;
                          associativity : Positive := 1;
                          latency       : Time_Type := 1;
-                         policy        : Policy_Type := LRU)
+                         policy        : Policy_Type := LRU;
+                         store         : Store_Type := Store_RW)
                          return Cache_Pointer is
       result : constant Cache_Pointer := new Cache_Type;
    begin
@@ -26,10 +28,11 @@ package body Memory.Cache is
       return result;
    end Create_Cache;
 
-   function Random_Boolean(generator : RNG.Generator) return Boolean is
-   begin
-      return (RNG.Random(generator) mod 2) = 1;
-   end Random_Boolean;
+   function Random_Policy is new Random_Enum(Policy_Type);
+
+   function Random_Store is new Random_Enum(Store_Type);
+
+   function Random_Boolean is new Random_Enum(Boolean);
 
    function Random_Cache(generator  : RNG.Generator;
                          max_cost   : Cost_Type)
@@ -57,7 +60,7 @@ package body Memory.Cache is
          declare
             line_size : constant Positive := result.line_size;
          begin
-            if Random_Boolean(generator) then
+            if Random_Boolean(RNG.Random(generator)) then
                result.line_size := line_size * 2;
                if Get_Cost(result.all) > max_cost then
                   result.line_size := line_size;
@@ -69,7 +72,7 @@ package body Memory.Cache is
          declare
             line_count : constant Positive := result.line_count;
          begin
-            if Random_Boolean(generator) then
+            if Random_Boolean(RNG.Random(generator)) then
                result.line_count := 2 * line_count;
                if Get_Cost(result.all) > max_cost then
                   result.line_count := line_count;
@@ -81,7 +84,7 @@ package body Memory.Cache is
          declare
             associativity : constant Positive := result.associativity;
          begin
-            if Random_Boolean(generator) then
+            if Random_Boolean(RNG.Random(generator)) then
                result.associativity := result.associativity * 2;
                if result.associativity > result.line_count or else
                   Get_Cost(result.all) > max_cost then
@@ -94,18 +97,23 @@ package body Memory.Cache is
          declare
             policy : constant Policy_Type := result.policy;
          begin
-            case RNG.Random(generator) mod 4 is
-               when 0      => result.policy := LRU;
-               when 1      => result.policy := MRU;
-               when 2      => result.policy := FIFO;
-               when others => result.policy := Random;
-            end case;
+            result.policy := Random_Policy(RNG.Random(generator));
             if Get_Cost(result.all) > max_cost then
                result.policy := policy;
             end if;
          end;
 
-         -- 1 in 8 chance of exiting after adjusting parameters.
+         -- Store.
+         declare
+            store : constant Store_Type := result.store;
+         begin
+            result.store := Random_Store(RNG.Random(generator));
+            if Get_Cost(result.all) > max_cost then
+               result.store := store;
+            end if;
+         end;
+
+         -- 1 in 16 chance of exiting after adjusting parameters.
          exit when (RNG.Random(generator) mod 16) = 0;
 
       end loop;
@@ -140,6 +148,7 @@ package body Memory.Cache is
       line_count     : constant Positive := mem.line_count;
       associativity  : constant Positive := mem.associativity;
       policy         : constant Policy_Type := mem.policy;
+      store          : constant Store_Type := mem.store;
 
    begin
 
@@ -180,18 +189,14 @@ package body Memory.Cache is
                   mem.associativity := associativity / 2;
                   exit;
                end if;
-            when 6 =>      -- Increase policy
-               if policy /= Policy_Type'Last then
-                  mem.policy := Policy_Type'Succ(policy);
-                  exit when Get_Cost(mem) <= max_cost;
-                  mem.policy := policy;
-               end if;
-            when others => -- Decrease policy
-               if policy /= Policy_Type'First then
-                  mem.policy := Policy_Type'Pred(policy);
-                  exit when Get_Cost(mem) <= max_cost;
-                  mem.policy := policy;
-               end if;
+            when 6 =>      -- Change policy
+               mem.policy := Random_Policy(RNG.Random(generator));
+               exit when Get_Cost(mem) <= max_cost;
+               mem.policy := policy;
+            when others => -- Change store
+               mem.store := Random_Store(RNG.Random(generator));
+               exit when Get_Cost(mem) <= max_cost;
+               mem.store := store;
          end case;
          param := (param + 1) mod 8;
       end loop;
@@ -312,9 +317,13 @@ package body Memory.Cache is
                   size     : in Positive) is
       extra : constant Natural := size / mem.line_size;
    begin
-      for i in 0 .. extra loop
-         Get_Data(mem, address + Address_Type(i * mem.line_size), True);
-      end loop;
+      if mem.store = Store_WO then
+         Read(Container_Type(mem), address, size);
+      else
+         for i in 0 .. extra loop
+            Get_Data(mem, address + Address_Type(i * mem.line_size), True);
+         end loop;
+      end if;
    end Read;
 
    procedure Write(mem     : in out Cache_Type;
@@ -322,9 +331,13 @@ package body Memory.Cache is
                    size    : in Positive) is
       extra : constant Natural := size / mem.line_size;
    begin
-      for i in 0 .. extra loop
-         Get_Data(mem, address + Address_Type(i * mem.line_size), False);
-      end loop;
+      if mem.store = Store_RO then
+         Write(Container_Type(mem), address, size);
+      else
+         for i in 0 .. extra loop
+            Get_Data(mem, address + Address_Type(i * mem.line_size), False);
+         end loop;
+      end if;
    end Write;
 
    function To_String(mem : Cache_Type) return Unbounded_String is
@@ -342,6 +355,13 @@ package body Memory.Cache is
          when MRU    => Append(result, "mru");
          when FIFO   => Append(result, "fifo");
          when Random => Append(result, "random");
+      end case;
+      Append(result, ")");
+      Append(result, "(store ");
+      case mem.store is
+         when Store_RO  => Append(result, "r");
+         when Store_WO  => Append(result, "w");
+         when Store_RW  => Append(result, "rw");
       end case;
       Append(result, ")");
       Append(result, "(memory ");

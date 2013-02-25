@@ -14,12 +14,17 @@ package Memory.Cache is
                         FIFO,       -- First-in first-out
                         Random);    -- Random
 
+   type Store_Type is (Store_RO,    -- Store only on read
+                       Store_WO,    -- Store only on write
+                       Store_RW);   -- Store on both read and write
+
    function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 8;
                          associativity : Positive := 1;
                          latency       : Time_Type := 1;
-                         policy        : Policy_Type := LRU)
+                         policy        : Policy_Type := LRU;
+                         store         : Store_Type := Store_RW)
                          return Cache_Pointer;
 
    function Random_Cache(generator  : RNG.Generator;
@@ -78,6 +83,7 @@ private
       latency        : Time_Type := 1;
       data           : Cache_Vectors.Vector;
       policy         : Policy_Type := LRU;
+      store          : Store_Type := Store_RW;
       generator      : Generator_Pointer := new RNG.Generator;
    end record;
 
