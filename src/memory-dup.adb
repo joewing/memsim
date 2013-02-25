@@ -35,6 +35,7 @@ package body Memory.Dup is
 
    procedure Reset(mem : in out Dup_Type) is
    begin
+      Reset(Memory_Type(mem));
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop
          Reset(mem.memories.Element(i).all);
       end loop;

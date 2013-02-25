@@ -295,6 +295,18 @@ package body Memory.Cache is
 
    end Get_Data;
 
+   procedure Reset(mem : in out Cache_Type) is
+      data : Cache_Data_Pointer;
+   begin
+      Reset(Container_Type(mem));
+      for i in 0 .. mem.line_count - 1 loop
+         data := mem.data.Element(i);
+         data.address   := Address_Type'Last;
+         data.age       := 0;
+         data.dirty     := False;
+      end loop;
+   end Reset;
+
    procedure Read(mem      : in out Cache_Type;
                   address  : in Address_Type;
                   size     : in Positive) is

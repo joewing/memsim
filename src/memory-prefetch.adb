@@ -19,6 +19,12 @@ package body Memory.Prefetch is
       return Memory_Pointer(result);
    end Clone;
 
+   procedure Reset(mem : in out Prefetch_Type) is
+   begin
+      Reset(Container_Type(mem));
+      mem.pending := 0;
+   end Reset;
+
    procedure Read(mem      : in out Prefetch_Type;
                   address  : in Address_Type;
                   size     : in Positive) is

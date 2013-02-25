@@ -120,6 +120,7 @@ package body Benchmark.Trace is
          or
             accept Reset do
                Reset(mem.all);
+               state := State_Action;
                skip := False;
             end Reset;
          or
@@ -261,23 +262,17 @@ package body Benchmark.Trace is
       for count in 1 .. benchmark.iterations loop
          Put_Line("Iteration" & Long_Integer'Image(count) & " /" &
                   Long_Integer'Image(benchmark.iterations));
+         Stream_IO.Reset(file);
          consumer.Reset;
-         begin
-            loop
-               pool.Allocate(sdata);
-               Stream_IO.Read(file, sdata.buffer, sdata.last);
-               if sdata.last < sdata.buffer'First then
-                  pool.Release(sdata);
-                  raise Stream_IO.End_Error;
-               end if;
-               sdata.pos := sdata.buffer'First;
-               consumer.Process(sdata);
-            end loop;
-         exception
-            when Stream_IO.End_Error =>
-               Stream_IO.Reset(file);
-               pool.Reset;
-         end;
+         loop
+            pool.Allocate(sdata);
+            Stream_IO.Read(file, sdata.buffer, sdata.last);
+            exit when sdata.last < sdata.buffer'First;
+            sdata.pos := sdata.buffer'First;
+            consumer.Process(sdata);
+         end loop;
+         pool.Release(sdata);
+         pool.Reset;
       end loop;
       Stream_IO.Close(file);
       pool.Destroy;

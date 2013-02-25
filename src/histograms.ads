@@ -8,6 +8,8 @@ package Histograms is
 
    type Histogram_Type is tagged private;
 
+   procedure Reset(hist : in out Histogram_Type);
+
    procedure Increment(hist   : in out Histogram_Type;
                        key    : in Key_Type);
 

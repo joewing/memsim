@@ -15,6 +15,9 @@ package Memory.Flash is
    function Clone(mem : Flash_Type) return Memory_Pointer;
 
    overriding
+   procedure Reset(mem : in out Flash_Type);
+
+   overriding
    procedure Read(mem      : in out Flash_Type;
                   address  : in Address_Type;
                   size     : in Positive);

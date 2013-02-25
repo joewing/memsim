@@ -14,6 +14,9 @@ package Memory.Perfect_Prefetch is
    function Clone(mem : Perfect_Prefetch_Type) return Memory_Pointer;
 
    overriding
+   procedure Reset(mem : in out Perfect_Prefetch_Type);
+
+   overriding
    procedure Read(mem      : in out Perfect_Prefetch_Type;
                   address  : in Address_Type;
                   size     : in Positive);

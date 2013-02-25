@@ -16,7 +16,7 @@ package body Memory.Bank is
                       bank : access Memory_Type'Class;
                       key  : in Address_Type;
                       mask : in Address_Type) is
-      data : constant Bank_Data := Bank_Data'(bank, key, mask);
+      data : constant Bank_Data := Bank_Data'(bank, key, mask, 0);
    begin
       mem.banks.Append(data);
    end Add_Bank;
@@ -35,9 +35,17 @@ package body Memory.Bank is
    end Get_Data;
 
    procedure Reset(mem : in out Bank_Type) is
+
+      procedure Reset_Bank(data : in out Bank_Data) is
+      begin
+         Reset(data.mem.all);
+         data.pending := 0;
+      end Reset_Bank;
+
    begin
+      Reset(Memory_Type(mem));
       for i in mem.banks.First_Index .. mem.banks.Last_Index loop
-         Reset(mem.banks.Element(i).mem.all);
+         mem.banks.Update_Element(i, Reset_Bank'Access);
       end loop;
    end Reset;
 

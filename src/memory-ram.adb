@@ -16,6 +16,12 @@ package body Memory.RAM is
       return Memory_Pointer(result);
    end Clone;
 
+   procedure Reset(mem : in out RAM_Type) is
+   begin
+      Reset(Memory_Type(mem));
+      mem.writes := 0;
+   end Reset;
+
    procedure Read(mem      : in out RAM_Type;
                   address  : in Address_Type;
                   size     : in Positive) is

@@ -60,6 +60,7 @@ private
       mem      : access Memory_Type'Class;
       key      : Address_Type;
       mask     : Address_Type;
+      pending  : Time_Type := 0;
    end record;
 
    package Bank_Vectors is new Vectors(Natural, Bank_Data);

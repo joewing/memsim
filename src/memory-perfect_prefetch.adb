@@ -16,6 +16,12 @@ package body Memory.Perfect_Prefetch is
       return Memory_Pointer(result);
    end Clone;
 
+   procedure Reset(mem : in out Perfect_Prefetch_Type) is
+   begin
+      Reset(Container_Type(mem));
+      mem.pending := 0;
+   end Reset;
+
    procedure Read(mem      : in out Perfect_Prefetch_Type;
                   address  : in Address_Type;
                   size     : in Positive) is

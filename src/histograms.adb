@@ -4,6 +4,11 @@ with Ada.Float_Text_IO; use Ada.Float_Text_IO;
 
 package body Histograms is
 
+   procedure Reset(hist : in out Histogram_Type) is
+   begin
+      hist.data.Clear;
+   end Reset;
+
    procedure Increment(hist   : in out Histogram_Type;
                        key    : in Key_Type) is
       value : Long_Integer := 1;

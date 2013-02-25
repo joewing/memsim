@@ -15,6 +15,9 @@ package Memory.Prefetch is
    function Clone(mem : Prefetch_Type) return Memory_Pointer;
 
    overriding
+   procedure Reset(mem : in out Prefetch_Type);
+
+   overriding
    procedure Read(mem      : in out Prefetch_Type;
                   address  : in Address_Type;
                   size     : in Positive);

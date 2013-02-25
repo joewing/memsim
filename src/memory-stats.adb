@@ -58,6 +58,19 @@ package body Memory.Stats is
       end if;
    end Process;
 
+   procedure Reset(mem : in out Stats_Type) is
+   begin
+      Reset(Container_Type(mem));
+      mem.last_address  := 0;
+      mem.last_stride   := 0;
+      mem.reads         := 0;
+      mem.min_address   := Address_Type'Last;
+      mem.max_address   := Address_Type'First;
+      mem.addresses.Reset;
+      mem.strides.Reset;
+      mem.multipliers.Reset;
+   end Reset;
+
    procedure Read(mem      : in out Stats_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
