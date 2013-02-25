@@ -95,8 +95,7 @@ package body Memory.SPM is
       elsif address + Address_Type(size) > Address_Type(mem.size) then
          declare
             naddr : constant Address_Type := Address_Type(mem.size);
-            diff  : constant Address_Type := naddr - address;
-            nsize : constant Positive := mem.size - Positive(diff);
+            nsize : constant Positive := Positive(naddr - address);
          begin
             Write(Container_Type(mem), naddr, nsize);
          end;
