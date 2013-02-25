@@ -16,6 +16,8 @@ private
    procedure Match(lexer   : in out Lexer_Type;
                    token   : in Token_Type);
 
+   function Parse_Boolean(value : String) return Boolean;
+
    procedure Parse_Memory(lexer  : in out Lexer_Type;
                           result : out Memory_Pointer);
 

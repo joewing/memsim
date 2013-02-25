@@ -10,14 +10,7 @@ procedure Parse_Cache(lexer   : in out Lexer_Type;
       policy   : Cache.Policy_Type;
    end record;
 
-   type Store_Map_Type is record
-      name     : Unbounded_String;
-      store    : Cache.Store_Type;
-   end record;
-
    type Policy_Map_Array is array(Positive range <>) of Policy_Map_Type;
-
-   type Store_Map_Array is array(Positive range <>) of Store_Map_Type;
 
    policies : constant Policy_Map_Array := (
       (To_Unbounded_String("lru"),        Cache.LRU),
@@ -26,19 +19,14 @@ procedure Parse_Cache(lexer   : in out Lexer_Type;
       (To_Unbounded_String("random"),     Cache.Random)
    );
 
-   stores : constant Store_Map_Array := (
-      (To_Unbounded_String("r"),       Cache.Store_RO),
-      (To_Unbounded_String("w"),       Cache.Store_WO),
-      (To_Unbounded_String("rw"),      Cache.Store_RW)
-   );
-
    mem            : Memory_Pointer := null;
    line_count     : Positive := 1;
    line_size      : Positive := 1;
    associativity  : Positive := 1;
    latency        : Time_Type := 1;
    policy         : Cache.Policy_Type := Cache.LRU;
-   store          : Cache.Store_Type := Cache.Store_RW;
+   exclusive      : Boolean := False;
+   write_back     : Boolean := False;
 
 begin
    while Get_Type(lexer) = Open loop
@@ -66,6 +54,10 @@ begin
                   associativity := Positive'Value(value);
                elsif name = "latency" then
                   latency := Time_Type'Value(value);
+               elsif name = "exclusive" then
+                  exclusive := Parse_Boolean(value);
+               elsif name = "write_back" then
+                  write_back := Parse_Boolean(value);
                elsif name = "policy" then
                   declare
                      found : Boolean := False;
@@ -79,21 +71,6 @@ begin
                      end loop;
                      if not found then
                         Raise_Error(lexer, "invalid cache replacement policy");
-                     end if;
-                  end;
-               elsif name = "store" then
-                  declare
-                     found : Boolean := False;
-                  begin
-                     for p in stores'Range loop
-                        if stores(p).name = value then
-                           store := stores(p).store;
-                           found := True;
-                           exit;
-                        end if;
-                     end loop;
-                     if not found then
-                        Raise_Error(lexer, "invalid cache store mode");
                      end if;
                   end;
                else
@@ -113,7 +90,8 @@ begin
                                                associativity,
                                                latency,
                                                policy,
-                                               store));
+                                               exclusive,
+                                               write_back));
 exception
    when Data_Error | Constraint_Error =>
       Destroy(mem);

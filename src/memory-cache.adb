@@ -11,7 +11,8 @@ package body Memory.Cache is
                          associativity : Positive := 1;
                          latency       : Time_Type := 1;
                          policy        : Policy_Type := LRU;
-                         store         : Store_Type := Store_RW)
+                         exclusive     : Boolean := False;
+                         write_back    : Boolean := True)
                          return Cache_Pointer is
       result : constant Cache_Pointer := new Cache_Type;
    begin
@@ -21,6 +22,8 @@ package body Memory.Cache is
       result.associativity := associativity;
       result.latency       := latency;
       result.policy        := policy;
+      result.exclusive     := exclusive;
+      result.write_back    := write_back;
       result.data.Set_Length(Count_Type(result.line_count));
       for i in 0 .. result.line_count - 1 loop
          result.data.Replace_Element(i, new Cache_Data);
@@ -29,8 +32,6 @@ package body Memory.Cache is
    end Create_Cache;
 
    function Random_Policy is new Random_Enum(Policy_Type);
-
-   function Random_Store is new Random_Enum(Store_Type);
 
    function Random_Boolean is new Random_Enum(Boolean);
 
@@ -46,6 +47,8 @@ package body Memory.Cache is
       result.associativity := 1;
       result.latency       := 1;
       result.policy        := Random;
+      result.exclusive     := False;
+      result.write_back    := True;
 
       -- If even the minimum cache is too costly, return nulll.
       if Get_Cost(result.all) > max_cost then
@@ -103,13 +106,16 @@ package body Memory.Cache is
             end if;
          end;
 
-         -- Store.
+         -- Type.
          declare
-            store : constant Store_Type := result.store;
+            exclusive   : constant Boolean := result.exclusive;
+            write_back  : constant Boolean := result.write_back;
          begin
-            result.store := Random_Store(RNG.Random(generator));
+            result.exclusive  := Random_Boolean(RNG.Random(generator));
+            result.write_back := Random_Boolean(RNG.Random(generator));
             if Get_Cost(result.all) > max_cost then
-               result.store := store;
+               result.exclusive := exclusive;
+               result.write_back := write_back;
             end if;
          end;
 
@@ -148,7 +154,8 @@ package body Memory.Cache is
       line_count     : constant Positive := mem.line_count;
       associativity  : constant Positive := mem.associativity;
       policy         : constant Policy_Type := mem.policy;
-      store          : constant Store_Type := mem.store;
+      exclusive      : constant Boolean := mem.exclusive;
+      write_back     : constant Boolean := mem.write_back;
 
    begin
 
@@ -193,10 +200,12 @@ package body Memory.Cache is
                mem.policy := Random_Policy(RNG.Random(generator));
                exit when Get_Cost(mem) <= max_cost;
                mem.policy := policy;
-            when others => -- Change store
-               mem.store := Random_Store(RNG.Random(generator));
+            when others => -- Change type
+               mem.exclusive  := Random_Boolean(RNG.Random(generator));
+               mem.write_back := Random_Boolean(RNG.Random(generator));
                exit when Get_Cost(mem) <= max_cost;
-               mem.store := store;
+               mem.exclusive := exclusive;
+               mem.write_back := write_back;
          end case;
          param := (param + 1) mod 8;
       end loop;
@@ -262,8 +271,12 @@ package body Memory.Cache is
             if mem.policy /= FIFO then
                data.age := 0;
             end if;
-            data.dirty := data.dirty or not is_read;
-            Advance(mem, mem.latency);
+            if is_read or mem.write_back then
+               Advance(mem, mem.latency);
+               data.dirty := data.dirty or not is_read;
+            else
+               Write(Container_Type(mem), tag, mem.line_size);
+            end if;
             return;
          elsif mem.policy = MRU then
             if data.age < age then
@@ -277,26 +290,36 @@ package body Memory.Cache is
             end if;
          end if;
       end loop;
-
       if mem.policy = Random then
          line := RNG.Random(mem.generator.all) mod mem.associativity;
          to_replace := first + line * mem.line_count / mem.associativity;
       end if;
 
-      -- Not in the cache; evict the oldest entry.
-      data := mem.data.Element(to_replace);
-      if data.dirty then
-         Write(Container_Type(mem), data.address, mem.line_size);
-         data.dirty := False;
+      -- If we got here, the item is not in the cache.
+      -- If this is a read on an exclusive cache, we just forward the
+      -- read the return without caching, otherwise we need to evict the
+      -- oldest entry.
+      if mem.exclusive and is_read then
+
+         Read(Container_Type(mem), tag, mem.line_size);
+
+      else
+
+         -- Evict the oldest entry.
+         -- On write-through caches, the dirty flag will never be set.
+         data := mem.data.Element(to_replace);
+         if data.dirty then
+            Write(Container_Type(mem), data.address, mem.line_size);
+            data.dirty := False;
+         end if;
+
+         -- Read the new entry.
+         data.address := tag;
+         Read(Container_Type(mem), data.address, mem.line_size);
+         data.age := 0;
+         data.dirty := not is_read;
+
       end if;
-
-      -- Read the new entry.
-      data.address := tag;
-      Read(Container_Type(mem), data.address, mem.line_size);
-
-      -- Mark the data as new and return.
-      data.age := 0;
-      data.dirty := not is_read;
 
    end Get_Data;
 
@@ -317,13 +340,9 @@ package body Memory.Cache is
                   size     : in Positive) is
       extra : constant Natural := size / mem.line_size;
    begin
-      if mem.store = Store_WO then
-         Read(Container_Type(mem), address, size);
-      else
-         for i in 0 .. extra loop
-            Get_Data(mem, address + Address_Type(i * mem.line_size), True);
-         end loop;
-      end if;
+      for i in 0 .. extra loop
+         Get_Data(mem, address + Address_Type(i * mem.line_size), True);
+      end loop;
    end Read;
 
    procedure Write(mem     : in out Cache_Type;
@@ -331,13 +350,9 @@ package body Memory.Cache is
                    size    : in Positive) is
       extra : constant Natural := size / mem.line_size;
    begin
-      if mem.store = Store_RO then
-         Write(Container_Type(mem), address, size);
-      else
-         for i in 0 .. extra loop
-            Get_Data(mem, address + Address_Type(i * mem.line_size), False);
-         end loop;
-      end if;
+      for i in 0 .. extra loop
+         Get_Data(mem, address + Address_Type(i * mem.line_size), False);
+      end loop;
    end Write;
 
    function To_String(mem : Cache_Type) return Unbounded_String is
@@ -357,13 +372,16 @@ package body Memory.Cache is
          when Random => Append(result, "random");
       end case;
       Append(result, ")");
-      Append(result, "(store ");
-      case mem.store is
-         when Store_RO  => Append(result, "r");
-         when Store_WO  => Append(result, "w");
-         when Store_RW  => Append(result, "rw");
-      end case;
-      Append(result, ")");
+      if mem.exclusive then
+         Append(result, "(exclusive true)");
+      else
+         Append(result,  "(exclusive false)");
+      end if;
+      if mem.write_back then
+         Append(result, "(write_back true)");
+      else
+         Append(result, "(write_back false)");
+      end if;
       Append(result, "(memory ");
       Append(result, To_String(Container_Type(mem)));
       Append(result, "))");
@@ -391,6 +409,9 @@ package body Memory.Cache is
       -- Number of transistors needed to store age data.
       age      : constant Cost_Type := 6 * (assoc - 1);
 
+      -- Number of transistors needed to store dirty bits.
+      dirty    : constant Cost_Type := 6 * lines;
+
       -- Number of transistors needed for comparators.
       compare  : constant Cost_Type := 8 * (assoc - 1) * tag_size;
 
@@ -400,17 +421,19 @@ package body Memory.Cache is
       -- Cost of the contained memory.
       con      : constant Cost_Type := Get_Cost(Container_Type(mem));
 
+      result   : Cost_Type := base + con;
+
    begin
       case mem.policy is
-         when LRU    =>
-            return base + age + con;
-         when MRU    =>
-            return base + age + con;
-         when FIFO   =>
-            return base + age + con;
-         when Random =>
-            return base + con;
+         when LRU    => result := result + age;
+         when MRU    => result := result + age;
+         when FIFO   => result := result + age;
+         when Random => null;
       end case;
+      if mem.write_back then
+         result := result + dirty;
+      end if;
+      return result;
    end Get_Cost;
 
    procedure Adjust(mem : in out Cache_Type) is

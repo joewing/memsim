@@ -63,6 +63,17 @@ package body Parser is
       (To_Unbounded_String("trace"),            Parse_Trace'Access)
    );
 
+   function Parse_Boolean(value : String) return Boolean is
+   begin
+      if value = "true" then
+         return True;
+      elsif value = "false" then
+         return False;
+      else
+         raise Data_Error;
+      end if;
+   end Parse_Boolean;
+
    procedure Parse_Memory(lexer  : in out Lexer_Type;
                           result : out Memory_Pointer) is
    begin
