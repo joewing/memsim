@@ -12,7 +12,17 @@ package Memory.Prefetch is
                             multiplier : Address_Type := 1)
                             return Prefetch_Pointer;
 
+   function Random_Prefetch(generator  : RNG.Generator;
+                            max_cost   : Cost_Type)
+                            return Memory_Pointer;
+
+   overriding
    function Clone(mem : Prefetch_Type) return Memory_Pointer;
+
+   overriding
+   procedure Permute(mem         : in out Prefetch_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type);
 
    overriding
    procedure Reset(mem : in out Prefetch_Type);

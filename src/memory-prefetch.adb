@@ -13,11 +13,41 @@ package body Memory.Prefetch is
       return result;
    end Create_Prefetch;
 
+   function Random_Prefetch(generator  : RNG.Generator;
+                            max_cost   : Cost_Type)
+                            return Memory_Pointer is
+      result : Prefetch_Pointer := new Prefetch_Type;
+   begin
+      if Get_Cost(result.all) > max_cost then
+         Destroy(Memory_Pointer(result));
+         return null;
+      end if;
+      result.stride     := Address_Type(RNG.Random(generator) mod 3) - 1;
+      result.multiplier := Address_Type(RNG.Random(generator) mod 3) - 1;
+      return Memory_Pointer(result);
+   end Random_Prefetch;
+
    function Clone(mem : Prefetch_Type) return Memory_Pointer is
       result : constant Prefetch_Pointer := new Prefetch_Type'(mem);
    begin
       return Memory_Pointer(result);
    end Clone;
+
+   procedure Permute(mem         : in out Prefetch_Type;
+                     generator   : in RNG.Generator;
+                     max_cost    : in Cost_Type) is
+   begin
+      case RNG.Random(generator) mod 4 is
+         when 0      =>    -- Increment stride
+            mem.stride := mem.stride + 1;
+         when 1      =>    -- Decrement stride
+            mem.stride := mem.stride - 1;
+         when 2      =>    -- Increment multiplier
+            mem.multiplier := mem.multiplier + 1;
+         when others =>    -- Decrement multiplier
+            mem.multiplier := mem.multiplier - 1;
+      end case;
+   end Permute;
 
    procedure Reset(mem : in out Prefetch_Type) is
    begin
@@ -88,7 +118,7 @@ package body Memory.Prefetch is
 
    function Get_Cost(mem : Prefetch_Type) return Cost_Type is
    begin
-      return Get_Cost(Container_Type(mem));
+      return 28 * Address_Type'Size + Get_Cost(Container_Type(mem));
    end Get_Cost;
 
 end Memory.Prefetch;

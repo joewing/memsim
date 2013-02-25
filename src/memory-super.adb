@@ -5,6 +5,7 @@ with Memory.Cache;            use Memory.Cache;
 with Memory.SPM;              use Memory.SPM;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
+with Memory.Prefetch;         use Memory.Prefetch;
 
 package body Memory.Super is
 
@@ -13,13 +14,15 @@ package body Memory.Super is
                           return Container_Pointer is
       result : Memory_Pointer;
    begin
-      case RNG.Random(mem.generator.all) mod 4 is
+      case RNG.Random(mem.generator.all) mod 5 is
          when 0      =>    -- Shift
             result := Random_Shift(mem.generator.all, cost);
          when 1      =>    -- Offset
             result := Random_Offset(mem.generator.all, cost);
          when 2      =>    -- SPM
             result := Random_SPM(mem.generator.all, cost);
+         when 3      =>
+            result := Random_Prefetch(mem.generator.all, cost);
          when others =>    -- Cache
             result := Random_Cache(mem.generator.all, cost);
       end case;
