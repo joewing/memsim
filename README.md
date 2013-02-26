@@ -14,19 +14,12 @@ benchmarks:
   hash [size=1024] [iterations=1000] [spacing=100]
   heap [size=1024] [iterations=1000] [spacing=100]
   stride [size=1024] [iterations=1000] [stride=1] [spacing=100]
-  trace [file=trace.txt] [spacing=100]
+  trace [file=trace.txt] [iterations=1] [spacing=100]
 </pre>
 
-The memory is a memory description.  Memories are specified using
-s-expressions.  For example, a simple cached memory would look as follows:
+The &lt;memory&gt; parameter specifies a memory description file.
 
-<pre>
-(cache (latency 1) (line_size 8) (line_count 1024) (associativity 4)
-   (memory (ram (latency 100))))
-</pre>
-
-See the *mem* subdirectory for more examples.
-
+The &lt;benchmark&gt; parameter specifies the bnechmark to use.
 The following benchmarks are available:
 
  - *hash*: A benchmark to generate random 4-byte memory accesses.
@@ -62,6 +55,78 @@ Finally, the format of idle time is:
 
 Where &lt;cycles&gt; is the number of cycles in hexadecimal.
 
+Memories
+------------------------------------------------------------------------------
+Memories are specified using s-expressions.  The type of memory comes first
+and then pairs containing argument (name, value) follow.  
+For example, a simple cached memory would look as follows:
+
+<pre>
+(cache (latency 1) (line_size 8) (line_count 1024) (associativity 4)
+   (memory (ram (latency 100))))
+</pre>
+
+See the *mem* subdirectory for more examples.
+
+There are two types of memories: containers and basic memories.
+The basic memories are:
+
+ - ram: A RAM simulator with a fixed word size and latency.  Takes the
+   following parameters:
+   - word\_size: The size of a word in bytes (defaults to 8).
+   - latency: The latency of an access (defaults to 1).
+ - flash: A Flash memory simulator with a separate block write size and
+   latency.  Takes the following parameters:
+   - word\_size: The size of a word in bytes (defaults to 8).
+   - block\_size: The size of a block in bytes (defaults to 256).
+   - read\_latency: The latency of a read (defaults to 10).
+   - write\_latency: The latency of a write (defaults to 1000).
+
+The following memory containers are available:
+
+ - bank: Memory bank. Divide memory accesses based on address.  Banks take
+   a list for the banks.  Each bank must specify a memory, key, and mask.
+   The mask is a bit mask for the address and the key is the value that
+   the masked address is tested against.
+ - cache: Cache.  The following parameters are available:
+   - memory: The contained memory.
+   - line\_count: The number of cache lines (1).
+   - line\_size: The size of each cache line in bytes (8).
+   - associativity: The set associativity of the cache (1).
+   - latency: The latency of a cache hit (1).
+   - policy: The replacement policy (lru, mru, fifo, or random,
+     defaults is lru).
+   - exclusive: Determine if read values are cached (defaults to true).
+   - write\_back: Set if the cache should use write back instead of
+     write through (defaults to false).
+ - dup: Access duplicator.  This can be used to test several memories at
+   once. Takes a list of memories.
+ - perfect\_prefetch: Perfect prefetcher.  Takes the following parameter:
+   - memory: The contained memory.
+ - prefetch: Strided prefetcher.  Prefetches the address computed by
+   (address * multiplier + stride) Takes the following parameters:
+   - memory: The contained memory.
+   - stride: The stride size (defaults to 1).
+   - multiplier: The stride multiplier (defaults to 1).
+ - spm: Scratchpad memory.  Takes the following parameters:
+   - memory: The contained memory.
+   - size: The size of the scratchpad (defaults to 0).
+   - latency: The latency of a hit in the scratchpad.
+ - stats: Access statistics logger.  Takes the following parameter:
+   - memory: The contained memory.
+ - super: Memory hierarchy optimizer (for use with the trace benchmark).
+   Takes the following parameters:
+   - memory: The contained memory.
+   - optimize: The optimization target (time or writes, defaults to time).
+   - max\_cost: The maximum cost in transistors (defaults to 0).
+ - trace: Access trace logger.  Takes the following parameter:
+   - memory: The contained memory.
+ - transform: Address transformer.  Takes the following parameters:
+   - memory: The contained memory.
+   - offset: An address offset (exactly one of shift or offset must be
+     specified).
+   - shift: A number of bits to rotate the address left.
+
 Building
 ------------------------------------------------------------------------------
 Assuming GNAT is installed, simply run 'make'.
@@ -70,30 +135,7 @@ Implementation
 ------------------------------------------------------------------------------
 
 memsim is implemented in Ada 2005.  There are two main package hierarchies:
-the *Memory* package and the *Benchmark* package.  The *Parser* package
-(which uses the *Lexer* package) is used to build up memories.  The
-following memory packages are available:
-
- - *Memory*: The base package.
- - *Memory.Bank*: A memory bank which can contain multiple memories.
- - *Memory.Cache*: A write-back cache with various parameters.
- - *Memory.Dup*: Duplicate accesses to other memories.
- - *Memory.Flash*: A RAM with a separate write block size.
- - *Memory.Prefetch*: A memory prefetcher (assumes prefetches are free).
- - *Memory.RAM*: A simple RAM with constant access time.
- - *Memory.SPM*: A scratchpad memory.
- - *Memory.Stats*: A memory to track memory access statistics.
- - *Memory.Super*: A memory hierarchy optimizer.
- - *Memory.Trace*: A memory to write a memory access trace.
- - *Memory.Transform*: Base class for memory address transformers.
- - *Memory.Transform.Offset*: Transform memory addresses by an offset.
- - *Memory.Transform.Shift*: Transform memory addresses by shifting.
-
-The following benchmark packages are available:
-
- - *Benchmark* The base package.
- - *Benchmark.Hash* A benchmark to generate random memory accesses.
- - *Benchmark.Heap* A benchmark to perform operations on a binary heap.
- - *Benchmark.Trace* A benchmark to process a memory trace.
- - *Benchmark.Stride* A benchmark to generate strided memory accesses.
+the *Memory* package to describe memories and the *Benchmark* package
+to describe benchmarks.  The *Parser* package (which uses the *Lexer*
+package) is used to build up memories.
 
