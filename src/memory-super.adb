@@ -14,15 +14,15 @@ package body Memory.Super is
                           return Container_Pointer is
       result : Memory_Pointer;
    begin
-      case RNG.Random(mem.generator.all) mod 5 is
+      case RNG.Random(mem.generator.all) mod 8 is
          when 0      =>    -- Shift
             result := Random_Shift(mem.generator.all, cost);
          when 1      =>    -- Offset
             result := Random_Offset(mem.generator.all, cost);
-         when 2      =>    -- SPM
-            result := Random_SPM(mem.generator.all, cost);
-         when 3      =>
+         when 2      =>
             result := Random_Prefetch(mem.generator.all, cost);
+         when 3 | 4  =>    -- SPM
+            result := Random_SPM(mem.generator.all, cost);
          when others =>    -- Cache
             result := Random_Cache(mem.generator.all, cost);
       end case;
@@ -150,34 +150,18 @@ package body Memory.Super is
       result.max_cost := max_cost;
       result.dram := Memory_Pointer(mem);
       RNG.Reset(result.generator.all, seed);
+      Randomize(Super_Type(result.all));
       return result;
    end Create_Super;
 
-   procedure Finish_Run(mem : in out Super_Type) is
-      cost  : constant Cost_Type := Get_Cost(mem);
+   procedure Update_Memory(mem   : in out Super_Type;
+                           value : in Value_Type) is
       temp  : Container_Pointer;
       next  : Memory_Pointer;
-      base  : constant Natural := 2 ** 16;
-      prob  : Natural;
-      rand  : constant Natural := RNG.Random(mem.generator.all) mod base;
-      value : constant Value_Type := Get_Value(mem'Access);
+      prob  : constant Float := Float(value) / Float(mem.last_value + value);
+      rand  : constant Float := Float(RNG.Random(mem.generator.all)) /
+                                Float(Natural'Last);
    begin
-
-      -- Keep track of the best memory.
-      if value < mem.best_value or else
-         (value = mem.best_value and cost < mem.best_cost) then
-         mem.best_value := value;
-         mem.best_cost  := cost;
-         mem.best_name  := To_String(mem);
-      end if;
-
-      -- Determine the probability of reverting to the old state.
-      if mem.last_value /= Value_Type'Last then
-         prob := Natural((Value_Type(base) * mem.last_value) /
-                         (value + mem.last_value));
-      else
-         prob := base / 2;
-      end if;
 
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
@@ -209,15 +193,6 @@ package body Memory.Super is
          Set_Memory(mem, next);
 
       end if;
-   end Finish_Run;
-
-   procedure Reset(mem : in out Super_Type) is
-      temp : Container_Pointer;
-      next : Memory_Pointer;
-   begin
-
-      -- Reset the time.
-      Reset(Container_Type(mem));
 
       -- Destroy the last chain.
       for i in mem.last_chain.First_Index .. mem.last_chain.Last_Index loop
@@ -248,6 +223,48 @@ package body Memory.Super is
       -- Make a random modification to the memory.
       Randomize(mem);
 
+      -- If we've already run this memory, find a new one.
+      declare
+         new_name : constant Unbounded_String := To_String(mem);
+         cursor   : constant Value_Maps.Cursor := mem.table.Find(new_name);
+      begin
+         if Value_Maps."/="(cursor, Value_Maps.No_Element) then
+            declare
+               cached_value : constant Value_Type :=
+                              Value_Maps.Element(cursor);
+            begin
+               Put_Line("Value: " & Value_Type'Image(cached_value));
+               Update_Memory(mem, cached_value);
+            end;
+         end if;
+      end;
+
+   end Update_Memory;
+
+   procedure Finish_Run(mem : in out Super_Type) is
+      name  : constant Unbounded_String := To_String(mem);
+      cost  : constant Cost_Type := Get_Cost(mem);
+      value : constant Value_Type := Get_Value(mem'Access);
+   begin
+
+      -- Keep track of the best memory.
+      if value < mem.best_value or else
+         (value = mem.best_value and cost < mem.best_cost) then
+         mem.best_value := value;
+         mem.best_cost  := cost;
+         mem.best_name  := To_String(mem);
+      end if;
+
+      -- Keep track of the result of running with this memory.
+      mem.table.Insert(name, value);
+
+      Update_Memory(mem, value);
+
+   end Finish_Run;
+
+   procedure Reset(mem : in out Super_Type) is
+   begin
+      Reset(Container_Type(mem));
    end Reset;
 
    procedure Read(mem      : in out Super_Type;

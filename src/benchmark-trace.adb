@@ -115,10 +115,10 @@ package body Benchmark.Trace is
             total := total +
                      Byte_Count_Type(buffer.last - buffer.buffer'First + 1);
             Put_Line("Processed" & Byte_Count_Type'Image(total) & " bytes");
-            Show_Stats(mem.all);
             pool.Release(buffer);
          or
             accept Reset do
+               Show_Stats(mem.all);
                Reset(mem.all);
                state := State_Action;
                skip := False;
@@ -262,8 +262,6 @@ package body Benchmark.Trace is
       for count in 1 .. benchmark.iterations loop
          Put_Line("Iteration" & Long_Integer'Image(count) & " /" &
                   Long_Integer'Image(benchmark.iterations));
-         Stream_IO.Reset(file);
-         consumer.Reset;
          loop
             pool.Allocate(sdata);
             Stream_IO.Read(file, sdata.buffer, sdata.last);
@@ -273,6 +271,10 @@ package body Benchmark.Trace is
          end loop;
          pool.Release(sdata);
          pool.Reset;
+         if count < benchmark.iterations then
+            consumer.Reset;
+            Stream_IO.Reset(file);
+         end if;
       end loop;
       Stream_IO.Close(file);
       pool.Destroy;
