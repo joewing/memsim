@@ -1,3 +1,3 @@
+; Memory with a 256 byte scratchpad.
 (spm (size 256) (latency 1)
-   (memory (ram (word_size 8) (latency 100)))
-)
+   (memory (ram (word_size 8) (latency 100))))

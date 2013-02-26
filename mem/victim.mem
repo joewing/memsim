@@ -1,0 +1,5 @@
+; Cached memory with an 8 entry victim cache.
+(cache (line_count 256) (line_size 8) (associativity 1)
+   (memory (cache (line_count 8) (line_size 8) (associativity 8)
+      (policy fifo) (exclusive true)
+      (memory (ram (word_size 8) (latency 100))))))

@@ -1,3 +1,4 @@
+; Cached memory with perfect prefetching.
 (perfect_prefetch
    (cache (line_size 8) (line_count 256) (associativity 1)
       (memory (ram (word_size 8) (latency 100)))))

@@ -239,6 +239,7 @@ package body Memory.Cache is
 
    procedure Get_Data(mem      : in out Cache_Type;
                       address  : in Address_Type;
+                      size     : in Positive;
                       is_read  : in Boolean) is
 
       data        : Cache_Data_Pointer;
@@ -267,7 +268,7 @@ package body Memory.Cache is
       for i in 0 .. mem.associativity - 1 loop
          line := first + i * mem.line_count / mem.associativity;
          data := mem.data.Element(line);
-         if tag = data.address then
+         if tag = data.address then    -- Cache hit.
             if mem.policy /= FIFO then
                data.age := 0;
             end if;
@@ -314,10 +315,13 @@ package body Memory.Cache is
          end if;
 
          -- Read the new entry.
-         data.address := tag;
-         Read(Container_Type(mem), data.address, mem.line_size);
-         data.age := 0;
-         data.dirty := not is_read;
+         -- We skip this if this was a write that wrote the entire line.
+         if is_read or size /= mem.line_size then
+            data.address := tag;
+            Read(Container_Type(mem), data.address, mem.line_size);
+            data.age := 0;
+            data.dirty := not is_read;
+         end if;
 
       end if;
 
@@ -340,9 +344,14 @@ package body Memory.Cache is
                   size     : in Positive) is
       extra : constant Natural := size / mem.line_size;
    begin
-      for i in 0 .. extra loop
-         Get_Data(mem, address + Address_Type(i * mem.line_size), True);
+      for i in 0 .. extra - 1 loop
+         Get_Data(mem, address + Address_Type(i * mem.line_size),
+                  mem.line_size, True);
       end loop;
+      if size > extra * mem.line_size then
+         Get_Data(mem, address + Address_Type(extra * mem.line_size),
+                  size - extra * mem.line_size, True);
+      end if;
    end Read;
 
    procedure Write(mem     : in out Cache_Type;
@@ -350,9 +359,14 @@ package body Memory.Cache is
                    size    : in Positive) is
       extra : constant Natural := size / mem.line_size;
    begin
-      for i in 0 .. extra loop
-         Get_Data(mem, address + Address_Type(i * mem.line_size), False);
+      for i in 0 .. extra - 1 loop
+         Get_Data(mem, address + Address_Type(i * mem.line_size),
+                  mem.line_size, False);
       end loop;
+      if size > extra * mem.line_size then
+         Get_Data(mem, address + Address_Type(extra * mem.line_size),
+                  size - extra * mem.line_size, False);
+      end if;
    end Write;
 
    function To_String(mem : Cache_Type) return Unbounded_String is

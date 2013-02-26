@@ -1,1 +1,2 @@
+; Simple memory with 100 cycle access time and 8-byte words.
 (ram (word_size 8) (latency 100))
