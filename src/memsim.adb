@@ -9,6 +9,7 @@ with Benchmark.Heap;
 with Benchmark.Trace;
 with Benchmark.Stride;
 with Benchmark.Hash;
+with Test;
 
 procedure MemSim is
 
@@ -54,7 +55,10 @@ procedure MemSim is
 begin
 
    -- Make sure we have enough arguments.
-   if Argument_Count < 2 then
+   if Argument_Count = 1 and then Argument(1) = "test" then
+      Test.Run_Tests;
+      return;
+   elsif Argument_Count < 2 then
       Put_Line("usage: " & Command_Name & " <memory> <benchmark> [<options>]");
       Put_Line("benchmarks:");
       for i in benchmark_map'First .. benchmark_map'Last loop

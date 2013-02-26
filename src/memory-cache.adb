@@ -321,6 +321,8 @@ package body Memory.Cache is
             Read(Container_Type(mem), data.address, mem.line_size);
             data.age := 0;
             data.dirty := not is_read;
+         elsif not is_read then
+            Advance(mem, mem.latency);
          end if;
 
       end if;
