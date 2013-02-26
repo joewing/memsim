@@ -58,7 +58,7 @@ Where &lt;cycles&gt; is the number of cycles in hexadecimal.
 Memories
 ------------------------------------------------------------------------------
 Memories are specified using s-expressions.  The type of memory comes first
-and then pairs containing argument (name, value) follow.  
+and then pairs containing argument name/value follow.
 For example, a simple cached memory would look as follows:
 
 <pre>
