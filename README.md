@@ -19,7 +19,7 @@ benchmarks:
 
 The &lt;memory&gt; parameter specifies a memory description file.
 
-The &lt;benchmark&gt; parameter specifies the bnechmark to use.
+The &lt;benchmark&gt; parameter specifies the benchmark to use.
 The following benchmarks are available:
 
  - *hash*: A benchmark to generate random 4-byte memory accesses.
