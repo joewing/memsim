@@ -158,11 +158,8 @@ package body Memory.Super is
                            value : in Value_Type) is
       temp  : Container_Pointer;
       next  : Memory_Pointer;
-      lena  : constant Float := Float(mem.chain.Length) + 1.0;
-      lenb  : constant Float := Float(mem.last_chain.Length) + 1.0;
-      total : constant Float := Float(value) + Float(mem.last_value);
-      valt  : constant Float := Float(value) / total;
-      prob  : constant Float := valt * (lenb / lena);
+      prob  : constant Float := Float(value) /
+                                (Float(value) + Float(mem.last_value));
       rand  : constant Float := Float(RNG.Random(mem.generator.all)) /
                                 Float(Natural'Last);
    begin
