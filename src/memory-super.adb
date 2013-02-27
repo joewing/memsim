@@ -15,15 +15,15 @@ package body Memory.Super is
       result : Memory_Pointer;
    begin
       case RNG.Random(mem.generator.all) mod 8 is
-         when 0      =>    -- Shift
+         when 0      =>    -- Shift (1/8)
             result := Random_Shift(mem.generator.all, cost);
-         when 1      =>    -- Offset
+         when 1      =>    -- Offset (1/8)
             result := Random_Offset(mem.generator.all, cost);
-         when 2      =>
+         when 2      =>    -- Strided prefetch (1/8)
             result := Random_Prefetch(mem.generator.all, cost);
-         when 3 | 4  =>    -- SPM
+         when 3 | 4  =>    -- SPM (2/8)
             result := Random_SPM(mem.generator.all, cost);
-         when others =>    -- Cache
+         when others =>    -- Cache (3/8)
             result := Random_Cache(mem.generator.all, cost);
       end case;
       return Container_Pointer(result);
@@ -158,14 +158,18 @@ package body Memory.Super is
                            value : in Value_Type) is
       temp  : Container_Pointer;
       next  : Memory_Pointer;
-      prob  : constant Float := Float(value) / Float(mem.last_value + value);
+      lena  : constant Float := Float(mem.chain.Length) + 1.0;
+      lenb  : constant Float := Float(mem.last_chain.Length) + 1.0;
+      total : constant Float := Float(value) + Float(mem.last_value);
+      valt  : constant Float := Float(value) / total;
+      prob  : constant Float := valt * (lenb / lena);
       rand  : constant Float := Float(RNG.Random(mem.generator.all)) /
                                 Float(Natural'Last);
    begin
 
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
-      if mem.last_value = Value_Type'Last or rand > prob then
+      if rand > prob then
 
          -- Keep this memory.
          mem.last_value := value;
@@ -261,25 +265,6 @@ package body Memory.Super is
       Update_Memory(mem, value);
 
    end Finish_Run;
-
-   procedure Reset(mem : in out Super_Type) is
-   begin
-      Reset(Container_Type(mem));
-   end Reset;
-
-   procedure Read(mem      : in out Super_Type;
-                  address  : in Address_Type;
-                  size     : in Positive) is
-   begin
-      Read(Container_Type(mem), address, size);
-   end Read;
-
-   procedure Write(mem     : in out Super_Type;
-                   address : in Address_Type;
-                   size    : in Positive) is
-   begin
-      Write(Container_Type(mem), address, size);
-   end Write;
 
    procedure Show_Access_Stats(mem : in out Super_Type) is
    begin
