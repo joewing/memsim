@@ -1,12 +1,13 @@
 
 with Memory.Super_Time;
 with Memory.Super_Writes;
+with Memory.Super_None;
 
 separate (Parser)
 procedure Parse_Super(lexer   : in out Lexer_Type;
                       result  : out Memory_Pointer) is
 
-   type Opt_Type is (Opt_Time, Opt_Writes);
+   type Opt_Type is (Opt_Time, Opt_Writes, Opt_None);
 
    max_cost    : Cost_Type := 1e6;
    dram        : Memory_Pointer := null;
@@ -42,6 +43,8 @@ begin
                      opt := Opt_Time;
                   elsif value = "writes" then
                      opt := Opt_Writes;
+                  elsif value = "none" then
+                     opt := Opt_None;
                   else
                      Raise_Error(lexer, "invalid optimization target: " &
                                  value);
@@ -61,6 +64,9 @@ begin
       when Opt_Writes =>
          result := Memory_Pointer(Super_Writes.Create_Super(dram, max_cost,
                                                             seed));
+      when Opt_None =>
+         result := Memory_Pointer(Super_None.Create_Super(dram, max_cost,
+                                                          seed));
    end case;
 exception
    when Data_Error | Constraint_Error =>

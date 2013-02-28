@@ -29,6 +29,7 @@ package body Memory is
    procedure Show_Stats(mem : in out Memory_Type) is
    begin
       Put_Line("Time:" & Time_Type'Image(mem.time) & " cycles");
+      Put_Line("Cost:" & Cost_Type'Image(Get_Cost(Memory_Type'Class(mem))));
       Show_Access_Stats(Memory_Type'Class(mem));
    end Show_Stats;
 
@@ -73,5 +74,10 @@ package body Memory is
    begin
       return Get_Writes(mem.all);
    end Get_Writes;
+
+   function Get_Zero(mem : access Memory_Type'Class) return Natural is
+   begin
+      return 0;
+   end Get_Zero;
 
 end Memory;

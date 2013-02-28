@@ -62,6 +62,8 @@ package Memory is
 
    function Get_Writes(mem : access Memory_Type'Class) return Long_Integer;
 
+   function Get_Zero(mem : access Memory_Type'Class) return Natural;
+
 private
 
    type Memory_Type is abstract new Controlled with record
