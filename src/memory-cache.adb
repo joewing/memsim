@@ -96,6 +96,19 @@ package body Memory.Cache is
             end if;
          end;
 
+         -- Latency.
+         declare
+            latency : constant Time_Type := result.latency;
+         begin
+            if Random_Boolean(RNG.Random(generator)) then
+               result.latency := result.latency * 2;
+               if result.latency > Time_Type(result.associativity) or else
+                  Get_Cost(result.all) > max_cost then
+                  result.latency := latency;
+               end if;
+            end if;
+         end;
+
          -- Policy.
          declare
             policy : constant Policy_Type := result.policy;
@@ -149,19 +162,20 @@ package body Memory.Cache is
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
 
-      param          : Natural := RNG.Random(generator) mod 8;
-      line_size      : constant Positive := mem.line_size;
-      line_count     : constant Positive := mem.line_count;
-      associativity  : constant Positive := mem.associativity;
-      policy         : constant Policy_Type := mem.policy;
-      exclusive      : constant Boolean := mem.exclusive;
-      write_back     : constant Boolean := mem.write_back;
+      param          : Natural := RNG.Random(generator) mod 10;
+      line_size      : constant Positive     := mem.line_size;
+      line_count     : constant Positive     := mem.line_count;
+      associativity  : constant Positive     := mem.associativity;
+      latency        : constant Time_Type    := mem.latency;
+      policy         : constant Policy_Type  := mem.policy;
+      exclusive      : constant Boolean      := mem.exclusive;
+      write_back     : constant Boolean      := mem.write_back;
 
    begin
 
       -- Loop until we either change a parameter or we are unable to
       -- change any parameter.
-      for i in 1 .. 8 loop
+      for i in 1 .. 10 loop
          case param is
             when 0 =>      -- Increase line size
                mem.line_size := line_size * 2;
@@ -178,12 +192,10 @@ package body Memory.Cache is
                exit when Get_Cost(mem) <= max_cost;
                mem.line_count := line_count;
             when 3 =>      -- Decrease line count
-               if line_count > 1 then
+               if line_count > 1 and line_count > associativity then
                   mem.line_count := line_count / 2;
-                  if mem.associativity > mem.line_count then
-                     mem.associativity := mem.line_count;
-                  end if;
-                  exit;
+                  exit when Get_Cost(mem) <= max_cost;
+                  mem.line_count := line_count;
                end if;
             when 4 =>      -- Increase associativity
                if associativity < line_count then
@@ -192,11 +204,24 @@ package body Memory.Cache is
                   mem.associativity := associativity;
                end if;
             when 5 =>      -- Decrease associativity
-               if associativity > 1 then
+               if associativity > 1 and associativity > Positive(latency) then
                   mem.associativity := associativity / 2;
-                  exit;
+                  exit when Get_Cost(mem) <= max_cost;
+                  mem.associativity := associativity;
                end if;
-            when 6 =>      -- Change policy
+            when 6 =>      -- Increase latency.
+               if latency < Time_Type(associativity) then
+                  mem.latency := latency * 2;
+                  exit when Get_Cost(mem) <= max_cost;
+                  mem.latency := latency;
+               end if;
+            when 7 =>      -- Decrease latency.
+               if latency > 1 then
+                  mem.latency := latency / 2;
+                  exit when Get_Cost(mem) <= max_cost;
+                  mem.latency := latency;
+               end if;
+            when 8 =>      -- Change policy
                mem.policy := Random_Policy(RNG.Random(generator));
                exit when Get_Cost(mem) <= max_cost;
                mem.policy := policy;
@@ -207,7 +232,7 @@ package body Memory.Cache is
                mem.exclusive := exclusive;
                mem.write_back := write_back;
          end case;
-         param := (param + 1) mod 8;
+         param := (param + 1) mod 10;
       end loop;
 
       mem.data.Set_Length(Count_Type(mem.line_count));
@@ -406,50 +431,56 @@ package body Memory.Cache is
 
    function Get_Cost(mem : Cache_Type) return Cost_Type is
 
-      -- Number of transistors to store the data.
       lines    : constant Cost_Type := Cost_Type(mem.line_count);
-      lsize    : constant Cost_Type := Cost_Type(mem.line_size);
+      lsize    : constant Cost_Type := Cost_Type(mem.line_size) * 8;
       assoc    : constant Cost_Type := Cost_Type(mem.associativity);
-      cells    : constant Cost_Type := 6 * lines * lsize * 8 * assoc;
 
-      -- Number of transistors needed for the address decoder.
-      decoder  : constant Cost_Type := 2 * (Address_Type'Size +
-                                            Cost_Type(Log2(mem.line_count)));
+      -- Bits to store a tag.
+      tag_bits : constant Cost_Type := Cost_Type(Address_Type'Size /
+                                                 mem.line_size +
+                                                 mem.associativity);
 
-      -- Number of transistors needed to store tags.
-      tag_size : constant Cost_Type
-                  := Cost_Type(Address_Type'Size / mem.line_size +
-                               mem.associativity);
-      tags     : constant Cost_Type := 6 * tag_size * lines;
+      -- Bits to store the age.
+      age_bits : constant Cost_Type := assoc - 1;
 
-      -- Number of transistors needed to store age data.
-      age      : constant Cost_Type := 6 * (assoc - 1);
+      -- Minimum number of banks needed.
+      min_banks : constant Cost_Type := Cost_Type(mem.associativity) /
+                                        Cost_Type(mem.latency);
 
-      -- Number of transistors needed to store dirty bits.
-      dirty    : constant Cost_Type := 6 * lines;
+      -- Bits per line.
+      line_bits   : Cost_Type := lsize + tag_bits;
 
-      -- Number of transistors needed for comparators.
-      compare  : constant Cost_Type := 8 * (assoc - 1) * tag_size;
-
-      -- Number of transistors for the cache with no policy.
-      base     : constant Cost_Type := cells + decoder + tags + compare;
-
-      -- Cost of the contained memory.
-      con      : constant Cost_Type := Get_Cost(Container_Type(mem));
-
-      result   : Cost_Type := base + con;
+      result : Cost_Type;
 
    begin
+
+      -- Determine how many bits are in each line.
       case mem.policy is
-         when LRU    => result := result + age;
-         when MRU    => result := result + age;
-         when FIFO   => result := result + age;
-         when Random => null;
+         when LRU | MRU | FIFO =>
+            line_bits := lsize + tag_bits + age_bits;
+         when Random =>
+            line_bits := lsize + tag_bits;
       end case;
+
+      -- If this cache is a write-back cache, we need to track a dirty
+      -- bit for each cache line.
       if mem.write_back then
-         result := result + dirty;
+         line_bits := line_bits + 1;
       end if;
+
+      -- Divide the line bits amoung the banks.
+      line_bits := (line_bits + min_banks - 1) / min_banks;
+
+      -- Now we need to store (line_bits * lines) bits of data in each bank.
+      -- If this is too much for a BRAM, we need to split further.
+      Assert(min_banks > 0);
+      result := min_banks * ((line_bits * lines + BRAM_SIZE - 1) / BRAM_SIZE);
+
+      -- Add the cost of the contained memory.
+      result := result + Get_Cost(Container_Type(mem));
+
       return result;
+
    end Get_Cost;
 
    procedure Adjust(mem : in out Cache_Type) is

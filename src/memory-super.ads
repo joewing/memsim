@@ -49,6 +49,7 @@ private
       last_cost      : Cost_Type             := Cost_Type'Last;
       last_value     : Value_Type            := Value_Type'Last;
       table          : Value_Maps.Map;
+      temperature    : Float                 := 1.0;
    end record;
 
 end Memory.Super;

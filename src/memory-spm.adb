@@ -118,8 +118,10 @@ package body Memory.SPM is
    end To_String;
 
    function Get_Cost(mem : SPM_Type) return Cost_Type is
+      size : constant Cost_Type := Cost_Type(mem.size) * 8;
    begin
-      return 6 * 8 * Cost_Type(mem.size) + Get_Cost(Container_Type(mem));
+      return (size + BRAM_SIZE - 1) / BRAM_SIZE +
+             Get_Cost(Container_Type(mem));
    end Get_Cost;
 
 end Memory.SPM;

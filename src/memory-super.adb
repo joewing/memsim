@@ -1,6 +1,7 @@
 
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Assertions;          use Ada.Assertions;
+with Ada.Numerics.Generic_Elementary_Functions;
 with Memory.Cache;            use Memory.Cache;
 with Memory.SPM;              use Memory.SPM;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
@@ -8,6 +9,8 @@ with Memory.Transform.Shift;  use Memory.Transform.Shift;
 with Memory.Prefetch;         use Memory.Prefetch;
 
 package body Memory.Super is
+
+   package Float_Math is new Ada.Numerics.Generic_Elementary_Functions(Float);
 
    function Create_Memory(mem    : Super_Type;
                           cost   : Cost_Type)
@@ -95,7 +98,7 @@ package body Memory.Super is
                Destroy(Memory_Pointer(temp));
                mem.chain.Delete(pos);
             end if;
-         when 1 .. 3 =>    -- Remove a stage (unless there are none).
+         when 1 .. 2 =>    -- Remove a stage (unless there are none).
             if len = 0 then
                temp := Create_Memory(mem, left);
                if temp /= null then
@@ -158,15 +161,22 @@ package body Memory.Super is
                            value : in Value_Type) is
       temp  : Container_Pointer;
       next  : Memory_Pointer;
-      prob  : constant Float := Float(value) /
-                                (Float(value) + Float(mem.last_value));
+      last  : constant Float := Float(mem.last_value);
+      curr  : constant Float := Float(value) + 1.0;
+      prob  : constant Float := mem.temperature * last / curr;
       rand  : constant Float := Float(RNG.Random(mem.generator.all)) /
                                 Float(Natural'Last);
    begin
 
+      -- Update the temperature.
+      mem.temperature := mem.temperature * 0.95;
+      if mem.temperature < 1.0 / Float(Natural'Last) then
+         mem.temperature := 1.0;
+      end if;
+
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
-      if rand > prob then
+      if value <= mem.last_value or rand < prob then
 
          -- Keep this memory.
          mem.last_value := value;
@@ -224,28 +234,12 @@ package body Memory.Super is
       -- Make a random modification to the memory.
       Randomize(mem);
 
-      -- If we've already run this memory, find a new one.
-      declare
-         new_name : constant Unbounded_String := To_String(mem);
-         cursor   : constant Value_Maps.Cursor := mem.table.Find(new_name);
-      begin
-         if Value_Maps."/="(cursor, Value_Maps.No_Element) then
-            declare
-               cached_value : constant Value_Type :=
-                              Value_Maps.Element(cursor);
-            begin
-               Put_Line("Value: " & Value_Type'Image(cached_value));
-               Update_Memory(mem, cached_value);
-            end;
-         end if;
-      end;
-
    end Update_Memory;
 
    procedure Finish_Run(mem : in out Super_Type) is
       name  : constant Unbounded_String := To_String(mem);
       cost  : constant Cost_Type := Get_Cost(mem);
-      value : constant Value_Type := Get_Value(mem'Access);
+      value : Value_Type := Get_Value(mem'Access);
    begin
 
       -- Keep track of the best memory.
@@ -259,7 +253,18 @@ package body Memory.Super is
       -- Keep track of the result of running with this memory.
       mem.table.Insert(name, value);
 
-      Update_Memory(mem, value);
+      -- Generate new memories until we find a new one.
+      loop
+         Update_Memory(mem, value);
+         declare
+            new_name : constant Unbounded_String := To_String(mem);
+            cursor   : constant Value_Maps.Cursor := mem.table.Find(new_name);
+         begin
+            exit when Value_Maps."="(cursor, Value_Maps.No_Element);
+            value := Value_Maps.Element(cursor);
+            Put_Line("Value: " & Value_Type'Image(value));
+         end;
+      end loop;
 
    end Finish_Run;
 
