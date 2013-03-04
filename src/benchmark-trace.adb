@@ -8,7 +8,7 @@ package body Benchmark.Trace is
 
    type Byte_Count_Type is mod 2 ** 64;
 
-   type Access_Type is (Read, Write, Idle);
+   type Access_Type is (Read, Write, Modify, Idle);
 
    type Memory_Access is record
       t     : Access_Type;
@@ -155,6 +155,9 @@ package body Benchmark.Trace is
             Read(mem.all, mdata.value, mdata.size);
          when Write  =>
             Write(mem.all, mdata.value, mdata.size);
+         when Modify =>
+            Read(mem.all, mdata.value, mdata.size);
+            Write(mem.all, mdata.value, mdata.size);
          when Idle   =>
             Idle(mem.all, Time_Type(mdata.value));
       end case;
@@ -181,6 +184,7 @@ package body Benchmark.Trace is
                case ch is
                   when 'R'    => mdata.t := Read;
                   when 'W'    => mdata.t := Write;
+                  when 'M'    => mdata.t := Modify;
                   when 'I'    => mdata.t := Idle;
                   when others => state := State_Action;
                end case;
