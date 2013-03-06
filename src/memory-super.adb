@@ -12,8 +12,8 @@ package body Memory.Super is
 
    package Float_Math is new Ada.Numerics.Generic_Elementary_Functions(Float);
 
-   function Create_Memory(mem    : Super_Type;
-                          cost   : Cost_Type)
+   function Create_Memory(mem       : Super_Type;
+                          cost      : Cost_Type)
                           return Container_Pointer is
       result : Memory_Pointer;
    begin
@@ -146,12 +146,14 @@ package body Memory.Super is
 
    function Create_Super(mem        : not null access Memory_Type'Class;
                          max_cost   : Cost_Type;
-                         seed       : Integer)
+                         seed       : Integer;
+                         initial    : Long_Integer)
                          return Super_Pointer is
       result : constant Super_Pointer := new Super_Type;
    begin
-      result.max_cost := max_cost;
-      result.dram := Memory_Pointer(mem);
+      result.max_cost   := max_cost;
+      result.dram       := Memory_Pointer(mem);
+      result.initial    := initial;
       RNG.Reset(result.generator.all, seed);
       Randomize(Super_Type(result.all));
       return result;
@@ -161,22 +163,32 @@ package body Memory.Super is
                            value : in Value_Type) is
       temp  : Container_Pointer;
       next  : Memory_Pointer;
-      last  : constant Float := Float(mem.last_value);
-      curr  : constant Float := Float(value) + 1.0;
-      prob  : constant Float := mem.temperature * last / curr;
+      eold  : constant Float := Float(mem.last_value);
+      enew  : constant Float := Float(value);
+      dele  : constant Float := enew - eold;
+      prob  : constant Float := Float_Math.Exp(-dele / mem.temperature);
       rand  : constant Float := Float(RNG.Random(mem.generator.all)) /
                                 Float(Natural'Last);
    begin
 
       -- Update the temperature.
-      mem.temperature := mem.temperature * 0.95;
-      if mem.temperature < 1.0 / Float(Natural'Last) then
-         mem.temperature := 1.0;
+      if mem.iteration < mem.initial then
+         if abs(dele) > mem.temperature then
+            mem.temperature := abs(dele);
+         end if;
+      else
+         mem.temperature := mem.temperature * 0.98;
+         if mem.temperature <= 1.0 then
+            mem.iteration := 0;
+         end if;
       end if;
+Put_Line("ITERATION:" & Long_Integer'Image(mem.iteration) &
+         " TEMPERATURE:" & Float'Image(mem.temperature));
 
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
-      if value <= mem.last_value or rand < prob then
+      if value < mem.last_value or rand < prob or
+         mem.iteration < mem.initial then
 
          -- Keep this memory.
          mem.last_value := value;
@@ -265,6 +277,9 @@ package body Memory.Super is
             Put_Line("Value: " & Value_Type'Image(value));
          end;
       end loop;
+
+      -- Keep track of the number of iterations.
+      mem.iteration := mem.iteration + 1;
 
    end Finish_Run;
 

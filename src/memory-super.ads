@@ -14,7 +14,8 @@ package Memory.Super is
 
    function Create_Super(mem        : not null access Memory_Type'Class;
                          max_cost   : Cost_Type;
-                         seed       : Integer)
+                         seed       : Integer;
+                         initial    : Long_Integer)
                          return Super_Pointer;
 
    overriding
@@ -39,6 +40,7 @@ private
 
    type Super_Type is new Container_Type with record
       max_cost       : Cost_Type             := 1e6;
+      initial        : Long_Integer          := 10;
       dram           : Memory_Pointer        := null;
       generator      : Generator_Pointer     := new RNG.Generator;
       best_name      : Unbounded_String      := Null_Unbounded_String;
@@ -49,7 +51,8 @@ private
       last_cost      : Cost_Type             := Cost_Type'Last;
       last_value     : Value_Type            := Value_Type'Last;
       table          : Value_Maps.Map;
-      temperature    : Float                 := 1.0;
+      iteration      : Long_Integer          := 0;
+      temperature    : Float                 := 0.0;
    end record;
 
 end Memory.Super;

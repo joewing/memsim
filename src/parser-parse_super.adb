@@ -12,6 +12,7 @@ procedure Parse_Super(lexer   : in out Lexer_Type;
    max_cost    : Cost_Type := 1e6;
    dram        : Memory_Pointer := null;
    seed        : Integer := 0;
+   initial     : Long_Integer := 10;
    opt         : Opt_Type := Opt_Time;
 
 begin
@@ -38,6 +39,8 @@ begin
                   max_cost := Cost_Type'Value(value);
                elsif name = "seed" then
                   seed := Integer'Value(value);
+               elsif name = "initial" then
+                  initial := Long_Integer'Value(value);
                elsif name = "optimize" then
                   if value = "time" then
                      opt := Opt_Time;
@@ -60,13 +63,13 @@ begin
    case opt is
       when Opt_Time =>
          result := Memory_Pointer(Super_Time.Create_Super(dram, max_cost,
-                                                          seed));
+                                                          seed, initial));
       when Opt_Writes =>
          result := Memory_Pointer(Super_Writes.Create_Super(dram, max_cost,
-                                                            seed));
+                                                            seed, initial));
       when Opt_None =>
          result := Memory_Pointer(Super_None.Create_Super(dram, max_cost,
-                                                          seed));
+                                                          seed, initial));
    end case;
 exception
    when Data_Error | Constraint_Error =>
