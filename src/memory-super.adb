@@ -165,7 +165,7 @@ package body Memory.Super is
       next  : Memory_Pointer;
       eold  : constant Float := Float(mem.last_value);
       enew  : constant Float := Float(value);
-      dele  : constant Float := enew - eold;
+      dele  : constant Float := abs(enew - eold);
       prob  : constant Float := Float_Math.Exp(-dele / mem.temperature);
       rand  : constant Float := Float(RNG.Random(mem.generator.all)) /
                                 Float(Natural'Last);
@@ -173,17 +173,15 @@ package body Memory.Super is
 
       -- Update the temperature.
       if mem.iteration < mem.initial then
-         if abs(dele) > mem.temperature then
-            mem.temperature := abs(dele);
+         if dele > mem.temperature then
+            mem.temperature := dele;
          end if;
       else
-         mem.temperature := mem.temperature * 0.98;
-         if mem.temperature <= 1.0 then
+         mem.temperature := mem.temperature * 0.99;
+         if mem.temperature < 1.0 / Float(Natural'Last) then
             mem.iteration := 0;
          end if;
       end if;
-Put_Line("ITERATION:" & Long_Integer'Image(mem.iteration) &
-         " TEMPERATURE:" & Float'Image(mem.temperature));
 
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
