@@ -358,6 +358,7 @@ package body Memory.Cache is
       data : Cache_Data_Pointer;
    begin
       Reset(Container_Type(mem));
+      RNG.Reset(mem.generator.all);
       for i in 0 .. mem.line_count - 1 loop
          data := mem.data.Element(i);
          data.address   := Address_Type'Last;
@@ -405,14 +406,16 @@ package body Memory.Cache is
       Append(result, "(associativity" &
              Positive'Image(mem.associativity) & ")");
       Append(result, "(latency" & Time_Type'Image(mem.latency) & ")");
-      Append(result, "(policy ");
-      case mem.policy is
-         when LRU    => Append(result, "lru");
-         when MRU    => Append(result, "mru");
-         when FIFO   => Append(result, "fifo");
-         when Random => Append(result, "random");
-      end case;
-      Append(result, ")");
+      if mem.associativity > 1 then
+         Append(result, "(policy ");
+         case mem.policy is
+            when LRU    => Append(result, "lru");
+            when MRU    => Append(result, "mru");
+            when FIFO   => Append(result, "fifo");
+            when Random => Append(result, "random");
+         end case;
+         Append(result, ")");
+      end if;
       if mem.exclusive then
          Append(result, "(exclusive true)");
       else
