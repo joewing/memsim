@@ -26,7 +26,7 @@ procedure Parse_Cache(lexer   : in out Lexer_Type;
    latency        : Time_Type := 1;
    policy         : Cache.Policy_Type := Cache.LRU;
    exclusive      : Boolean := False;
-   write_back     : Boolean := False;
+   write_back     : Boolean := True;
 
 begin
    while Get_Type(lexer) = Open loop
