@@ -172,21 +172,14 @@ package body Memory.Super is
    begin
 
       -- Update the temperature.
-      if mem.iteration < mem.initial then
-         if dele > mem.temperature then
-            mem.temperature := dele;
-         end if;
-      else
-         mem.temperature := mem.temperature * 0.99;
-         if mem.temperature < 1.0 / Float(Natural'Last) then
-            mem.iteration := 0;
-         end if;
+      mem.temperature := mem.temperature * 0.9;
+      if mem.temperature < 1.0 / Float(Natural'Last) then
+         mem.temperature := enew;
       end if;
 
       -- Determine if we should keep this memory for the next
       -- run or revert the the previous memory.
-      if value < mem.last_value or rand < prob or
-         mem.iteration < mem.initial then
+      if value <= mem.last_value or rand < prob or mem.iteration = 0 then
 
          -- Keep this memory.
          mem.last_value := value;
