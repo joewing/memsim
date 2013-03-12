@@ -247,7 +247,9 @@ package body Memory.Super is
 
       -- Keep track of the best memory.
       if value < mem.best_value or else
-         (value = mem.best_value and cost < mem.best_cost) then
+         (value = mem.best_value and cost < mem.best_cost) or else
+         (value = mem.best_value and then cost = mem.best_cost and then
+            Length(To_String(mem)) < Length(mem.best_name)) then
          mem.best_value := value;
          mem.best_cost  := cost;
          mem.best_name  := To_String(mem);

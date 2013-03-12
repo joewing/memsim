@@ -20,7 +20,7 @@ package body Memory.SPM is
 
       result.latency := 1;
       result.size := 1;
-      loop
+      for i in 1 .. 10 loop
 
          result.size := result.size * 2;
          if Get_Cost(result.all) > max_cost then
@@ -28,7 +28,7 @@ package body Memory.SPM is
             exit;
          end if;
 
-         exit when (RNG.Random(generator) mod 8) = 0;
+         exit when Get_Cost(result.all) >= max_cost;
 
       end loop;
 

@@ -46,7 +46,7 @@ package body Memory.Cache is
       result.line_count    := 1;
       result.associativity := 1;
       result.latency       := 1;
-      result.policy        := Random;
+      result.policy        := LRU;
       result.exclusive     := False;
       result.write_back    := True;
 
@@ -67,6 +67,7 @@ package body Memory.Cache is
                result.line_size := line_size * 2;
                if Get_Cost(result.all) > max_cost then
                   result.line_size := line_size;
+                  exit;
                end if;
             end if;
          end;
@@ -79,6 +80,7 @@ package body Memory.Cache is
                result.line_count := 2 * line_count;
                if Get_Cost(result.all) > max_cost then
                   result.line_count := line_count;
+                  exit;
                end if;
             end if;
          end;
@@ -92,6 +94,7 @@ package body Memory.Cache is
                if result.associativity > result.line_count or else
                   Get_Cost(result.all) > max_cost then
                   result.associativity := associativity;
+                  exit;
                end if;
             end if;
          end;
@@ -105,6 +108,7 @@ package body Memory.Cache is
                if result.latency > Time_Type(result.associativity) or else
                   Get_Cost(result.all) > max_cost then
                   result.latency := latency;
+                  exit;
                end if;
             end if;
          end;
@@ -116,6 +120,7 @@ package body Memory.Cache is
             result.policy := Random_Policy(RNG.Random(generator));
             if Get_Cost(result.all) > max_cost then
                result.policy := policy;
+               exit;
             end if;
          end;
 
@@ -129,11 +134,9 @@ package body Memory.Cache is
             if Get_Cost(result.all) > max_cost then
                result.exclusive := exclusive;
                result.write_back := write_back;
+               exit;
             end if;
          end;
-
-         -- 1 in 16 chance of exiting after adjusting parameters.
-         exit when (RNG.Random(generator) mod 16) = 0;
 
       end loop;
 
@@ -316,10 +319,6 @@ package body Memory.Cache is
             end if;
          end if;
       end loop;
-      if mem.policy = Random then
-         line := RNG.Random(mem.generator.all) mod mem.associativity;
-         to_replace := first + line * mem.line_count / mem.associativity;
-      end if;
 
       -- If we got here, the item is not in the cache.
       -- If this is a read on an exclusive cache, we just forward the
@@ -412,7 +411,6 @@ package body Memory.Cache is
             when LRU    => Append(result, "lru");
             when MRU    => Append(result, "mru");
             when FIFO   => Append(result, "fifo");
-            when Random => Append(result, "random");
          end case;
          Append(result, ")");
       end if;
@@ -458,12 +456,7 @@ package body Memory.Cache is
    begin
 
       -- Determine how many bits are in each line.
-      case mem.policy is
-         when LRU | MRU | FIFO =>
-            line_bits := lsize + tag_bits + age_bits;
-         when Random =>
-            line_bits := lsize + tag_bits;
-      end case;
+      line_bits := lsize + tag_bits + age_bits;
 
       -- If this cache is a write-back cache, we need to track a dirty
       -- bit for each cache line.
