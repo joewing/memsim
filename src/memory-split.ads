@@ -24,12 +24,14 @@ package Memory.Split is
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type);
 
-   function Get_Bank(mem    : Split_Type'Class;
+   function Get_Bank(mem    : Split_Pointer;
                      index  : Natural) return Memory_Pointer;
 
-   procedure Set_Bank(mem   : in out Split_Type'Class;
+   procedure Set_Bank(mem   : in Split_Pointer;
                       index : in Natural;
                       other : access Memory_Type'Class);
+
+   function Get_Offset(mem : Split_Type'Class) return Address_Type;
 
    overriding
    procedure Reset(mem : in out Split_Type);
@@ -70,7 +72,6 @@ private
 
    type Split_Data is record
       mem      : access Memory_Type'Class;
-      pending  : Time_Type := 0;
    end record;
 
    type Split_Data_Array is array(0 .. 1) of Split_Data;

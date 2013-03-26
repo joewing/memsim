@@ -1,11 +1,7 @@
 
 with Ada.Assertions; use Ada.Assertions;
 
-with Random_Enum;
-
 package body Memory.Split is
-
-   function Random_Boolean is new Random_Enum(Boolean);
 
    function Create_Split(mem     : access Memory_Type'Class;
                          banka   : access Memory_Type'Class;
@@ -18,10 +14,10 @@ package body Memory.Split is
       result.banks(1).mem := bankb;
       result.offset := offset;
       if banka /= null then
-         Set_Split(banka.all, result);
+         Set_Split(banka.all, 0, Memory_Pointer(result));
       end if;
       if bankb /= null then
-         Set_Split(bankb.all, result);
+         Set_Split(bankb.all, 1, Memory_Pointer(result));
       end if;
       return result;
    end Create_Split;
@@ -38,42 +34,62 @@ package body Memory.Split is
    function Clone(mem : Split_Type) return Memory_Pointer is
       result : constant Split_Pointer := new Split_Type'(mem);
    begin
+      for i in result.banks'Range loop
+         Set_Split(result.banks(i).mem.all, i, Memory_Pointer(result));
+      end loop;
       return Memory_Pointer(result);
    end Clone;
 
    procedure Permute(mem         : in out Split_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
+      temp : Cost_Type;
    begin
-      if mem.offset > 1 and then Random_Boolean(RNG.Random(generator)) then
-         mem.offset := mem.offset / 2;
-      else
-         mem.offset := mem.offset * 2;
-      end if;
+      case RNG.Random(generator) mod 4 is
+         when 0 =>
+            if mem.offset > 1 then
+               mem.offset := mem.offset / 2;
+            else
+               mem.offset := mem.offset * 2;
+            end if;
+         when 1 =>
+            mem.offset := mem.offset * 2;
+         when 2 =>
+            temp := max_cost - Get_Cost(mem.banks(1).mem.all);
+            Permute(mem.banks(0).mem.all, generator, temp);
+         when others =>
+            temp := max_cost - Get_Cost(mem.banks(0).mem.all);
+            Permute(mem.banks(1).mem.all, generator, temp);
+      end case;
+      Assert(Get_Cost(mem) <= max_cost, "Invalid Permute in Memory.Split");
    end Permute;
 
-   function Get_Bank(mem   : Split_Type'Class;
+   function Get_Bank(mem   : Split_Pointer;
                      index : Natural) return Memory_Pointer is
    begin
       Assert(index < 2);
       return Memory_Pointer(mem.banks(index).mem);
    end Get_Bank;
 
-   procedure Set_Bank(mem     : in out Split_Type'Class;
+   procedure Set_Bank(mem     : in Split_Pointer;
                       index   : in Natural;
                       other   : access Memory_Type'Class) is
    begin
       Assert(index < 2);
       mem.banks(index).mem := other;
-      Set_Split(other.all, mem'Access);
+      Set_Split(other.all, index, Memory_Pointer(mem));
    end Set_Bank;
+
+   function Get_Offset(mem : Split_Type'Class) return Address_Type is
+   begin
+      return mem.offset;
+   end Get_Offset;
 
    procedure Reset(mem : in out Split_Type) is
    begin
       Reset(Memory_Type(mem));
       for i in mem.banks'Range loop
          Reset(mem.banks(i).mem.all);
-         mem.banks(i).pending := 0;
       end loop;
    end Reset;
 
@@ -92,31 +108,29 @@ package body Memory.Split is
          else
             temp_size := Positive(mem.offset - address);
          end if;
-         Advance(mem, mem.banks(0).pending);
          start_time := Get_Time(mem.banks(0).mem.all);
          if is_read then
             Read(mem.banks(0).mem.all, address, temp_size);
          else
             Write(mem.banks(0).mem.all, address, temp_size);
          end if;
-         mem.banks(0).pending := Get_Time(mem.banks(0).mem.all) - start_time;
+         Advance(mem, Get_Time(mem.banks(0).mem.all) - start_time);
       end if;
       if last >= mem.offset then
          if address >= mem.offset then
-            temp_addr := address;
+            temp_addr := address - mem.offset;
             temp_size := size;
          else
-            temp_addr := mem.offset;
+            temp_addr := 0;
             temp_size := Positive(last - mem.offset + 1);
          end if;
-         Advance(mem, mem.banks(1).pending);
          start_time := Get_Time(mem.banks(1).mem.all);
          if is_read then
             Read(mem.banks(1).mem.all, temp_addr, temp_size);
          else
             Write(mem.banks(1).mem.all, temp_addr, temp_size);
          end if;
-         mem.banks(1).pending := Get_Time(mem.banks(1).mem.all) - start_time;
+         Advance(mem, Get_Time(mem.banks(1).mem.all) - start_time);
       end if;
    end Process;
 
@@ -124,6 +138,7 @@ package body Memory.Split is
                   address  : in Address_Type;
                   size     : in Positive) is
    begin
+      Assert(Get_Memory(mem) /= null, "Read");
       Process(mem, address, size, True);
    end Read;
 
@@ -131,6 +146,7 @@ package body Memory.Split is
                    address : in Address_Type;
                    size    : in Positive) is
    begin
+      Assert(Get_Memory(mem) /= null, "Write");
       Process(mem, address, size, False);
    end Write;
 
@@ -138,12 +154,7 @@ package body Memory.Split is
                   cycles   : in Time_Type) is
    begin
       for i in mem.banks'Range loop
-         if mem.banks(i).pending >= cycles then
-            mem.banks(i).pending := mem.banks(i).pending - cycles;
-         else
-            Idle(mem.banks(i).mem.all, cycles - mem.banks(i).pending);
-            mem.banks(i).pending := 0;
-         end if;
+         Idle(mem.banks(i).mem.all, cycles);
       end loop;
       Advance(mem, cycles);
    end Idle;
@@ -159,12 +170,19 @@ package body Memory.Split is
       result   : Unbounded_String;
    begin
       Append(result, "(split ");
-      Append(result, "(offset " & Address_Type'Image(mem.offset) & ")");
-      Append(result, "(memory0 ");
-      Append(result, To_String(mem.banks(0).mem.all));
-      Append(result, ")");
-      Append(result, "(memory1 ");
-      Append(result, To_String(mem.banks(1).mem.all));
+      Append(result, "(offset" & Address_Type'Image(mem.offset) & ")");
+      if mem.banks(0).mem /= null then
+         Append(result, "(bank0 ");
+         Append(result, To_String(mem.banks(0).mem.all));
+         Append(result, ")");
+      end if;
+      if mem.banks(1).mem /= null then
+         Append(result, "(bank1 ");
+         Append(result, To_String(mem.banks(1).mem.all));
+         Append(result, ")");
+      end if;
+      Append(result, "(memory ");
+      Append(result, To_String(Container_Type(mem)));
       Append(result, ")");
       Append(result, ")");
       return result;

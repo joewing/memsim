@@ -12,7 +12,8 @@ package Memory.Container is
 
    overriding
    procedure Set_Split(mem    : in out Container_Type;
-                       other  : access Memory_Type'Class);
+                       index  : in Natural;
+                       other  : in Memory_Pointer);
 
    overriding
    procedure Reset(mem : in out Container_Type);

@@ -7,10 +7,20 @@ with Memory.SPM;              use Memory.SPM;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
 with Memory.Prefetch;         use Memory.Prefetch;
+with Memory.Split;            use Memory.Split;
+with Memory.Join;             use Memory.Join;
 
 package body Memory.Super is
 
    package Float_Math is new Ada.Numerics.Generic_Elementary_Functions(Float);
+
+   function Create_Memory(mem       : Super_Type;
+                          cost      : Cost_Type)
+                          return Container_Pointer;
+
+   function Create_Split(mem        : Super_Type;
+                         cost       : Cost_Type)
+                         return Memory_Pointer;
 
    function Create_Memory(mem       : Super_Type;
                           cost      : Cost_Type)
@@ -24,13 +34,45 @@ package body Memory.Super is
             result := Random_Offset(mem.generator.all, cost);
          when 2      =>    -- Strided prefetch (1/8)
             result := Random_Prefetch(mem.generator.all, cost);
-         when 3 | 4  =>    -- SPM (2/8)
+         when 3      =>    -- Split (1/8)
+            result := Create_Split(mem, cost);
+         when 4      =>    -- SPM (1/8)
             result := Random_SPM(mem.generator.all, cost);
          when others =>    -- Cache (3/8)
             result := Random_Cache(mem.generator.all, cost);
       end case;
       return Container_Pointer(result);
    end Create_Memory;
+
+   function Create_Split(mem        : Super_Type;
+                         cost       : Cost_Type)
+                         return Memory_Pointer is
+      result   : Split_Pointer
+                  := Split_Pointer(Random_Split(mem.generator.all, cost));
+      bank0    : Container_Pointer := Create_Memory(mem, cost / 2);
+      bank1    : Container_Pointer := Create_Memory(mem, cost / 2);
+      join0    : Join_Pointer := Create_Join;
+      join1    : Join_Pointer := Create_Join;
+   begin
+      if bank0 /= null and bank1 /= null then
+         Set_Memory(bank0.all, join0);
+         Set_Memory(bank1.all, join1);
+         Set_Bank(result, 0, bank0);
+         Set_Bank(result, 1, bank1);
+         return Memory_Pointer(result);
+      else
+         if bank0 /= null then
+            Destroy(Memory_Pointer(bank0));
+         end if;
+         if bank1 /= null then
+            Destroy(Memory_Pointer(bank1));
+         end if;
+         Destroy(Memory_Pointer(join0));
+         Destroy(Memory_Pointer(join1));
+         Destroy(Memory_Pointer(result));
+         return null;
+      end if;
+   end Create_Split;
 
    function Clone(mem : Super_Type) return Memory_Pointer is
       result : constant Super_Pointer := new Super_Type'(mem);

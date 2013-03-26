@@ -11,7 +11,8 @@ package Memory.Join is
 
    overriding
    procedure Set_Split(mem    : in out Join_Type;
-                       other  : access Memory_Type'Class);
+                       index  : in Natural;
+                       other  : in Memory_Pointer);
 
    overriding
    function Clone(mem : Join_Type) return Memory_Pointer;
@@ -41,7 +42,8 @@ package Memory.Join is
 private
 
    type Join_Type is new Memory_Type with record
-      split : Split_Pointer := null;
+      index : Natural         := 0;
+      split : Split_Pointer   := null;
    end record;
 
 end Memory.Join;

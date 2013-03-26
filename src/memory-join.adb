@@ -12,9 +12,11 @@ package body Memory.Join is
    end Create_Join;
 
    procedure Set_Split(mem    : in out Join_Type;
-                       other  : access Memory_Type'Class) is
+                       index  : in Natural;
+                       other  : in Memory_Pointer) is
    begin
       mem.split := Split_Pointer(other);
+      mem.index := index;
    end Set_Split;
 
    function Clone(mem : Join_Type) return Memory_Pointer is
@@ -26,19 +28,35 @@ package body Memory.Join is
    procedure Read(mem      : in out Join_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
+      base     : constant Memory_Pointer := Get_Memory(mem.split.all);
+      cycles   : Time_Type;
    begin
-      if mem.split /= null then
-         Forward_Read(mem.split.all, address, size);
+      Assert(mem.split /= null, "Memory.Join.Read: split is null");
+      Assert(base /= null, "Memory.Join.Read: base is null");
+      cycles := Get_Time(base.all);
+      if mem.index = 0 then
+         Read(base.all, address, size);
+      else
+         Read(base.all, address + Get_Offset(mem.split.all), size);
       end if;
+      Advance(mem, Get_Time(base.all) - cycles);
    end Read;
 
    procedure Write(mem     : in out Join_Type;
                    address : in Address_Type;
                    size    : in Positive) is
+      base     : constant Memory_Pointer := Get_Memory(mem.split.all);
+      cycles   : Time_Type;
    begin
-      if mem.split /= null then
-         Forward_Write(mem.split.all, address, size);
+      Assert(mem.split /= null, "Memory.Join.Write: split is null");
+      Assert(base /= null, "Memory.Join.Write: base is null");
+      cycles := Get_Time(base.all);
+      if mem.index = 0 then
+         Write(base.all, address, size);
+      else
+         Write(base.all, address + Get_Offset(mem.split.all), size);
       end if;
+      Advance(mem, Get_Time(base.all) - cycles);
    end Write;
 
    function Get_Writes(mem : Join_Type) return Long_Integer is

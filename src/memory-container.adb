@@ -13,11 +13,10 @@ package body Memory.Container is
    end Set_Memory;
 
    procedure Set_Split(mem    : in out Container_Type;
-                       other  : access Memory_Type'Class) is
+                       index  : in Natural;
+                       other  : in Memory_Pointer) is
    begin
-      if mem.mem /= null then
-         Set_Split(mem.mem.all, other);
-      end if;
+      Set_Split(mem.mem.all, index, other);
    end Set_Split;
 
    procedure Reset(mem : in out Container_Type) is
