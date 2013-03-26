@@ -4,9 +4,6 @@ with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 package body Parser is
 
-   procedure Parse_Bank(lexer    : in out Lexer_Type;
-                        result   : out Memory_Pointer) is separate;
-
    procedure Parse_Cache(lexer   : in out Lexer_Type;
                          result  : out Memory_Pointer) is separate;
 
@@ -16,6 +13,9 @@ package body Parser is
    procedure Parse_Flash(lexer   : in out Lexer_Type;
                          result  : out Memory_Pointer) is separate;
 
+   procedure Parse_Join(lexer    : in out Lexer_Type;
+                        result   : out Memory_Pointer) is separate;
+
    procedure Parse_Perfect_Prefetch(lexer    : in out Lexer_Type;
                                     result   : out Memory_Pointer) is separate;
 
@@ -24,6 +24,9 @@ package body Parser is
 
    procedure Parse_RAM(lexer  : in out Lexer_Type;
                        result : out Memory_Pointer) is separate;
+
+   procedure Parse_Split(lexer    : in out Lexer_Type;
+                         result   : out Memory_Pointer) is separate;
 
    procedure Parse_SPM(lexer  : in out Lexer_Type;
                        result : out Memory_Pointer) is separate;
@@ -49,7 +52,8 @@ package body Parser is
    type Memory_Parser_Array is array(Positive range <>) of Memory_Parser_Type;
 
    parser_map : constant Memory_Parser_Array := (
-      (To_Unbounded_String("bank"),             Parse_Bank'Access),
+      (To_Unbounded_String("split"),            Parse_Split'Access),
+      (To_Unbounded_String("join"),             Parse_Join'Access),
       (To_Unbounded_String("cache"),            Parse_Cache'Access),
       (To_Unbounded_String("perfect_prefetch"), Parse_Perfect_Prefetch'Access),
       (To_Unbounded_String("prefetch"),         Parse_Prefetch'Access),

@@ -1,16 +1,24 @@
 
 package body Memory.Container is
 
+   function Get_Memory(mem : Container_Type'Class) return Memory_Pointer is
+   begin
+      return Memory_Pointer(mem.mem);
+   end Get_Memory;
+
    procedure Set_Memory(mem   : in out Container_Type'Class;
                         other : access Memory_Type'Class) is
    begin
       mem.mem := other;
    end Set_Memory;
 
-   function Get_Memory(mem : Container_Type'Class) return Memory_Pointer is
+   procedure Set_Split(mem    : in out Container_Type;
+                       other  : access Memory_Type'Class) is
    begin
-      return Memory_Pointer(mem.mem);
-   end Get_Memory;
+      if mem.mem /= null then
+         Set_Split(mem.mem.all, other);
+      end if;
+   end Set_Split;
 
    procedure Reset(mem : in out Container_Type) is
    begin
