@@ -20,7 +20,7 @@ package body Memory.Super is
 
    function Create_Split(mem        : Super_Type;
                          cost       : Cost_Type)
-                         return Memory_Pointer;
+                         return Container_Pointer;
 
    function Create_Memory(mem       : Super_Type;
                           cost      : Cost_Type)
@@ -35,7 +35,7 @@ package body Memory.Super is
          when 2      =>    -- Strided prefetch (1/8)
             result := Random_Prefetch(mem.generator.all, cost);
          when 3      =>    -- Split (1/8)
-            result := Create_Split(mem, cost);
+            result := Memory_Pointer(Create_Split(mem, cost));
          when 4      =>    -- SPM (1/8)
             result := Random_SPM(mem.generator.all, cost);
          when others =>    -- Cache (3/8)
@@ -46,7 +46,7 @@ package body Memory.Super is
 
    function Create_Split(mem        : Super_Type;
                          cost       : Cost_Type)
-                         return Memory_Pointer is
+                         return Container_Pointer is
       result   : Split_Pointer
                   := Split_Pointer(Random_Split(mem.generator.all, cost));
       bank0    : Container_Pointer := Create_Memory(mem, cost / 2);
@@ -59,7 +59,7 @@ package body Memory.Super is
          Set_Memory(bank1.all, join1);
          Set_Bank(result, 0, bank0);
          Set_Bank(result, 1, bank1);
-         return Memory_Pointer(result);
+         return Container_Pointer(result);
       else
          if bank0 /= null then
             Destroy(Memory_Pointer(bank0));
@@ -80,106 +80,242 @@ package body Memory.Super is
       return Memory_Pointer(result);
    end Clone;
 
-   procedure Reduce(mem : in out Super_Type) is
-      updated  : Boolean := True;
-      a, b     : Container_Pointer;
+   function Count_Memories(ptr : Memory_Pointer) return Natural is
    begin
-      while updated loop
-         updated := False;
-         for i in mem.chain.First_Index .. mem.chain.Last_Index - 1 loop
-            a := mem.chain.Element(i);
-            b := mem.chain.Element(i + 1);
-            if a.all in Offset_Type'Class and b.all in Offset_Type'Class then
-               Set_Offset(Offset_Pointer(a).all,
-                          Get_Offset(Offset_Pointer(a).all) +
-                          Get_Offset(Offset_Pointer(b).all));
-               Destroy(Memory_Pointer(b));
-               mem.chain.Delete(i + 1);
-               updated := True;
-               exit;
-            elsif a.all in Shift_Type'Class and b.all in Shift_Type'Class then
-               Set_Shift(Shift_Pointer(a).all,
-                         Get_Shift(Shift_Pointer(a).all) +
-                         Get_Shift(Shift_Pointer(b).all));
-               Destroy(Memory_Pointer(b));
-               mem.chain.Delete(i + 1);
-               updated := True;
-               exit;
+      if ptr /= null then
+         if ptr.all in Split_Type'Class then
+            declare
+               sp : constant Split_Pointer   := Split_Pointer(ptr);
+               a  : constant Memory_Pointer  := Get_Bank(sp, 0);
+               ac : constant Natural         := Count_Memories(a);
+               b  : constant Memory_Pointer  := Get_Bank(sp, 1);
+               bc : constant Natural         := Count_Memories(b);
+               n  : constant Memory_Pointer  := Get_Memory(sp.all);
+               nc : constant Natural         := Count_Memories(n);
+            begin
+               return 1 + ac + bc + nc;
+            end;
+         elsif ptr.all in Container_Type'Class then
+            declare
+               cp : constant Container_Pointer := Container_Pointer(ptr);
+            begin
+               return 1 + Count_Memories(Get_Memory(cp.all));
+            end;
+         end if;
+      end if;
+      return 0;
+   end Count_Memories;
+
+   function Get_Memory(ptr    : Memory_Pointer;
+                       index  : Natural) return Container_Pointer is
+
+      temp : Natural := index;
+
+   begin
+      Assert(ptr /= null, "null ptr in Get_Memory");
+      if ptr.all in Join_Type'Class then
+         return null;
+      elsif temp = 0 then
+         return Container_Pointer(ptr);
+      else
+         temp := temp - 1;
+         if ptr.all in Split_Type'Class then
+            declare
+               sp : constant Split_Pointer      := Split_Pointer(ptr);
+               a  : constant Memory_Pointer     := Get_Bank(sp, 0);
+               b  : constant Memory_Pointer     := Get_Bank(sp, 1);
+               n  : constant Memory_Pointer     := Get_Memory(sp.all);
+               r  : Container_Pointer;
+            begin
+               r := Get_Memory(a, temp);
+               if r /= null then
+                  return r;
+               end if;
+               temp := temp - Count_Memories(a);
+               r := Get_Memory(b, temp);
+               if r /= null then
+                  return r;
+               end if;
+               temp := temp - Count_Memories(b);
+               return Get_Memory(n, temp);
+            end;
+         elsif ptr.all in Container_Type'Class then
+            declare
+               cp : constant Container_Pointer  := Container_Pointer(ptr);
+               n  : constant Memory_Pointer     := Get_Memory(cp.all);
+            begin
+               return Get_Memory(n, temp);
+            end;
+         end if;
+      end if;
+      return null;
+   end Get_Memory;
+
+   procedure Remove_Memory(ptr   : in out Memory_Pointer;
+                           index : in Natural) is
+   begin
+
+      Assert(ptr /= null, "null ptr in Remove_Memory");
+
+      if index = 0 then
+
+         -- Remove this memory.
+         if ptr.all in Container_Type'Class then
+            declare
+               cp    : constant Container_Pointer  := Container_Pointer(ptr);
+               next  : constant Memory_Pointer     := Get_Memory(cp.all);
+            begin
+               Set_Memory(cp.all, null);
+               Destroy(ptr);
+               ptr := next;
+            end;
+         else
+            Destroy(ptr);
+            ptr := null;
+         end if;
+
+      elsif ptr.all in Split_Type'Class then
+         declare
+            sp : constant Split_Pointer   := Split_Pointer(ptr);
+            a  : Memory_Pointer           := Get_Bank(sp, 0);
+            ac : constant Natural         := Count_Memories(a);
+            b  : Memory_Pointer           := Get_Bank(sp, 1);
+            bc : constant Natural         := Count_Memories(b);
+            n  : Memory_Pointer           := Get_Memory(sp.all);
+         begin
+
+            if 1 + ac >= index then
+
+               -- The memory to remove is in the first bank.
+               Remove_Memory(a, index - 1);
+               Set_Bank(sp, 0, a);
+
+            elsif 1 + ac + bc >= index then
+
+               -- The memory to remove is in the second bank.
+               Remove_Memory(b, index - ac - 1);
+               Set_Bank(sp, 1, b);
+
+            else
+
+               -- The memory to remove follows this memory.
+               Remove_Memory(n, index - ac - bc - 1);
+               Set_Memory(sp.all, n);
+
             end if;
-         end loop;
-      end loop;
-   end Reduce;
+         end;
+      elsif ptr.all in Container_Type'Class then
+         declare
+            cp : constant Container_Pointer  := Container_Pointer(ptr);
+            n  : Memory_Pointer              := Get_Memory(cp.all);
+         begin
+            Remove_Memory(n, index - 1);
+            Set_Memory(cp.all, n);
+         end;
+      end if;
+   end Remove_Memory;
+
+   procedure Insert_Memory(ptr   : in out Memory_Pointer;
+                           index : in Natural;
+                           other : in Container_Pointer) is
+   begin
+
+      if index = 0 then
+
+         -- Insert other before ptr.
+         Set_Memory(other.all, ptr);
+         ptr := Memory_Pointer(other);
+
+      elsif ptr.all in Split_Type'Class then
+
+         declare
+            sp : constant Split_Pointer   := Split_Pointer(ptr);
+            a  : Memory_Pointer           := Get_Bank(sp, 0);
+            ac : constant Natural         := Count_Memories(a);
+            b  : Memory_Pointer           := Get_Bank(sp, 1);
+            bc : constant Natural         := Count_Memories(b);
+            n  : Memory_Pointer           := Get_Memory(sp.all);
+         begin
+
+            if 1 + ac >= index then
+
+               -- Insert to the first bank.
+               Insert_Memory(a, index - 1, other);
+               Set_Bank(sp, 0, a);
+
+            elsif 1 + ac + bc >= index then
+
+               -- Insert to the second bank.
+               Insert_Memory(b, index - ac - 1, other);
+               Set_Bank(sp, 1, b);
+
+            else
+
+               -- Insert after the split.
+               Insert_Memory(n, index - ac - bc - 1, other);
+               Set_Memory(sp.all, n);
+
+            end if;
+
+         end;
+
+      elsif ptr.all in Container_Type'Class then
+         declare
+            cp : constant Container_Pointer  := Container_Pointer(ptr);
+            n  : Memory_Pointer              := Get_Memory(cp.all);
+         begin
+            Insert_Memory(n, index - 1, other);
+            Set_Memory(cp.all, n);
+         end;
+      end if;
+
+   end Insert_Memory;
 
    procedure Randomize(mem : in out Super_Type) is
-      next  : Memory_Pointer := null;
       temp  : Container_Pointer := null;
-      len   : constant Natural := Natural(mem.chain.Length);
+      len   : constant Natural := Count_Memories(mem.current);
       pos   : Natural;
       cost  : constant Cost_Type := Get_Cost(mem);
       left  : constant Cost_Type := mem.max_cost - cost;
    begin
 
-      -- Unlink memories.
-      for i in mem.chain.First_Index .. mem.chain.Last_Index loop
-         Set_Memory(mem.chain.Element(i).all, null);
-      end loop;
-      Set_Memory(mem, null);
-
       -- Select an action to take.
-      -- Here we give extra weight to modifying an existing hierarchy
-      -- rather than adding or removing stages.
+      -- Here we give extra weight to modifying an existing subsystem
+      -- rather than adding or removing components.
       case RNG.Random(mem.generator.all) mod 16 is
-         when 0      =>    -- Insert a stage.
+         when 0      =>    -- Insert a component.
             temp := Create_Memory(mem, left);
             if temp /= null then
                pos := RNG.Random(mem.generator.all) mod (len + 1);
-               mem.chain.Insert(Memory_Vectors.Extended_Index(pos), temp);
+               Insert_Memory(mem.current, pos, temp);
             elsif len > 0 then
                pos := RNG.Random(mem.generator.all) mod len;
-               temp := mem.chain.Element(pos);
-               Destroy(Memory_Pointer(temp));
-               mem.chain.Delete(pos);
+               Remove_Memory(mem.current, pos);
             end if;
-         when 1 .. 2 =>    -- Remove a stage (unless there are none).
+         when 1 .. 2 =>    -- Remove a component.
             if len = 0 then
                temp := Create_Memory(mem, left);
                if temp /= null then
                   pos := RNG.Random(mem.generator.all) mod (len + 1);
-                  mem.chain.Insert(pos, temp);
+                  Insert_Memory(mem.current, pos, temp);
                end if;
             else
                pos := RNG.Random(mem.generator.all) mod len;
-               temp := mem.chain.Element(pos);
-               Destroy(Memory_Pointer(temp));
-               mem.chain.Delete(pos);
+               Remove_Memory(mem.current, pos);
             end if;
-         when others =>    -- Modify an existing stage.
+         when others =>    -- Modify a component.
             if len = 0 then
                temp := Create_Memory(mem, left);
                if temp /= null then
-                  mem.chain.Append(temp);
+                  Insert_Memory(mem.current, 0, temp);
                end if;
             else
                pos := RNG.Random(mem.generator.all) mod len;
-               temp := mem.chain.Element(pos);
+               temp := Get_Memory(mem.current, pos);
                Permute(temp.all, mem.generator.all, left + Get_Cost(temp.all));
             end if;
       end case;
-
-      -- Remove redundant memories.
-      Reduce(mem);
-
-      -- Link the memories together.
-      next := mem.dram;
-      for i in reverse mem.chain.First_Index .. mem.chain.Last_Index loop
-         declare
-            temp : constant Container_Pointer := mem.chain.Element(i);
-         begin
-            Set_Memory(temp.all, next);
-            next := Memory_Pointer(temp);
-         end;
-      end loop;
-      Set_Memory(mem, next);
+      Set_Memory(mem, mem.current);
 
       Put_Line(To_String(To_String(mem)));
       Assert(Get_Cost(mem) <= mem.max_cost, "Invalid randomize");
@@ -194,8 +330,9 @@ package body Memory.Super is
       result : constant Super_Pointer := new Super_Type;
    begin
       result.max_cost   := max_cost;
-      result.dram       := Memory_Pointer(mem);
       result.initial    := initial;
+      result.last       := Clone(mem.all);
+      result.current    := Clone(mem.all);
       RNG.Reset(result.generator.all, seed);
       Randomize(Super_Type(result.all));
       return result;
@@ -203,8 +340,6 @@ package body Memory.Super is
 
    procedure Update_Memory(mem   : in out Super_Type;
                            value : in Value_Type) is
-      temp  : Container_Pointer;
-      next  : Memory_Pointer;
       eold  : constant Float := Float(mem.last_value);
       enew  : constant Float := Float(value);
       dele  : constant Float := abs(enew - eold);
@@ -223,58 +358,28 @@ package body Memory.Super is
       -- run or revert the the previous memory.
       if value <= mem.last_value or rand < prob or mem.iteration = 0 then
 
-         -- Keep this memory.
+         -- Keep the current memory.
          mem.last_value := value;
          mem.last_cost := Get_Cost(mem);
+
+         -- Destroy the last memory.
+         Destroy(mem.last);
+
+         -- Keep a copy of the current memory.
+         mem.last := Clone(mem.current.all);
 
       else
 
          -- Revert to the previous memory.
-         -- Destroy chain and copy last_chain to chain.
-         for i in mem.chain.First_Index .. mem.chain.Last_Index loop
-            temp := mem.chain.Element(i);
-            Set_Memory(temp.all, null);
-            Destroy(Memory_Pointer(temp));
-         end loop;
-         mem.chain := mem.last_chain;
-         mem.last_chain.Clear;
 
-         -- Fix links.
-         next := mem.dram;
-         for i in reverse mem.chain.First_Index .. mem.chain.Last_Index loop
-            temp := mem.chain.Element(i);
-            Set_Memory(temp.all, next);
-            next := Memory_Pointer(temp);
-         end loop;
-         Set_Memory(mem, next);
+         -- Destroy this memory.
+         Destroy(mem.current);
+
+         -- Copy the last memory to the current memory.
+         mem.current := Clone(mem.last.all);
+         Set_Memory(mem, mem.current);
 
       end if;
-
-      -- Destroy the last chain.
-      for i in mem.last_chain.First_Index .. mem.last_chain.Last_Index loop
-         temp := mem.last_chain.Element(i);
-         Set_Memory(temp.all, null);
-         Destroy(Memory_Pointer(temp));
-      end loop;
-      mem.last_chain.Clear;
-
-      -- Keep a copy of the current memory so we can go back to it
-      -- if our random change is no good.
-      for i in mem.chain.First_Index .. mem.chain.Last_Index loop
-         temp := mem.chain.Element(i);
-         Set_Memory(temp.all, null);
-         temp := Container_Pointer(Clone(temp.all));
-         mem.last_chain.Append(temp);
-      end loop;
-
-      -- Fix links.
-      next := mem.dram;
-      for i in reverse mem.chain.First_Index .. mem.chain.Last_Index loop
-         temp := mem.chain.Element(i);
-         Set_Memory(temp.all, next);
-         next := Memory_Pointer(temp);
-      end loop;
-      Set_Memory(mem, next);
 
       -- Make a random modification to the memory.
       Randomize(mem);
@@ -328,15 +433,18 @@ package body Memory.Super is
 
    procedure Adjust(mem : in out Super_Type) is
    begin
-      mem.dram       := null;
+      Adjust(Container_Type(mem));
       mem.generator  := new RNG.Generator;
-      mem.chain.Clear;
-      mem.last_chain.Clear;
+      mem.last       := null;
+      mem.current    := null;
    end Adjust;
 
    procedure Finalize(mem : in out Super_Type) is
    begin
+      Finalize(Container_Type(mem));
       Destroy(mem.generator);
+      Destroy(mem.last);
+      Destroy(mem.current);
    end Finalize;
 
 end Memory.Super;

@@ -1,5 +1,4 @@
 
-with Ada.Containers.Vectors;
 with Ada.Containers.Ordered_Maps;
 with Memory.Container; use Memory.Container;
 
@@ -32,22 +31,20 @@ package Memory.Super is
 
 private
 
-   package Memory_Vectors is new Ada.Containers.Vectors(Natural,
-                                                        Container_Pointer);
-
    package Value_Maps is new Ada.Containers.Ordered_Maps(Unbounded_String,
                                                          Value_Type);
 
    type Super_Type is new Container_Type with record
       max_cost       : Cost_Type             := 1e6;
       initial        : Long_Integer          := 10;
-      dram           : Memory_Pointer        := null;
       generator      : Generator_Pointer     := new RNG.Generator;
       best_name      : Unbounded_String      := Null_Unbounded_String;
       best_cost      : Cost_Type             := Cost_Type'Last;
       best_value     : Value_Type            := Value_Type'Last;
-      chain          : Memory_Vectors.Vector;
-      last_chain     : Memory_Vectors.Vector;
+
+      last           : Memory_Pointer        := null;
+      current        : Memory_Pointer        := null;
+
       last_cost      : Cost_Type             := Cost_Type'Last;
       last_value     : Value_Type            := Value_Type'Last;
       table          : Value_Maps.Map;

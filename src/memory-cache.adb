@@ -482,6 +482,7 @@ package body Memory.Cache is
    procedure Adjust(mem : in out Cache_Type) is
       ptr : Cache_Data_Pointer;
    begin
+      Adjust(Container_Type(mem));
       for i in mem.data.First_Index .. mem.data.Last_Index loop
          ptr := new Cache_Data'(mem.data.Element(i).all);
          mem.data.Replace_Element(i, ptr);
@@ -494,6 +495,7 @@ package body Memory.Cache is
 
    procedure Finalize(mem : in out Cache_Type) is
    begin
+      Finalize(Container_Type(mem));
       for i in mem.data.First_Index .. mem.data.Last_Index loop
          declare
             ptr : Cache_Data_Pointer := mem.data.Element(i);

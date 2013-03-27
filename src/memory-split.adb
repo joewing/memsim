@@ -43,24 +43,12 @@ package body Memory.Split is
    procedure Permute(mem         : in out Split_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
-      temp : Cost_Type;
    begin
-      case RNG.Random(generator) mod 4 is
-         when 0 =>
-            if mem.offset > 1 then
-               mem.offset := mem.offset / 2;
-            else
-               mem.offset := mem.offset * 2;
-            end if;
-         when 1 =>
-            mem.offset := mem.offset * 2;
-         when 2 =>
-            temp := max_cost - Get_Cost(mem.banks(1).mem.all);
-            Permute(mem.banks(0).mem.all, generator, temp);
-         when others =>
-            temp := max_cost - Get_Cost(mem.banks(0).mem.all);
-            Permute(mem.banks(1).mem.all, generator, temp);
-      end case;
+      if mem.offset > 1 and then (RNG.Random(generator) mod 2) = 0 then
+         mem.offset := mem.offset / 2;
+      else
+         mem.offset := mem.offset * 2;
+      end if;
       Assert(Get_Cost(mem) <= max_cost, "Invalid Permute in Memory.Split");
    end Permute;
 
@@ -208,6 +196,7 @@ package body Memory.Split is
 
    procedure Adjust(mem : in out Split_Type) is
    begin
+      Adjust(Container_Type(mem));
       for i in mem.banks'Range loop
          mem.banks(i).mem := Clone(mem.banks(i).mem.all);
       end loop;
@@ -215,6 +204,7 @@ package body Memory.Split is
 
    procedure Finalize(mem : in out Split_Type) is
    begin
+      Finalize(Container_Type(mem));
       for i in mem.banks'Range loop
          Destroy(Memory_Pointer(mem.banks(i).mem));
       end loop;

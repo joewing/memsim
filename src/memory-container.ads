@@ -5,7 +5,7 @@ package Memory.Container is
 
    type Container_Pointer is access all Container_Type'Class;
 
-   function Get_Memory(mem    : Container_Type'Class) return Memory_Pointer;
+   function Get_Memory(mem : Container_Type'Class) return Memory_Pointer;
 
    procedure Set_Memory(mem   : in out Container_Type'Class;
                         other : access Memory_Type'Class);
