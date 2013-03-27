@@ -75,7 +75,7 @@ package body Memory.Split is
 
    procedure Reset(mem : in out Split_Type) is
    begin
-      Reset(Memory_Type(mem));
+      Reset(Container_Type(mem));
       for i in mem.banks'Range loop
          Reset(mem.banks(i).mem.all);
       end loop;
