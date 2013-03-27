@@ -177,8 +177,9 @@ package body Memory.Split is
    end To_String;
 
    function Get_Cost(mem : Split_Type) return Cost_Type is
-      result   : Cost_Type := 0;
+      result : Cost_Type;
    begin
+      result := Get_Cost(Container_Type(mem));
       for i in mem.banks'Range loop
          result := result + Get_Cost(mem.banks(i).mem.all);
       end loop;
