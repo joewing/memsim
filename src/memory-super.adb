@@ -334,6 +334,7 @@ package body Memory.Super is
       result.last       := Clone(mem.all);
       result.current    := Clone(mem.all);
       RNG.Reset(result.generator.all, seed);
+      Set_Memory(result.all, result.current);
       Randomize(Super_Type(result.all));
       return result;
    end Create_Super;
@@ -382,6 +383,7 @@ package body Memory.Super is
       end if;
 
       -- Make a random modification to the memory.
+      Set_Memory(mem, mem.current);
       Randomize(mem);
 
    end Update_Memory;
