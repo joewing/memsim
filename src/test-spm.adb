@@ -1,0 +1,51 @@
+
+with Memory.RAM;  use Memory.RAM;
+with Memory.SPM;  use Memory.SPM;
+use Memory;
+
+package body Test.SPM is
+
+   procedure Run_Tests is
+
+      ram   : constant RAM_Pointer  := Create_RAM(latency   => 100,
+                                                  word_size => 8);
+      spm   : SPM_Pointer           := Create_SPM(ram, 1024, 1);
+
+   begin
+
+      Check(Get_Time(spm.all) = 0, "spm1");
+      Check(Get_Writes(spm.all) = 0, "spm2");
+
+      Read(spm.all, 0, 1);
+      Check(Get_Time(spm.all) = 1, "spm3");
+      Check(Get_Writes(spm.all) = 0, "spm4");
+
+      Read(spm.all, 1024 - 8, 8);
+      Check(Get_Time(spm.all) = 2, "spm5");
+      Check(Get_Writes(spm.all) = 0, "spm6");
+
+      Read(spm.all, 1024, 4);
+      Check(Get_Time(spm.all) = 102, "spm7");
+      Check(Get_Writes(spm.all) = 0, "spm8");
+
+      Read(spm.all, 1023, 2);
+      Check(Get_Time(spm.all) = 202, "spm9");
+      Check(Get_Writes(spm.all) = 0, "spm10");
+
+      Write(spm.all, 1024, 1);
+      Check(Get_Time(spm.all) = 302, "spm9");
+      Check(Get_Writes(spm.all) = 1, "spm10");
+
+      Write(spm.all, 8, 1);
+      Check(Get_Time(spm.all) = 303, "spm11");
+      Check(Get_Writes(spm.all) = 1, "spm12");
+
+      Write(spm.all, 8192, 16);
+      Check(Get_Time(spm.all) = 503, "spm13");
+      Check(Get_Writes(spm.all) = 2, "spm14");
+
+      Destroy(Memory_Pointer(spm));
+
+   end Run_Tests;
+
+end Test.SPM;

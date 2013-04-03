@@ -2,6 +2,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Test.RAM;
 with Test.Cache;
+with Test.SPM;
 
 package body Test is
 
@@ -13,6 +14,7 @@ package body Test is
 
       RAM.Run_Tests;
       Cache.Run_Tests;
+      SPM.Run_Tests;
 
       Put_Line("ran" & Natural'Image(count) & " tests");
       if failed > 1 then
