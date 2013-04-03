@@ -64,9 +64,12 @@ package body Memory.Transform.Shift is
       right    : constant Address_Type := address * rshift;
       lshift   : constant Address_Type :=
                  Address_Type(2) ** (Address_Type'Size - mem.shift);
-      left     : constant Address_Type := address / lshift;
    begin
-      return right or left;
+      if lshift /= 0 then
+         return right or (address / lshift);
+      else
+         return address;
+      end if;
    end Apply;
 
    function To_String(mem : Shift_Type) return Unbounded_String is
