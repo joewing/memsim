@@ -5,7 +5,7 @@ package Memory.Transform.Shift is
 
    type Shift_Pointer is access all Shift_Type'Class;
 
-   function Create_Shift(mem     : Memory_Pointer;
+   function Create_Shift(mem     : access Memory_Type'Class;
                          shift   : Integer) return Shift_Pointer;
 
    function Random_Shift(generator  : RNG.Generator;

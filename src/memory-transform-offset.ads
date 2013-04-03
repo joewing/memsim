@@ -5,7 +5,7 @@ package Memory.Transform.Offset is
 
    type Offset_Pointer is access all Offset_Type'Class;
 
-   function Create_Offset(mem    : Memory_Pointer;
+   function Create_Offset(mem    : access Memory_Type'Class;
                           offset : Integer) return Offset_Pointer;
 
    function Random_Offset(generator : RNG.Generator;

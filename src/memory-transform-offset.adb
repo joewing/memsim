@@ -1,7 +1,7 @@
 
 package body Memory.Transform.Offset is
 
-   function Create_Offset(mem    : Memory_Pointer;
+   function Create_Offset(mem    : access Memory_Type'Class;
                           offset : Integer) return Offset_Pointer is
       result : constant Offset_Pointer := new Offset_Type;
    begin

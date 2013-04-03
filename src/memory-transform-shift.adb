@@ -1,7 +1,7 @@
 
 package body Memory.Transform.Shift is
 
-   function Create_Shift(mem     : Memory_Pointer;
+   function Create_Shift(mem     : access Memory_Type'Class;
                          shift   : Integer) return Shift_Pointer is
       result : constant Shift_Pointer := new Shift_Type;
    begin
