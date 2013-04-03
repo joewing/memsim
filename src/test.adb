@@ -4,6 +4,7 @@ with Test.RAM;
 with Test.Cache;
 with Test.SPM;
 with Test.Offset;
+with Test.Shift;
 
 package body Test is
 
@@ -17,6 +18,7 @@ package body Test is
       Cache.Run_Tests;
       SPM.Run_Tests;
       Offset.Run_Tests;
+      Shift.Run_Tests;
 
       Put_Line("ran" & Natural'Image(count) & " tests");
       if failed > 1 then

@@ -22,18 +22,27 @@ package body Test.RAM is
 
       Read(mem.all, 2, 4);
       Check(Get_Time(mem.all) = 300, "ram5");
+      Check(Get_Writes(mem.all) = 0, "ram6");
+
+      Read(mem.all, 2, 2);
+      Check(Get_Time(mem.all) = 400, "ram7");
+      Check(Get_Writes(mem.all) = 0, "ram8");
+
+      Read(mem.all, 2, 3);
+      Check(Get_Time(mem.all) = 600, "ram9");
+      Check(Get_Writes(mem.all) = 0, "ram10");
 
       Write(mem.all, 1, 8);
-      Check(Get_Time(mem.all) = 600, "ram6");
-      Check(Get_Writes(mem.all) = 1, "ram7");
+      Check(Get_Time(mem.all) = 900, "ram11");
+      Check(Get_Writes(mem.all) = 1, "ram12");
 
       Reset(mem.all);
-      Check(Get_Time(mem.all) = 0, "ram8");
+      Check(Get_Time(mem.all) = 0, "ram13");
 
-      Check(To_String(mem.all) = "(ram (latency 100)(word_size 4))", "ram9");
+      Check(To_String(mem.all) = "(ram (latency 100)(word_size 4))", "ram14");
 
       other := Clone(mem.all);
-      Check(To_String(other.all) = To_String(mem.all), "ram10");
+      Check(To_String(other.all) = To_String(mem.all), "ram15");
 
       Destroy(Memory_Pointer(mem));
 

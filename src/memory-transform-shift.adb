@@ -60,9 +60,11 @@ package body Memory.Transform.Shift is
 
    function Apply(mem      : Shift_Type;
                   address  : Address_Type) return Address_Type is
-      right    : constant Address_Type := address * (2 ** mem.shift);
-      lshift   : constant Natural := Address_Type'Size - mem.shift;
-      left     : constant Address_Type := address / (2 ** lshift);
+      rshift   : constant Address_Type := Address_Type(2) ** mem.shift;
+      right    : constant Address_Type := address * rshift;
+      lshift   : constant Address_Type :=
+                 Address_Type(2) ** (Address_Type'Size - mem.shift);
+      left     : constant Address_Type := address / lshift;
    begin
       return right or left;
    end Apply;

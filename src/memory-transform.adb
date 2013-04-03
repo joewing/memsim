@@ -6,29 +6,41 @@ package body Memory.Transform is
                      size     : in Address_Type;
                      is_write : in Boolean) is
 
-      offset      : Address_Type := 0;
-      start       : Address_Type := address;
-      transformed : Address_Type := Apply(Transform_Type'Class(mem), address);
-      temp        : Address_Type;
+      start    : Address_Type := address;
+      trans    : Address_Type := Apply(Transform_Type'Class(mem), start);
+      total    : Address_Type := 0;
+
+      nsize    : Address_Type;
+      last     : Address_Type;
+      temp     : Address_Type;
 
    begin
-      while offset <= size loop
-         temp := Apply(Transform_Type'Class(mem), address + offset);
-         if temp /= transformed + offset or else offset = size then
-            declare
-               nsize : constant Natural := Natural(address + offset - start);
-            begin
-               if is_write then
-                  Write(Container_Type(mem), transformed, nsize);
-               else
-                  Read(Container_Type(mem), transformed, nsize);
-               end if;
-               start := address + offset;
-               transformed := temp;
-            end;
+
+      while total < size loop
+
+         -- Determine how big we can make the current access.
+         last := trans;
+         nsize := 1;
+         while total + nsize < size loop
+            temp := Apply(Transform_Type'Class(mem), start + nsize);
+            exit when last + 1 /= temp;
+            last := temp;
+            nsize := nsize + 1;
+         end loop;
+
+         -- Perform the access.
+         if is_write then
+            Write(Container_Type(mem), trans, Natural(nsize));
+         else
+            Read(Container_Type(mem), trans, Natural(nsize));
          end if;
-         offset := offset + 1;
+
+         total := total + nsize;
+         start := start + nsize;
+         trans := temp;
+
       end loop;
+
    end Process;
 
    procedure Read(mem      : in out Transform_Type;
