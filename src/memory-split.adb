@@ -27,7 +27,7 @@ package body Memory.Split is
                          return Memory_Pointer is
       result : constant Split_Pointer := new Split_Type;
    begin
-      result.offset := 8;
+      result.offset := 2 ** ((RNG.Random(generator) mod 16) + 3);
       return Memory_Pointer(result);
    end Random_Split;
 

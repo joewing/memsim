@@ -17,67 +17,71 @@ package body Memory.Super is
    function Create_Memory(mem       : Super_Type;
                           cost      : Cost_Type;
                           in_split  : Boolean)
-                          return Container_Pointer;
+                          return Memory_Pointer;
 
    function Create_Split(mem        : Super_Type;
                          cost       : Cost_Type)
-                         return Container_Pointer;
+                         return Memory_Pointer;
 
    function Create_Memory(mem       : Super_Type;
                           cost      : Cost_Type;
                           in_split  : Boolean)
-                          return Container_Pointer is
+                          return Memory_Pointer is
       result : Memory_Pointer := null;
    begin
-      case RNG.Random(mem.generator.all) mod 8 is
-         when 0      =>    -- Shift (1/8)
-            if not in_split then
+      if in_split then
+         case RNG.Random(mem.generator.all) mod 4 is
+            when 0      =>
+               result := Random_Prefetch(mem.generator.all, cost);
+            when 1      =>
+               result := Random_SPM(mem.generator.all, cost);
+            when 2      =>
+               result := Random_Cache(mem.generator.all, cost);
+            when others =>
+               result := Create_Split(mem, cost);
+         end case;
+      else
+         case RNG.Random(mem.generator.all) mod 6 is
+            when 0      =>
                result := Random_Shift(mem.generator.all, cost);
-            end if;
-         when 1      =>    -- Offset (1/8)
-            if not in_split then
+            when 1      =>
                result := Random_Offset(mem.generator.all, cost);
-            end if;
-         when 2      =>    -- Strided prefetch (1/8)
-            result := Random_Prefetch(mem.generator.all, cost);
-         when 3      =>    -- Split (1/8)
-            result := Memory_Pointer(Create_Split(mem, cost));
-         when 4      =>    -- SPM (1/8)
-            result := Random_SPM(mem.generator.all, cost);
-         when others =>    -- Cache (3/8)
-            result := Random_Cache(mem.generator.all, cost);
-      end case;
-      return Container_Pointer(result);
+            when 2      =>
+               result := Random_Prefetch(mem.generator.all, cost);
+            when 3      =>
+               result := Random_SPM(mem.generator.all, cost);
+            when 4      =>
+               result := Random_Cache(mem.generator.all, cost);
+            when others =>
+               result := Create_Split(mem, cost);
+         end case;
+      end if;
+      return result;
    end Create_Memory;
 
    function Create_Split(mem        : Super_Type;
                          cost       : Cost_Type)
-                         return Container_Pointer is
-      result   : Split_Pointer
+                         return Memory_Pointer is
+      result   : constant Split_Pointer
                   := Split_Pointer(Random_Split(mem.generator.all, cost));
-      bank0    : Container_Pointer := Create_Memory(mem, cost / 2, True);
-      bank1    : Container_Pointer := Create_Memory(mem, cost / 2, True);
-      join0    : Join_Pointer := Create_Join;
-      join1    : Join_Pointer := Create_Join;
+      bank0    : constant Memory_Pointer
+                  := Create_Memory(mem, (cost + 1) / 2, True);
+      bank1    : constant Memory_Pointer
+                  := Create_Memory(mem, cost / 2, True);
    begin
-      if bank0 /= null and bank1 /= null then
-         Set_Memory(bank0.all, join0);
-         Set_Memory(bank1.all, join1);
+      if bank0 /= null and then bank0.all in Container_Type'Class then
+         Set_Memory(Container_Pointer(bank0).all, Create_Join);
          Set_Bank(result, 0, bank0);
-         Set_Bank(result, 1, bank1);
-         return Container_Pointer(result);
       else
-         if bank0 /= null then
-            Destroy(Memory_Pointer(bank0));
-         end if;
-         if bank1 /= null then
-            Destroy(Memory_Pointer(bank1));
-         end if;
-         Destroy(Memory_Pointer(join0));
-         Destroy(Memory_Pointer(join1));
-         Destroy(Memory_Pointer(result));
-         return null;
+         Set_Bank(result, 0, Create_Join);
       end if;
+      if bank1 /= null and then bank1.all in Container_Type'Class then
+         Set_Memory(Container_Pointer(bank1).all, Create_Join);
+         Set_Bank(result, 1, bank1);
+      else
+         Set_Bank(result, 1, Create_Join);
+      end if;
+      return Memory_Pointer(result);
    end Create_Split;
 
    function Clone(mem : Super_Type) return Memory_Pointer is
@@ -232,12 +236,12 @@ package body Memory.Super is
 
          -- Insert other before ptr.
          declare
-            temp : constant Container_Pointer :=
+            temp : constant Memory_Pointer :=
                    Create_Memory(mem, cost, in_split);
          begin
             if temp /= null then
-               Set_Memory(temp.all, ptr);
-               ptr := Memory_Pointer(temp);
+               Set_Memory(Container_Pointer(temp).all, ptr);
+               ptr := temp;
             end if;
          end;
 
@@ -301,7 +305,7 @@ package body Memory.Super is
          when 0      =>    -- Insert a component.
             pos := RNG.Random(mem.generator.all) mod (len + 1);
             Insert_Memory(mem, mem.current, pos, left, False);
-         when 1 .. 2 =>    -- Remove a component.
+         when 1      =>    -- Remove a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
             else
