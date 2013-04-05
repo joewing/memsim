@@ -290,6 +290,84 @@ package body Memory.Super is
 
    end Insert_Memory;
 
+   function Simplify_Memory(ptr : Memory_Pointer) return Memory_Pointer is
+   begin
+      if ptr.all in Split_Type'Class then
+         declare
+            sp : Split_Pointer   := Split_Pointer(ptr);
+            b0 : Memory_Pointer  := Get_Bank(sp, 0);
+            b1 : Memory_Pointer  := Get_Bank(sp, 1);
+            n  : Memory_Pointer  := Get_Memory(sp.all);
+         begin
+            b0 := Simplify_Memory(b0);
+            Set_Bank(sp, 0, b0);
+            b1 := Simplify_Memory(b1);
+            Set_Bank(sp, 1, b1);
+            n := Simplify_Memory(n);
+            if b0.all in Join_Type'Class and b1.all in Join_Type'Class then
+               Set_Memory(sp.all, null);
+               Destroy(Memory_Pointer(sp));
+               return n;
+            else
+               Set_Memory(sp.all, n);
+               return ptr;
+            end if;
+         end;
+      elsif ptr.all in Offset_Type'Class then
+         declare
+            op : Offset_Pointer  := Offset_Pointer(ptr);
+            n  : Memory_Pointer  := Get_Memory(op.all);
+         begin
+            n := Simplify_Memory(n);
+            if n.all in Offset_Type'Class then
+               declare
+                  nop : Offset_Pointer := Offset_Pointer(n);
+               begin
+                  Set_Offset(op.all, Get_Offset(op.all) + Get_Offset(nop.all));
+                  n := Get_Memory(nop.all);
+                  n := Simplify_Memory(n);
+                  Set_Memory(nop.all, null);
+                  Destroy(Memory_Pointer(nop));
+               end;
+            end if;
+            if Get_Offset(op.all) = 0 then
+               Set_Memory(op.all, null);
+               Destroy(Memory_Pointer(op));
+               return n;
+            else
+               Set_Memory(op.all, n);
+               return Memory_Pointer(op);
+            end if;
+         end;
+      elsif ptr.all in Shift_Type'Class then
+         declare
+            sp : Shift_Pointer   := Shift_Pointer(ptr);
+            n  : Memory_Pointer  := Get_Memory(sp.all);
+         begin
+            n := Simplify_Memory(n);
+            if Get_Shift(sp.all) = 0 then
+               Set_Memory(sp.all, null);
+               Destroy(Memory_Pointer(sp));
+               return n;
+            else
+               Set_Memory(sp.all, n);
+               return Memory_Pointer(sp);
+            end if;
+         end;
+      elsif ptr.all in Container_Type'Class then
+         declare
+            cp : constant Container_Pointer  := Container_Pointer(ptr);
+            n  : Memory_Pointer              := Get_Memory(cp.all);
+         begin
+            n := Simplify_Memory(n);
+            Set_Memory(cp.all, n);
+            return ptr;
+         end;
+      else
+         return ptr;
+      end if;
+   end Simplify_Memory;
+
    procedure Randomize(mem : in out Super_Type) is
       temp  : Container_Pointer := null;
       len   : constant Natural := Count_Memories(mem.current);
@@ -321,6 +399,7 @@ package body Memory.Super is
                Permute(temp.all, mem.generator.all, left + Get_Cost(temp.all));
             end if;
       end case;
+      mem.current := Simplify_Memory(mem.current);
       Set_Memory(mem, mem.current);
 
       Put_Line(To_String(To_String(mem)));
