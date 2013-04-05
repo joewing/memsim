@@ -3,15 +3,13 @@ with Memory.RAM;              use Memory.RAM;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
 use Memory;
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 package body Test.Shift is
 
    procedure Test_Positive is
 
       ram   : constant RAM_Pointer  := Create_RAM(latency   => 100,
                                                   word_size => 8);
-      shift : Shift_Pointer         := Create_Shift(ram, 2);
+      shift : Shift_Pointer         := Create_Shift(ram, 1, 2);
 
    begin
 
@@ -38,7 +36,7 @@ package body Test.Shift is
 
       ram   : constant RAM_Pointer  := Create_RAM(latency   => 100,
                                                   word_size => 8);
-      shift : Shift_Pointer         := Create_Shift(ram, -1);
+      shift : Shift_Pointer         := Create_Shift(ram, 1, -1);
 
    begin
 
@@ -61,10 +59,34 @@ package body Test.Shift is
 
    end Test_Negative;
 
+   procedure Test_Word_Size is
+
+      ram   : constant RAM_Pointer  := Create_RAM(latency   => 100,
+                                                  word_size => 8);
+      shift : Shift_Pointer         := Create_Shift(ram, 4, 1);
+
+   begin
+
+      Check(Get_Time(shift.all) = 0, "shift.word1");
+      Check(Get_Writes(shift.all) = 0, "shift.word2");
+
+      Read(shift.all, 0, 8);
+      Check(Get_Time(shift.all) = 200, "shift.word3");
+      Check(Get_Writes(shift.all) = 0, "shift.word4");
+
+      Write(shift.all, 1, 4);
+      Check(Get_Time(shift.all) = 400, "shift.word5");
+      Check(Get_Writes(shift.all) = 2, "shift.word6");
+
+      Destroy(Memory_Pointer(shift));
+
+   end Test_Word_Size;
+
    procedure Run_Tests is
    begin
       Test_Positive;
       Test_Negative;
+      Test_Word_Size;
    end Run_Tests;
 
 end Test.Shift;

@@ -9,10 +9,11 @@ procedure Parse_Transform(lexer  : in out Lexer_Type;
 
    type Operator_Type is (Op_Invalid, Op_Offset, Op_Shift);
 
-   mem      : Memory_Pointer := null;
-   op       : Operator_Type := Op_Invalid;
-   offset   : Integer := 0;
-   shift    : Integer := 0;
+   mem         : Memory_Pointer := null;
+   op          : Operator_Type := Op_Invalid;
+   offset      : Integer := 0;
+   shift       : Integer := 0;
+   word_size   : Natural := 8;
 
 begin
 
@@ -43,6 +44,8 @@ begin
                elsif name = "shift" then
                   shift := Integer'Value(value);
                   op := Op_Shift;
+               elsif name = "word_size" then
+                  word_size := Natural'Value(value);
                else
                   Raise_Error(lexer, "invalid transform attribute: " & name);
                end if;
@@ -59,7 +62,9 @@ begin
       when Op_Offset =>
          result := Memory_Pointer(Transform.Offset.Create_Offset(mem, offset));
       when Op_Shift =>
-         result := Memory_Pointer(Transform.Shift.Create_Shift(mem, shift));
+         result := Memory_Pointer(Transform.Shift.Create_Shift(mem,
+                                                               word_size,
+                                                               shift));
       when Op_Invalid =>
          Raise_Error(lexer, "no operator specified in transform");
    end case;

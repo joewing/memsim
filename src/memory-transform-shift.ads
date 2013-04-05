@@ -5,8 +5,9 @@ package Memory.Transform.Shift is
 
    type Shift_Pointer is access all Shift_Type'Class;
 
-   function Create_Shift(mem     : access Memory_Type'Class;
-                         shift   : Integer) return Shift_Pointer;
+   function Create_Shift(mem        : access Memory_Type'Class;
+                         word_size  : Natural;
+                         shift      : Integer) return Shift_Pointer;
 
    function Random_Shift(generator  : RNG.Generator;
                          max_cost   : Cost_Type) return Memory_Pointer;
@@ -15,6 +16,11 @@ package Memory.Transform.Shift is
 
    procedure Set_Shift(mem    : in out Shift_Type;
                        shift  : in Natural);
+
+   function Get_Word(mem : Shift_Type) return Natural;
+
+   procedure Set_Word(mem  : in out Shift_Type;
+                      word : in Natural);
 
    overriding
    function Clone(mem : Shift_Type) return Memory_Pointer;
@@ -33,7 +39,8 @@ package Memory.Transform.Shift is
 private
 
    type Shift_Type is new Transform_Type with record
-      shift : Natural;
+      shift       : Natural;
+      word_size   : Natural;
    end record;
 
    overriding
