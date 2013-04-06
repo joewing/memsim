@@ -1,8 +1,6 @@
 
 with Ada.Assertions; use Ada.Assertions;
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 package body Memory.Split is
 
    function Create_Split(mem     : access Memory_Type'Class;
@@ -83,17 +81,16 @@ package body Memory.Split is
       end loop;
    end Reset;
 
-   procedure Process(mem      : in out Split_Type;
-                     address  : in Address_Type;
-                     size     : in Positive;
-                     is_read  : in Boolean) is
-      last        : constant Address_Type := address + Address_Type(size);
+   procedure Do_Process(mem      : in out Split_Type;
+                        address  : in Address_Type;
+                        size     : in Positive;
+                        is_read  : in Boolean) is
+      last        : constant Address_Type := address + Address_Type(size) - 1;
       start_time  : Time_Type;
       temp_addr   : Address_Type;
       temp_size   : Positive;
    begin
-Put_Line("PROCESS: " & Address_Type'Image(address));
-Put_Line("LAST: " & Address_Type'Image(last));
+      Assert(address <= last, "invalid address in Do_Process");
       if address < mem.offset then
          if last <= mem.offset then
             temp_size := size;
@@ -123,6 +120,25 @@ Put_Line("LAST: " & Address_Type'Image(last));
             Write(mem.banks(1).mem.all, temp_addr, temp_size);
          end if;
          Advance(mem, Get_Time(mem.banks(1).mem.all) - start_time);
+      end if;
+   end Do_Process;
+
+   procedure Process(mem      : in out Split_Type;
+                     address  : in Address_Type;
+                     size     : in Positive;
+                     is_read  : in Boolean) is
+      last : constant Address_Type := address + Address_Type(size - 1);
+      temp : Positive;
+   begin
+      if address > last then
+
+         temp := Positive(Address_Type'Last - address + 1);
+         Do_Process(mem, address, temp, is_read);
+
+         Do_Process(mem, 0, Positive(last), is_read);
+
+      else
+         Do_Process(mem, address, size, is_read);
       end if;
    end Process;
 

@@ -3,8 +3,6 @@ with Memory.RAM;     use Memory.RAM;
 with Memory.Split;   use Memory.Split;
 with Memory.Join;    use Memory.Join;
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 package body Test.Split is
 
    procedure Run_Tests is
@@ -51,10 +49,20 @@ package body Test.Split is
       Check(mon2.reads = 2, "split14");
 
       Read(split.all, Address_Type(0) - 4, 8);
-Put_Line("1: " & Natural'Image(mon1.reads));
-Put_Line("2: " & Natural'Image(mon2.reads));
       Check(mon1.reads = 3, "split15");
-      Check(mon2.reads = 4, "split16");
+      Check(mon2.reads = 3, "split16");
+
+      Read(split.all, Address_Type'Last, 1);
+      Check(mon1.reads = 3, "split17");
+      Check(mon2.reads = 4, "split18");
+
+      Read(split.all, 255, 1);
+      Check(mon1.reads = 4, "split19");
+      Check(mon2.reads = 4, "split20");
+
+      Read(split.all, 255, 2);
+      Check(mon1.reads = 5, "split21");
+      Check(mon2.reads = 5, "split22");
 
       Destroy(Memory_Pointer(split));
 
