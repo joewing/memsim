@@ -118,7 +118,7 @@ package body Memory.Prefetch is
 
    function Get_Cost(mem : Prefetch_Type) return Cost_Type is
    begin
-      return 28 * Address_Type'Size + Get_Cost(Container_Type(mem));
+      return 0;
    end Get_Cost;
 
 end Memory.Prefetch;
