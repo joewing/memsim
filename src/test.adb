@@ -18,6 +18,7 @@ package body Test is
                   address  : in Address_Type;
                   size     : in Positive) is
    begin
+      Read(Container_Type(mem), address, size);
       mem.reads := mem.reads + 1;
    end Read;
 
@@ -25,12 +26,14 @@ package body Test is
                    address : in Address_Type;
                    size    : in Positive) is
    begin
+      Write(Container_Type(mem), address, size);
       mem.writes := mem.writes + 1;
    end Write;
 
    procedure Idle(mem      : in out Monitor_Type;
                   cycles   : in Time_Type) is
    begin
+      Idle(Container_Type(mem), cycles);
       mem.cycles := mem.cycles + cycles;
    end Idle;
 

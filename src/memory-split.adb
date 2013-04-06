@@ -161,10 +161,10 @@ package body Memory.Split is
    procedure Idle(mem      : in out Split_Type;
                   cycles   : in Time_Type) is
    begin
+      Idle(Container_Type(mem), cycles);
       for i in mem.banks'Range loop
          Idle(mem.banks(i).mem.all, cycles);
       end loop;
-      Advance(mem, cycles);
    end Idle;
 
    procedure Show_Access_Stats(mem : in out Split_Type) is
