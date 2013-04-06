@@ -31,6 +31,9 @@ package body Test.Offset is
       Check(Get_Time(ram.all) = 600, "offset9");
       Check(Get_Writes(ram.all) = 2, "offset10");
 
+      Read(offset.all, Address_Type(0) - 6, 8);
+      Check(Get_Time(ram.all) = 800, "offset11");
+
       Destroy(Memory_Pointer(offset));
 
    end Run_Tests;
