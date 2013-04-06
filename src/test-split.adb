@@ -64,6 +64,10 @@ package body Test.Split is
       Check(mon1.reads = 5, "split21");
       Check(mon2.reads = 5, "split22");
 
+      Read(split.all, Address_Type'Last, 2);
+      Check(mon1.reads = 6, "split23");
+      Check(mon2.reads = 6, "split24");
+
       Destroy(Memory_Pointer(split));
 
    end Run_Tests;

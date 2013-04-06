@@ -135,7 +135,7 @@ package body Memory.Split is
          temp := Positive(Address_Type'Last - address + 1);
          Do_Process(mem, address, temp, is_read);
 
-         Do_Process(mem, 0, Positive(last), is_read);
+         Do_Process(mem, 0, Positive(last + 1), is_read);
 
       else
          Do_Process(mem, address, size, is_read);
