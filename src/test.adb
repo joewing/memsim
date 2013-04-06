@@ -1,5 +1,6 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
+
 with Test.RAM;
 with Test.Cache;
 with Test.SPM;
@@ -61,14 +62,16 @@ package body Test is
 
    end Run_Tests;
 
-   procedure Check(cond : in Boolean;
-                   msg  : in String) is
+   procedure Check(cond    : in Boolean;
+                   source  : in String := GNAT.Source_Info.File;
+                   line    : in Natural := GNAT.Source_Info.Line) is
+      lstr : constant String := Natural'Image(line);
+      msg : constant String := source & "[" &
+                               lstr(lstr'First + 1 .. lstr'Last) & "]";
    begin
       count := count + 1;
-      if cond then
-         Put_Line(msg & " passed");
-      else
-         Put_Line(msg & " FAILED");
+      if not cond then
+         Put_Line(msg & ": FAILED");
          failed := failed + 1;
       end if;
    end Check;

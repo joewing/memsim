@@ -12,20 +12,20 @@ package body Test.Shift is
 
    begin
 
-      Check(Get_Time(shift.all) = 0, "shift.positive1");
-      Check(Get_Writes(shift.all) = 0, "shift.positive2");
+      Check(Get_Time(shift.all) = 0);
+      Check(Get_Writes(shift.all) = 0);
 
       Read(shift.all, 0, 8);
-      Check(Get_Time(shift.all) = 800, "shift.positive3");
-      Check(Get_Writes(shift.all) = 0, "shift.positive4");
+      Check(Get_Time(shift.all) = 800);
+      Check(Get_Writes(shift.all) = 0);
 
       Read(shift.all, 1, 1);
-      Check(Get_Time(shift.all) = 900, "shift.positive5");
-      Check(Get_Writes(shift.all) = 0, "shift.positive6");
+      Check(Get_Time(shift.all) = 900);
+      Check(Get_Writes(shift.all) = 0);
 
       Write(shift.all, 1, 1);
-      Check(Get_Time(shift.all) = 1000, "shift.positive7");
-      Check(Get_Writes(shift.all) = 1, "shift.positive8");
+      Check(Get_Time(shift.all) = 1000);
+      Check(Get_Writes(shift.all) = 1);
 
       Destroy(Memory_Pointer(shift));
 
@@ -39,20 +39,20 @@ package body Test.Shift is
 
    begin
 
-      Check(Get_Time(shift.all) = 0, "shift.negative1");
-      Check(Get_Writes(shift.all) = 0, "shift.negative2");
+      Check(Get_Time(shift.all) = 0);
+      Check(Get_Writes(shift.all) = 0);
 
       Read(shift.all, 0, 8);
-      Check(Get_Time(shift.all) = 800, "shift.negative3");
-      Check(Get_Writes(shift.all) = 0, "shift.negative4");
+      Check(Get_Time(shift.all) = 800);
+      Check(Get_Writes(shift.all) = 0);
 
       Read(shift.all, 1, 1);
-      Check(Get_Time(shift.all) = 900, "shift.negative5");
-      Check(Get_Writes(shift.all) = 0, "shift.negative6");
+      Check(Get_Time(shift.all) = 900);
+      Check(Get_Writes(shift.all) = 0);
 
       Write(shift.all, 1, 1);
-      Check(Get_Time(shift.all) = 1000, "shift.negative7");
-      Check(Get_Writes(shift.all) = 1, "shift.negative8");
+      Check(Get_Time(shift.all) = 1000);
+      Check(Get_Writes(shift.all) = 1);
 
       Destroy(Memory_Pointer(shift));
 
@@ -66,16 +66,16 @@ package body Test.Shift is
 
    begin
 
-      Check(Get_Time(shift.all) = 0, "shift.word1");
-      Check(Get_Writes(shift.all) = 0, "shift.word2");
+      Check(Get_Time(shift.all) = 0);
+      Check(Get_Writes(shift.all) = 0);
 
       Read(shift.all, 0, 8);
-      Check(Get_Time(shift.all) = 200, "shift.word3");
-      Check(Get_Writes(shift.all) = 0, "shift.word4");
+      Check(Get_Time(shift.all) = 200);
+      Check(Get_Writes(shift.all) = 0);
 
       Write(shift.all, 1, 4);
-      Check(Get_Time(shift.all) = 400, "shift.word5");
-      Check(Get_Writes(shift.all) = 2, "shift.word6");
+      Check(Get_Time(shift.all) = 400);
+      Check(Get_Writes(shift.all) = 2);
 
       Destroy(Memory_Pointer(shift));
 

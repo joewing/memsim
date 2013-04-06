@@ -12,36 +12,36 @@ package body Test.SPM is
 
    begin
 
-      Check(Get_Time(spm.all) = 0, "spm1");
-      Check(Get_Writes(spm.all) = 0, "spm2");
+      Check(Get_Time(spm.all) = 0);
+      Check(Get_Writes(spm.all) = 0);
 
       Read(spm.all, 0, 1);
-      Check(Get_Time(spm.all) = 1, "spm3");
-      Check(Get_Writes(spm.all) = 0, "spm4");
+      Check(Get_Time(spm.all) = 1);
+      Check(Get_Writes(spm.all) = 0);
 
       Read(spm.all, 1024 - 8, 8);
-      Check(Get_Time(spm.all) = 2, "spm5");
-      Check(Get_Writes(spm.all) = 0, "spm6");
+      Check(Get_Time(spm.all) = 2);
+      Check(Get_Writes(spm.all) = 0);
 
       Read(spm.all, 1024, 4);
-      Check(Get_Time(spm.all) = 102, "spm7");
-      Check(Get_Writes(spm.all) = 0, "spm8");
+      Check(Get_Time(spm.all) = 102);
+      Check(Get_Writes(spm.all) = 0);
 
       Read(spm.all, 1023, 2);
-      Check(Get_Time(spm.all) = 202, "spm9");
-      Check(Get_Writes(spm.all) = 0, "spm10");
+      Check(Get_Time(spm.all) = 202);
+      Check(Get_Writes(spm.all) = 0);
 
       Write(spm.all, 1024, 1);
-      Check(Get_Time(spm.all) = 302, "spm9");
-      Check(Get_Writes(spm.all) = 1, "spm10");
+      Check(Get_Time(spm.all) = 302);
+      Check(Get_Writes(spm.all) = 1);
 
       Write(spm.all, 8, 1);
-      Check(Get_Time(spm.all) = 303, "spm11");
-      Check(Get_Writes(spm.all) = 1, "spm12");
+      Check(Get_Time(spm.all) = 303);
+      Check(Get_Writes(spm.all) = 1);
 
       Write(spm.all, 8192, 16);
-      Check(Get_Time(spm.all) = 503, "spm13");
-      Check(Get_Writes(spm.all) = 2, "spm14");
+      Check(Get_Time(spm.all) = 503);
+      Check(Get_Writes(spm.all) = 2);
 
       Destroy(Memory_Pointer(spm));
 

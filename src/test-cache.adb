@@ -19,31 +19,31 @@ package body Test.Cache is
 
    begin
 
-      Check(Get_Time(cache1.all) = 0, "cache-direct1");
-      Check(Get_Writes(cache1.all) = 0, "cache-direct2");
+      Check(Get_Time(cache1.all) = 0);
+      Check(Get_Writes(cache1.all) = 0);
 
       Read(cache1.all, 0, 1);
-      Check(Get_Time(cache1.all) = 200, "cache-direct3");
+      Check(Get_Time(cache1.all) = 200);
 
       Read(cache1.all, 1, 1);
-      Check(Get_Time(cache1.all) = 201, "cache-direct4");
+      Check(Get_Time(cache1.all) = 201);
 
       Write(cache1.all, 1, 1);
-      Check(Get_Time(cache1.all) = 202, "cache-direct5");
-      Check(Get_Writes(ram1.all) = 0, "cache-direct6");
+      Check(Get_Time(cache1.all) = 202);
+      Check(Get_Writes(ram1.all) = 0);
 
       Read(cache1.all, 8, 1);
-      Check(Get_Time(cache1.all) = 602, "cache-direct7");
-      Check(Get_Writes(ram1.all) = 1, "cache-direct8");
+      Check(Get_Time(cache1.all) = 602);
+      Check(Get_Writes(ram1.all) = 1);
 
       Read(cache1.all, 2, 2);
-      Check(Get_Time(cache1.all) = 802, "cache-direct9");
+      Check(Get_Time(cache1.all) = 802);
 
       Write(cache1.all, 4, 2);
-      Check(Get_Time(cache1.all) = 803, "cache-direct10");
+      Check(Get_Time(cache1.all) = 803);
 
       Write(cache1.all, 6, 1);
-      Check(Get_Time(cache1.all) = 1003, "cache-direct11");
+      Check(Get_Time(cache1.all) = 1003);
 
       Destroy(Memory_Pointer(cache1));
 
@@ -65,27 +65,27 @@ package body Test.Cache is
    begin
 
       Read(cache1.all, 0, 1);
-      Check(Get_Time(cache1.all) = 200, "cache-set1");
+      Check(Get_Time(cache1.all) = 200);
 
       Read(cache1.all, 1, 1);
-      Check(Get_Time(cache1.all) = 201, "cache-set2");
+      Check(Get_Time(cache1.all) = 201);
 
       Write(cache1.all, 1, 1);
-      Check(Get_Time(cache1.all) = 202, "cache-set3");
-      Check(Get_Writes(ram1.all) = 0, "cache-set4");
+      Check(Get_Time(cache1.all) = 202);
+      Check(Get_Writes(ram1.all) = 0);
 
       Read(cache1.all, 8, 1);
-      Check(Get_Time(cache1.all) = 402, "cache-set5");
-      Check(Get_Writes(ram1.all) = 0, "cache-set6");
+      Check(Get_Time(cache1.all) = 402);
+      Check(Get_Writes(ram1.all) = 0);
 
       Read(cache1.all, 2, 2);
-      Check(Get_Time(cache1.all) = 602, "cache-set7");
+      Check(Get_Time(cache1.all) = 602);
 
       Write(cache1.all, 4, 2);
-      Check(Get_Time(cache1.all) = 803, "cache-set8");
+      Check(Get_Time(cache1.all) = 803);
 
       Write(cache1.all, 6, 1);
-      Check(Get_Time(cache1.all) = 1003, "cache-set9");
+      Check(Get_Time(cache1.all) = 1003);
 
       Destroy(Memory_Pointer(cache1));
 

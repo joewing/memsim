@@ -12,36 +12,36 @@ package body Test.RAM is
 
    begin
 
-      Check(Get_Time(mem.all) = 0, "ram1");
-      Check(Get_Writes(mem.all) = 0, "ram2");
+      Check(Get_Time(mem.all) = 0);
+      Check(Get_Writes(mem.all) = 0);
 
       Read(mem.all, 0, 4);
-      Check(Get_Time(mem.all) = 100, "ram3");
-      Check(Get_Writes(mem.all) = 0, "ram4");
+      Check(Get_Time(mem.all) = 100);
+      Check(Get_Writes(mem.all) = 0);
 
       Read(mem.all, 2, 4);
-      Check(Get_Time(mem.all) = 300, "ram5");
-      Check(Get_Writes(mem.all) = 0, "ram6");
+      Check(Get_Time(mem.all) = 300);
+      Check(Get_Writes(mem.all) = 0);
 
       Read(mem.all, 2, 2);
-      Check(Get_Time(mem.all) = 400, "ram7");
-      Check(Get_Writes(mem.all) = 0, "ram8");
+      Check(Get_Time(mem.all) = 400);
+      Check(Get_Writes(mem.all) = 0);
 
       Read(mem.all, 2, 3);
-      Check(Get_Time(mem.all) = 600, "ram9");
-      Check(Get_Writes(mem.all) = 0, "ram10");
+      Check(Get_Time(mem.all) = 600);
+      Check(Get_Writes(mem.all) = 0);
 
       Write(mem.all, 1, 8);
-      Check(Get_Time(mem.all) = 900, "ram11");
-      Check(Get_Writes(mem.all) = 1, "ram12");
+      Check(Get_Time(mem.all) = 900);
+      Check(Get_Writes(mem.all) = 1);
 
       Reset(mem.all);
-      Check(Get_Time(mem.all) = 0, "ram13");
+      Check(Get_Time(mem.all) = 0);
 
-      Check(To_String(mem.all) = "(ram (latency 100)(word_size 4))", "ram14");
+      Check(To_String(mem.all) = "(ram (latency 100)(word_size 4))");
 
       other := Clone(mem.all);
-      Check(To_String(other.all) = To_String(mem.all), "ram15");
+      Check(To_String(other.all) = To_String(mem.all));
 
       Destroy(Memory_Pointer(mem));
 

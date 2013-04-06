@@ -12,27 +12,27 @@ package body Test.Offset is
 
    begin
 
-      Check(Get_Time(ram.all) = 0, "offset1");
-      Check(Get_Writes(ram.all) = 0, "offset2");
+      Check(Get_Time(ram.all) = 0);
+      Check(Get_Writes(ram.all) = 0);
 
       Read(offset.all, 0, 8);
-      Check(Get_Time(ram.all) = 200, "offset3");
-      Check(Get_Writes(ram.all) = 0, "offset4");
+      Check(Get_Time(ram.all) = 200);
+      Check(Get_Writes(ram.all) = 0);
 
       Read(offset.all, 5, 8);
-      Check(Get_Time(ram.all) = 300, "offset5");
-      Check(Get_Writes(ram.all) = 0, "offset6");
+      Check(Get_Time(ram.all) = 300);
+      Check(Get_Writes(ram.all) = 0);
 
       Write(offset.all, 5, 4);
-      Check(Get_Time(ram.all) = 400, "offset7");
-      Check(Get_Writes(ram.all) = 1, "offset8");
+      Check(Get_Time(ram.all) = 400);
+      Check(Get_Writes(ram.all) = 1);
 
       Write(offset.all, 2, 8);
-      Check(Get_Time(ram.all) = 600, "offset9");
-      Check(Get_Writes(ram.all) = 2, "offset10");
+      Check(Get_Time(ram.all) = 600);
+      Check(Get_Writes(ram.all) = 2);
 
       Read(offset.all, Address_Type(0) - 6, 8);
-      Check(Get_Time(ram.all) = 800, "offset11");
+      Check(Get_Time(ram.all) = 800);
 
       Destroy(Memory_Pointer(offset));
 
