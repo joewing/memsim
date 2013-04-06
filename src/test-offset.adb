@@ -1,7 +1,6 @@
 
 with Memory.RAM;              use Memory.RAM;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
-use Memory;
 
 package body Test.Offset is
 

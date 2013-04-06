@@ -1,7 +1,6 @@
 
 with Memory.RAM;              use Memory.RAM;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
-use Memory;
 
 package body Test.Shift is
 

@@ -1,7 +1,6 @@
 
 with Memory.RAM; use Memory.RAM;
 with Memory.Cache; use Memory.Cache;
-use Memory;
 
 package body Test.Cache is
 

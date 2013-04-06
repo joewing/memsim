@@ -1,7 +1,6 @@
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Memory.RAM; use Memory.RAM;
-use Memory;
 
 package body Test.RAM is
 

@@ -1,7 +1,6 @@
 
 with Memory.RAM;  use Memory.RAM;
 with Memory.SPM;  use Memory.SPM;
-use Memory;
 
 package body Test.SPM is
 

@@ -1,6 +1,8 @@
 
 with Ada.Assertions; use Ada.Assertions;
 
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Memory.Split is
 
    function Create_Split(mem     : access Memory_Type'Class;
@@ -90,6 +92,8 @@ package body Memory.Split is
       temp_addr   : Address_Type;
       temp_size   : Positive;
    begin
+Put_Line("PROCESS: " & Address_Type'Image(address));
+Put_Line("LAST: " & Address_Type'Image(last));
       if address < mem.offset then
          if last <= mem.offset then
             temp_size := size;
