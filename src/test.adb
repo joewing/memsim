@@ -7,6 +7,7 @@ with Test.SPM;
 with Test.Offset;
 with Test.Shift;
 with Test.Split;
+with Test.Prefetch;
 
 package body Test is
 
@@ -50,6 +51,7 @@ package body Test is
       Offset.Run_Tests;
       Shift.Run_Tests;
       Split.Run_Tests;
+      Prefetch.Run_Tests;
 
       Put_Line("ran" & Natural'Image(count) & " tests");
       if failed > 1 then
