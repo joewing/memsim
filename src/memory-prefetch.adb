@@ -103,6 +103,11 @@ package body Memory.Prefetch is
       Advance(mem, cycles);
    end Idle;
 
+   function Get_Time(mem : Prefetch_Type) return Time_Type is
+   begin
+      return Get_Time(Container_Type(mem)) + mem.pending;
+   end Get_Time;
+
    function To_String(mem : Prefetch_Type) return Unbounded_String is
       result : Unbounded_String;
    begin

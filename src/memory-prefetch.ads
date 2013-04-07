@@ -42,6 +42,9 @@ package Memory.Prefetch is
                   cycles   : in Time_Type);
 
    overriding
+   function Get_Time(mem : Prefetch_Type) return Time_Type;
+
+   overriding
    function To_String(mem : Prefetch_Type) return Unbounded_String;
 
    overriding
