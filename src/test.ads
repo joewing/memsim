@@ -11,9 +11,11 @@ package Test is
 private
 
    type Monitor_Type is new Container_Type with record
-      reads    : Natural   := 0;
-      writes   : Natural   := 0;
-      cycles   : Time_Type := 0;
+      last_addr   : Address_Type := Address_Type'Last;
+      last_size   : Positive     := Positive'Last;
+      reads       : Natural      := 0;
+      writes      : Natural      := 0;
+      cycles      : Time_Type    := 0;
    end record;
 
    type Monitor_Pointer is access all Monitor_Type;

@@ -24,13 +24,23 @@ package body Test.Split is
 
       Read(split.all, 0, 8);
       Check(mon1.reads = 1);
+      Check(mon1.last_addr = 0);
+      Check(mon1.last_size = 8);
       Check(mon2.reads = 0);
       Check(ram.reads = 1);
+      Check(ram.last_addr = 0);
+      Check(ram.last_size = 8);
 
       Read(split.all, 256, 8);
       Check(mon1.reads = 1);
+      Check(mon1.last_addr = 0);
+      Check(mon1.last_size = 8);
       Check(mon2.reads = 1);
+      Check(mon2.last_addr = 0);
+      Check(mon2.last_size = 8);
       Check(ram.reads = 2);
+      Check(ram.last_addr = 256);
+      Check(ram.last_size = 8);
 
       Write(split.all, 256, 8);
       Check(mon1.writes = 0);

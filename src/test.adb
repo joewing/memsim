@@ -21,7 +21,9 @@ package body Test is
                   size     : in Positive) is
    begin
       Read(Container_Type(mem), address, size);
-      mem.reads := mem.reads + 1;
+      mem.last_addr  := address;
+      mem.last_size  := size;
+      mem.reads      := mem.reads + 1;
    end Read;
 
    procedure Write(mem     : in out Monitor_Type;
@@ -29,7 +31,9 @@ package body Test is
                    size    : in Positive) is
    begin
       Write(Container_Type(mem), address, size);
-      mem.writes := mem.writes + 1;
+      mem.last_addr  := address;
+      mem.last_size  := size;
+      mem.writes     := mem.writes + 1;
    end Write;
 
    procedure Idle(mem      : in out Monitor_Type;
