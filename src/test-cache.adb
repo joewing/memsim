@@ -91,11 +91,50 @@ package body Test.Cache is
 
    end Test_Set;
 
+   procedure Test_Dual is
+
+      ram1   : constant RAM_Pointer   := Create_RAM(latency     => 100,
+                                                    word_size   => 1);
+      cache1 : constant Cache_Pointer := Create_Cache(mem            => ram1,
+                                                      line_count     => 1,
+                                                      line_size      => 1,
+                                                      associativity  => 1,
+                                                      latency        => 1,
+                                                      policy         => LRU,
+                                                      exclusive      => False,
+                                                      write_back     => True);
+      cache2 : Cache_Pointer          := Create_Cache(mem            => cache1,
+                                                      line_count     => 2,
+                                                      line_size      => 1,
+                                                      associativity  => 1,
+                                                      latency        => 1,
+                                                      policy         => LRU,
+                                                      exclusive      => False,
+                                                      write_back     => True);
+   begin
+
+      Read(cache2.all, 0, 1);
+      Check(Get_Time(cache2.all) = 100);
+
+      Read(cache2.all, 0, 1);
+      Check(Get_Time(cache2.all) = 101);
+
+      Read(cache2.all, 1, 1);
+      Check(Get_Time(cache2.all) = 201);
+
+      Read(cache2.all, 0, 1);
+      Check(Get_Time(cache2.all) = 202);
+
+      Destroy(Memory_Pointer(cache2));
+
+   end Test_Dual;
+
    procedure Run_Tests is
    begin
 
       Test_Direct;
       Test_Set;
+      Test_Dual;
 
    end Run_Tests;
 
