@@ -279,6 +279,9 @@ package body Memory.Cache is
 
    begin
 
+      -- Advance the time.
+      Advance(mem, mem.latency);
+
       -- Update the age of all items in this set.
       for i in 0 .. mem.associativity - 1 loop
          line := first + i * mem.line_count / mem.associativity;
@@ -301,7 +304,6 @@ package body Memory.Cache is
                data.age := 0;
             end if;
             if is_read or mem.write_back then
-               Advance(mem, mem.latency);
                data.dirty := data.dirty or not is_read;
             else
                Write(Container_Type(mem), tag, mem.line_size);
@@ -345,11 +347,10 @@ package body Memory.Cache is
             Read(Container_Type(mem), data.address, mem.line_size);
             data.age := 0;
             data.dirty := not is_read;
-         elsif not is_read then
-            Advance(mem, mem.latency);
          end if;
 
       end if;
+
 
    end Get_Data;
 

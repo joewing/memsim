@@ -23,27 +23,27 @@ package body Test.Cache is
       Check(Get_Writes(cache1.all) = 0);
 
       Read(cache1.all, 0, 1);
-      Check(Get_Time(cache1.all) = 200);
-
-      Read(cache1.all, 1, 1);
       Check(Get_Time(cache1.all) = 201);
 
-      Write(cache1.all, 1, 1);
+      Read(cache1.all, 1, 1);
       Check(Get_Time(cache1.all) = 202);
+
+      Write(cache1.all, 1, 1);
+      Check(Get_Time(cache1.all) = 203);
       Check(Get_Writes(ram1.all) = 0);
 
       Read(cache1.all, 8, 1);
-      Check(Get_Time(cache1.all) = 602);
+      Check(Get_Time(cache1.all) = 604);
       Check(Get_Writes(ram1.all) = 1);
 
       Read(cache1.all, 2, 2);
-      Check(Get_Time(cache1.all) = 802);
+      Check(Get_Time(cache1.all) = 805);
 
       Write(cache1.all, 4, 2);
-      Check(Get_Time(cache1.all) = 803);
+      Check(Get_Time(cache1.all) = 806);
 
       Write(cache1.all, 6, 1);
-      Check(Get_Time(cache1.all) = 1003);
+      Check(Get_Time(cache1.all) = 1007);
 
       Destroy(Memory_Pointer(cache1));
 
@@ -65,27 +65,27 @@ package body Test.Cache is
    begin
 
       Read(cache1.all, 0, 1);
-      Check(Get_Time(cache1.all) = 200);
-
-      Read(cache1.all, 1, 1);
       Check(Get_Time(cache1.all) = 201);
 
-      Write(cache1.all, 1, 1);
+      Read(cache1.all, 1, 1);
       Check(Get_Time(cache1.all) = 202);
+
+      Write(cache1.all, 1, 1);
+      Check(Get_Time(cache1.all) = 203);
       Check(Get_Writes(ram1.all) = 0);
 
       Read(cache1.all, 8, 1);
-      Check(Get_Time(cache1.all) = 402);
+      Check(Get_Time(cache1.all) = 404);
       Check(Get_Writes(ram1.all) = 0);
 
       Read(cache1.all, 2, 2);
-      Check(Get_Time(cache1.all) = 602);
+      Check(Get_Time(cache1.all) = 605);
 
       Write(cache1.all, 4, 2);
-      Check(Get_Time(cache1.all) = 803);
+      Check(Get_Time(cache1.all) = 806);
 
       Write(cache1.all, 6, 1);
-      Check(Get_Time(cache1.all) = 1003);
+      Check(Get_Time(cache1.all) = 1007);
 
       Destroy(Memory_Pointer(cache1));
 
@@ -96,7 +96,7 @@ package body Test.Cache is
       ram1   : constant RAM_Pointer   := Create_RAM(latency     => 100,
                                                     word_size   => 1);
       cache1 : constant Cache_Pointer := Create_Cache(mem            => ram1,
-                                                      line_count     => 1,
+                                                      line_count     => 2,
                                                       line_size      => 1,
                                                       associativity  => 1,
                                                       latency        => 1,
@@ -104,7 +104,7 @@ package body Test.Cache is
                                                       exclusive      => False,
                                                       write_back     => True);
       cache2 : Cache_Pointer          := Create_Cache(mem            => cache1,
-                                                      line_count     => 2,
+                                                      line_count     => 1,
                                                       line_size      => 1,
                                                       associativity  => 1,
                                                       latency        => 1,
@@ -114,16 +114,16 @@ package body Test.Cache is
    begin
 
       Read(cache2.all, 0, 1);
-      Check(Get_Time(cache2.all) = 100);
+      Check(Get_Time(cache2.all) = 102);
 
       Read(cache2.all, 0, 1);
-      Check(Get_Time(cache2.all) = 101);
+      Check(Get_Time(cache2.all) = 103);
 
       Read(cache2.all, 1, 1);
-      Check(Get_Time(cache2.all) = 201);
+      Check(Get_Time(cache2.all) = 205);
 
       Read(cache2.all, 0, 1);
-      Check(Get_Time(cache2.all) = 202);
+      Check(Get_Time(cache2.all) = 207);
 
       Destroy(Memory_Pointer(cache2));
 
