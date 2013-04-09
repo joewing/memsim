@@ -383,7 +383,7 @@ package body Memory.Super is
          when 0      =>    -- Insert a component.
             pos := RNG.Random(mem.generator.all) mod (len + 1);
             Insert_Memory(mem, mem.current, pos, left, False);
-         when 1      =>    -- Remove a component.
+         when 1 .. 3 =>    -- Remove a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
             else
@@ -435,35 +435,25 @@ package body Memory.Super is
    begin
 
       -- Update the temperature.
-      mem.temperature := mem.temperature * 0.9;
+      mem.temperature := mem.temperature * 0.99;
       if mem.temperature < 1.0 / Float(Natural'Last) then
          mem.temperature := enew;
       end if;
+      Put_Line("Temperature:" & Float'Image(mem.temperature));
 
-      -- Determine if we should keep this memory for the next
-      -- run or revert the the previous memory.
+
       if value <= mem.last_value or rand < prob or mem.iteration = 0 then
 
          -- Keep the current memory.
          mem.last_value := value;
-         mem.last_cost := Get_Cost(mem);
-
-         -- Destroy the last memory.
          Destroy(mem.last);
-
-         -- Keep a copy of the current memory.
          mem.last := Clone(mem.current.all);
 
       else
 
          -- Revert to the previous memory.
-
-         -- Destroy this memory.
          Destroy(mem.current);
-
-         -- Copy the last memory to the current memory.
          mem.current := Clone(mem.last.all);
-         Set_Memory(mem, mem.current);
 
       end if;
 
@@ -483,10 +473,10 @@ package body Memory.Super is
       if value < mem.best_value or else
          (value = mem.best_value and cost < mem.best_cost) or else
          (value = mem.best_value and then cost = mem.best_cost and then
-            Length(To_String(mem)) < Length(mem.best_name)) then
+            Length(name) < Length(mem.best_name)) then
          mem.best_value := value;
          mem.best_cost  := cost;
-         mem.best_name  := To_String(mem);
+         mem.best_name  := name;
       end if;
 
       -- Keep track of the result of running with this memory.

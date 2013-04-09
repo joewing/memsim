@@ -38,6 +38,7 @@ private
       max_cost       : Cost_Type             := 1e6;
       initial        : Long_Integer          := 10;
       generator      : Generator_Pointer     := new RNG.Generator;
+
       best_name      : Unbounded_String      := Null_Unbounded_String;
       best_cost      : Cost_Type             := Cost_Type'Last;
       best_value     : Value_Type            := Value_Type'Last;
@@ -45,7 +46,6 @@ private
       last           : Memory_Pointer        := null;
       current        : Memory_Pointer        := null;
 
-      last_cost      : Cost_Type             := Cost_Type'Last;
       last_value     : Value_Type            := Value_Type'Last;
       table          : Value_Maps.Map;
       iteration      : Long_Integer          := 0;
