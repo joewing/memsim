@@ -116,6 +116,40 @@ package body Memory.Super is
       return 0;
    end Count_Memories;
 
+   procedure Reset(mem : in out Super_Type) is
+   begin
+      mem.current_length := 0;
+      Reset(Container_Type(mem));
+   end Reset;
+
+   procedure Read(mem      : in out Super_Type;
+                  address  : in Address_Type;
+                  size     : in Positive) is
+   begin
+      mem.current_length := mem.current_length + 1;
+      if mem.current_length > mem.total_length then
+         mem.total_length := mem.current_length;
+      end if;
+      Read(Container_Type(mem), address, size);
+      if Get_Value(mem'Access) > mem.best_value then
+         raise Prune_Error;
+      end if;
+   end Read;
+
+   procedure Write(mem     : in out Super_Type;
+                   address : in Address_Type;
+                   size    : in Positive) is
+   begin
+      mem.current_length := mem.current_length + 1;
+      if mem.current_length > mem.total_length then
+         mem.total_length := mem.current_length;
+      end if;
+      Write(Container_Type(mem), address, size);
+      if Get_Value(mem'Access) > mem.best_value then
+         raise Prune_Error;
+      end if;
+   end Write;
+
    function Get_Memory(ptr    : Memory_Pointer;
                        index  : Natural) return Container_Pointer is
 
@@ -441,7 +475,6 @@ package body Memory.Super is
       end if;
       Put_Line("Temperature:" & Float'Image(mem.temperature));
 
-
       if value <= mem.last_value or rand < prob or mem.iteration = 0 then
 
          -- Keep the current memory.
@@ -468,6 +501,12 @@ package body Memory.Super is
       cost  : constant Cost_Type := Get_Cost(mem);
       value : Value_Type := Get_Value(mem'Access);
    begin
+
+      -- Scale the result if necessary.
+      if mem.current_length /= mem.total_length then
+         value := Value_Type(Float(value) * Float(mem.total_length) /
+                             Float(mem.current_length));
+      end if;
 
       -- Keep track of the best memory.
       if value < mem.best_value or else

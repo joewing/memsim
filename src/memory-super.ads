@@ -21,6 +21,19 @@ package Memory.Super is
    function Clone(mem : Super_Type) return Memory_Pointer;
 
    overriding
+   procedure Reset(mem : in out Super_Type);
+
+   overriding
+   procedure Read(mem      : in out Super_Type;
+                  address  : in Address_Type;
+                  size     : in Positive);
+
+   overriding
+   procedure Write(mem     : in out Super_Type;
+                   address : in Address_Type;
+                   size    : in Positive);
+
+   overriding
    procedure Show_Access_Stats(mem : in out Super_Type);
 
    overriding
@@ -38,6 +51,9 @@ private
       max_cost       : Cost_Type             := 1e6;
       initial        : Long_Integer          := 10;
       generator      : Generator_Pointer     := new RNG.Generator;
+
+      total_length   : Natural               := 0;
+      current_length : Natural               := 0;
 
       best_name      : Unbounded_String      := Null_Unbounded_String;
       best_cost      : Cost_Type             := Cost_Type'Last;

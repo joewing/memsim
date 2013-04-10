@@ -101,8 +101,10 @@ package body Benchmark.Trace is
       end Initialize;
       loop
          select
-            accept Process(b : in Stream_Buffer_Pointer) do
+            accept Process(b    : in Stream_Buffer_Pointer;
+                           done : out Boolean) do
                buffer := b;
+               done   := skip;
             end Process;
             if not skip then
                begin
@@ -255,6 +257,7 @@ package body Benchmark.Trace is
       sdata    : Stream_Buffer_Pointer;
       pool     : Buffer_Pool_Pointer := new Buffer_Pool_Type;
       consumer : Consumer_Type;
+      done     : Boolean;
    begin
       pool.Initialize;
       consumer.Initialize(benchmark.mem,
@@ -271,7 +274,8 @@ package body Benchmark.Trace is
             Stream_IO.Read(file, sdata.buffer, sdata.last);
             exit when sdata.last < sdata.buffer'First;
             sdata.pos := sdata.buffer'First;
-            consumer.Process(sdata);
+            consumer.Process(sdata, done);
+            exit when done;
          end loop;
          pool.Release(sdata);
          pool.Reset;

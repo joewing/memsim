@@ -59,7 +59,8 @@ private
                        p : in Buffer_Pool_Pointer;
                        s : in Time_Type);
       entry Reset;
-      entry Process(b : in Stream_Buffer_Pointer);
+      entry Process(b    : in Stream_Buffer_Pointer;
+                    done : out Boolean);
    end Consumer_Type;
 
    type Trace_Type is new Benchmark_Type with record
