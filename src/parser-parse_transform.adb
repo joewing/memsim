@@ -30,7 +30,7 @@ begin
             end if;
             Parse_Memory(lexer, mem);
          else
-            if op /= Op_Invalid then
+            if (name = "offset" or name = "shift") and op /= Op_Invalid then
                Raise_Error(lexer,
                            "multiple operations specified in transform");
             end if;
