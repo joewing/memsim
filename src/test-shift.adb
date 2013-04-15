@@ -14,6 +14,7 @@ package body Test.Shift is
 
       Check(Get_Time(shift.all) = 0);
       Check(Get_Writes(shift.all) = 0);
+      Check(Get_Cost(shift.all) = 0);
 
       Read(shift.all, 0, 8);
       Check(Get_Time(shift.all) = 800);

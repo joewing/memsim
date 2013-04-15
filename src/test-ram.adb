@@ -14,6 +14,7 @@ package body Test.RAM is
 
       Check(Get_Time(mem.all) = 0);
       Check(Get_Writes(mem.all) = 0);
+      Check(Get_Cost(mem.all) = 0);
 
       Read(mem.all, 0, 4);
       Check(Get_Time(mem.all) = 100);

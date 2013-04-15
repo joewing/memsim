@@ -21,6 +21,7 @@ package body Test.Split is
 
       Check(ram.reads = 0);
       Check(ram.writes = 0);
+      Check(Get_Cost(split.all) = Get_Cost(mon1.all) + Get_Cost(mon2.all));
 
       Read(split.all, 0, 8);
       Check(mon1.reads = 1);

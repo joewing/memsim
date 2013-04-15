@@ -14,6 +14,7 @@ package body Test.Offset is
 
       Check(Get_Time(ram.all) = 0);
       Check(Get_Writes(ram.all) = 0);
+      Check(Get_Cost(offset.all) = 0);
 
       Read(offset.all, 0, 8);
       Check(Get_Time(ram.all) = 200);

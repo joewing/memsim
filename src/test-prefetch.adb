@@ -22,6 +22,7 @@ package body Test.Prefetch is
    begin
 
       Check(Get_Time(prefetch.all) = 0);
+      Check(Get_Cost(prefetch.all) = Get_Cost(cache.all));
 
       Read(prefetch.all, 0, 8);
       Check(Get_Time(prefetch.all) = 202);
