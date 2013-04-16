@@ -33,6 +33,8 @@ package Memory.RAM is
    overriding
    function Get_Writes(mem : RAM_Type) return Long_Integer;
 
+   function Get_Word_Size(mem : RAM_Type) return Positive;
+
 private
 
    type RAM_Type is new Memory_Type with record

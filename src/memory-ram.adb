@@ -65,4 +65,9 @@ package body Memory.RAM is
       return mem.writes;
    end Get_Writes;
 
+   function Get_Word_Size(mem : RAM_Type) return Positive is
+   begin
+      return mem.word_size;
+   end Get_Word_Size;
+
 end Memory.RAM;

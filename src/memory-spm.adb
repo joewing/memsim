@@ -124,4 +124,9 @@ package body Memory.SPM is
              Get_Cost(Container_Type(mem));
    end Get_Cost;
 
+   function Get_Size(mem : SPM_Type) return Natural is
+   begin
+      return mem.size;
+   end Get_Size;
+
 end Memory.SPM;

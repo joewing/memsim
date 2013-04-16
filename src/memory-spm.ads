@@ -39,6 +39,8 @@ package Memory.SPM is
    overriding
    function Get_Cost(mem : SPM_Type) return Cost_Type;
 
+   function Get_Size(mem : SPM_Type) return Natural;
+
 private
 
    type SPM_Type is new Container_Type with record
