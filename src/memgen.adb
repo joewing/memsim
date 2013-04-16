@@ -29,7 +29,7 @@ begin
    RAM.Register(gen);
    SPM.Register(gen);
 
-   Put_Line(Generate(gen, mem));
+   Put_Line(Generate(gen, mem, 64, 64));
    Destroy(mem);
 
 end MemGen;

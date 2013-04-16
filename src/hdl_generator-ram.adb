@@ -12,8 +12,10 @@ package body HDL_Generator.RAM is
       return result;
    end RAM_Ports;
 
-   function Process_RAM(gen : Generator_Type;
-                        mem : Memory_Pointer) return String is
+   function Process_RAM(gen         : Generator_Type;
+                        mem         : Memory_Pointer;
+                        word_bits   : Positive;
+                        addr_bits   : Positive) return String is
    begin
       return "RAM";
    end Process_RAM;
