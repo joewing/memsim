@@ -3,6 +3,8 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Memory is
 
+   next_id : Natural := 0;
+
    procedure Permute(mem         : in out Memory_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
@@ -79,5 +81,22 @@ package body Memory is
    begin
       return 0;
    end Get_Zero;
+
+   function Get_ID(mem : Memory_Type'Class) return Natural is
+   begin
+      return mem.id;
+   end Get_ID;
+
+   procedure Initialize(mem : in out Memory_Type) is
+   begin
+      mem.id := next_id;
+      next_id := next_id + 1;
+   end Initialize;
+
+   procedure Adjust(mem : in out Memory_Type) is
+   begin
+      mem.id := next_id;
+      next_id := next_id + 1;
+   end Adjust;
 
 end Memory;

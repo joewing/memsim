@@ -3,8 +3,6 @@ with Ada.Characters.Latin_1;
 
 package body HDL_Generator is
 
-   next_id : Positive := 1;
-
    function Get_Ports(gen : Generator_Type;
                       mem : Memory_Pointer) return Port_Type is
       result : Port_Type;
@@ -74,12 +72,5 @@ package body HDL_Generator is
          return str;
       end if;
    end To_String;
-
-   function Get_ID(gen : Generator_Type) return String is
-      str : constant String := Positive'Image(next_id);
-   begin
-      next_id := next_id + 1;
-      return str(str'First + 1 .. str'Last);
-   end Get_ID;
 
 end HDL_Generator;

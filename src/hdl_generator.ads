@@ -52,7 +52,6 @@ private
 
    type Generator_Type is limited record
       nodes : Generator_Vectors.Vector;
-      id    : Positive := 1;
    end record;
 
    procedure Add_Type(gen     : in out Generator_Type;
@@ -64,7 +63,5 @@ private
                   str   : in String := "");
 
    function To_String(i : Integer) return String;
-
-   function Get_ID(gen : Generator_Type) return String;
 
 end HDL_Generator;

@@ -69,11 +69,20 @@ package Memory is
 
    function Get_Zero(mem : access Memory_Type'Class) return Natural;
 
+   function Get_ID(mem : Memory_Type'Class) return Natural;
+
 private
 
    type Memory_Type is abstract new Controlled with record
-      time           : Time_Type := 0;
+      id    : Natural;
+      time  : Time_Type := 0;
    end record;
+
+   overriding
+   procedure Initialize(mem : in out Memory_Type);
+
+   overriding
+   procedure Adjust(mem : in out Memory_Type);
 
    procedure Advance(mem      : in out Memory_Type'Class;
                      cycles   : in Time_Type);
