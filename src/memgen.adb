@@ -7,6 +7,7 @@ with Parser;               use Parser;
 with HDL_Generator;        use HDL_Generator;
 with HDL_Generator.SPM;
 with HDL_Generator.RAM;
+with HDL_Generator.Offset;
 
 procedure MemGen is
 
@@ -28,6 +29,7 @@ begin
 
    RAM.Register(gen);
    SPM.Register(gen);
+   Offset.Register(gen);
 
    Put_Line("module memory(clk, rst, addr, din, dout, re, we, ready);");
    New_Line;
