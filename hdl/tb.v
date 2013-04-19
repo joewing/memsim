@@ -1,6 +1,8 @@
 
 `include "ram.v"
 `include "spm.v"
+`include "split.v"
+`include "combine.v"
 
 `define CHECK( tst ) if (!(tst)) begin $display("error"); $stop; end
 `define CYCLE        #10 clk <= 1; #10 clk <= 0;
@@ -17,6 +19,26 @@ module tb();
    wire ram_we;
    wire ram_ready;
 
+   wire [63:0] combine0_addr;
+   wire [63:0] combine0_din;
+   wire [63:0] combine0_dout;
+   wire combine0_re;
+   wire combine0_we;
+   wire combine0_ready;
+   wire [63:0] combine1_addr;
+   wire [63:0] combine1_din;
+   wire [63:0] combine1_dout;
+   wire combine1_re;
+   wire combine1_we;
+   wire combine1_ready;
+
+   wire [63:0] split_addr;
+   wire [63:0] split_din;
+   wire [63:0] split_dout;
+   wire split_re;
+   wire split_we;
+   wire split_ready;
+
    reg [63:0] spm_addr;
    reg [63:0] spm_din;
    wire [63:0] spm_dout;
@@ -28,8 +50,22 @@ module tb();
 
    ram r(clk, rst, ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
+   combine c(clk, rst,
+           combine0_addr, combine0_dout, combine0_din,
+           combine0_re, combine0_we, combine0_ready,
+           combine1_addr, combine1_dout, combine1_din,
+           combine1_re, combine1_we, combine1_ready,
+           ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
+
+   split sp(clk, rst,
+         split_addr, split_din, split_dout, split_re, split_we, split_ready,
+         combine0_addr, combine0_din, combine0_dout,
+         combine0_re, combine0_we, combine0_ready,
+         combine1_addr, combine1_din, combine1_dout,
+         combine1_re, combine1_we, combine1_ready);
+
    spm s(clk, rst, spm_addr, spm_din, spm_dout, spm_re, spm_we, spm_ready,
-         ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
+         split_addr, split_din, split_dout, split_re, split_we, split_ready);
 
    initial begin
 

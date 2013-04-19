@@ -1,7 +1,7 @@
 
 module combine(clk, rst,
                addr0, din0, dout0, re0, we0, ready0,
-               addr1, dout1, din1, re1, we1, ready1,
+               addr1, din1, dout1, re1, we1, ready1,
                maddr, mout, min, mre, mwe, mready);
 
    parameter ADDR_WIDTH = 64;
@@ -12,15 +12,15 @@ module combine(clk, rst,
    input wire rst;
 
    input  wire [ADDR_WIDTH-1:0] addr0;
-   input  wire [WORD_WIDTH-1:0] din0;
-   output wire [WORD_WIDTH-1:0] dout0;
+   output wire [WORD_WIDTH-1:0] din0;
+   input  wire [WORD_WIDTH-1:0] dout0;
    input  wire re0;
    input  wire we0;
    output wire ready0;
 
    input  wire [ADDR_WIDTH-1:0] addr1;
-   input  wire [WORD_WIDTH-1:0] din1;
-   output wire [WORD_WIDTH-1:0] dout1;
+   output wire [WORD_WIDTH-1:0] din1;
+   input  wire [WORD_WIDTH-1:0] dout1;
    input  wire re1;
    input  wire we1;
    output wire ready1;
