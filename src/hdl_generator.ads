@@ -64,4 +64,6 @@ private
 
    function To_String(i : Integer) return String;
 
+   function To_String(a : Address_Type) return String;
+
 end HDL_Generator;

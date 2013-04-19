@@ -8,6 +8,8 @@ with HDL_Generator;        use HDL_Generator;
 with HDL_Generator.SPM;
 with HDL_Generator.RAM;
 with HDL_Generator.Offset;
+with HDL_Generator.Split;
+with HDL_Generator.Join;
 
 procedure MemGen is
 
@@ -30,6 +32,8 @@ begin
    RAM.Register(gen);
    SPM.Register(gen);
    Offset.Register(gen);
+   Split.Register(gen);
+   Join.Register(gen);
 
    Put_Line("module memory(clk, rst, addr, din, dout, re, we, ready);");
    New_Line;
