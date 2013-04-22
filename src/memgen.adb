@@ -10,6 +10,7 @@ with HDL_Generator.RAM;
 with HDL_Generator.Offset;
 with HDL_Generator.Split;
 with HDL_Generator.Join;
+with HDL_Generator.Cache;
 
 procedure MemGen is
 
@@ -34,6 +35,7 @@ begin
    Offset.Register(gen);
    Split.Register(gen);
    Join.Register(gen);
+   Cache.Register(gen);
 
    Put_Line("module memory(clk, rst, addr, din, dout, re, we, ready);");
    New_Line;

@@ -60,6 +60,12 @@ package Memory.Cache is
    overriding
    procedure Finalize(mem : in out Cache_Type);
 
+   function Get_Line_Size(mem : Cache_Type) return Positive;
+
+   function Get_Line_Count(mem : Cache_Type) return Positive;
+
+   function Get_Associativity(mem : Cache_Type) return Positive;
+
 private
 
    type Cache_Data is record

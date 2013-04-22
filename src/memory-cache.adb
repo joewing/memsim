@@ -507,4 +507,19 @@ package body Memory.Cache is
       Destroy(mem.generator);
    end Finalize;
 
+   function Get_Line_Size(mem : Cache_Type) return Positive is
+   begin
+      return mem.line_size;
+   end Get_Line_Size;
+
+   function Get_Line_Count(mem : Cache_Type) return Positive is
+   begin
+      return mem.line_count;
+   end Get_Line_Count;
+
+   function Get_Associativity(mem : Cache_Type) return Positive is
+   begin
+      return mem.associativity;
+   end Get_Associativity;
+
 end Memory.Cache;
