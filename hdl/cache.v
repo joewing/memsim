@@ -2,11 +2,11 @@
 module cache(clk, rst, addr, din, dout, re, we, ready,
              maddr, mout, min, mre, mwe, mready);
 
-   parameter ADDR_WIDTH    = 64;    // Size of address in bits.
-   parameter WORD_WIDTH    = 64;    // Size of a word in bits.
-   parameter LINE_SIZE     = 1;     // Words per line.
-   parameter LINE_COUNT    = 256;   // Number of cache lines.
-   parameter ASSOCIATIVITY = 1;     // Associativity.
+   parameter ADDR_WIDTH       = 64;    // Size of address in bits.
+   parameter WORD_WIDTH       = 64;    // Size of a word in bits.
+   parameter LINE_SIZE        = 1;     // Words per line.
+   parameter LINE_COUNT_BITS  = 8;     // 2^n cache lines.
+   parameter ASSOCIATIVITY    = 1;     // Associativity.
 
    input wire clk;
    input wire rst;
@@ -25,8 +25,9 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    output wire mwe;
    input  wire mready;
 
-   localparam INDEX_BITS   = ADDR_WIDTH - (1 << LINE_SIZE);
-   localparam TAG_BITS     = (ADDR_WIDTH / LINE_SIZE) + ASSOCIATIVITY;
+   localparam LINE_COUNT   = 1 << LINE_COUNT_BITS;
+   localparam INDEX_BITS   = LINE_COUNT_BITS;
+   localparam TAG_BITS     = ADDR_WIDTH - LINE_COUNT_BITS + ASSOCIATIVITY;
    localparam AGE_BITS     = ASSOCIATIVITY - 1;
    localparam LINE_BITS    = LINE_SIZE * WORD_WIDTH;
    localparam WAY_BITS     = LINE_BITS + TAG_BITS + AGE_BITS + 1;
@@ -37,17 +38,12 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    localparam AGE_OFFSET   = DIRTY_OFFSET + 1;
    localparam MAX_AGE      = (1 << AGE_BITS) - 1;
 
+   reg [ROW_BITS-1:0] row;
    reg  [ROW_BITS-1:0] data [0:LINE_COUNT-1];
    wire [INDEX_BITS-1:0] current_index = addr[INDEX_BITS-1:0];
    wire [TAG_BITS-1:0] current_tag = addr[ADDR_WIDTH-1:ADDR_WIDTH-TAG_BITS];
    wire [31:0] line_offset = addr & ((1 << LINE_SIZE) - 1);
    wire [31:0] line_shift  = line_offset * WORD_WIDTH;
-
-   // Register the current row.
-   reg [ROW_BITS-1:0] row;
-   always @(posedge clk) begin
-      row <= data[current_index];
-   end
 
    // Break out fields of the current row.
    wire [LINE_BITS-1:0] line  [0:ASSOCIATIVITY-1];
@@ -70,6 +66,14 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          end
       end
    endgenerate
+
+   // Initialize the cache to zeros for simulation.
+   integer init_i;
+   initial begin
+      for (init_i = 0; init_i < LINE_COUNT; init_i = init_i + 1) begin
+         data[init_i] = 0;
+      end
+   end
 
    // Determine the line to evict if necessry and if we have a hit.
    reg [ADDR_WIDTH-1:0] oldest_addr;
@@ -116,11 +120,14 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    // Determine the next state.
    reg [STATE_BITS-1:0] state;
    reg [STATE_BITS-1:0] next_state;
-   always @(posedge clk) begin
+   always @(*) begin
       if (rst) begin
          next_state <= STATE_IDLE;
       end else begin
          case (state)
+            STATE_IDLE: // Idle (ready for a read/write).
+               if (re) next_state <= STATE_READ;
+               else if (we) next_state <= STATE_WRITE;
             STATE_READ: // Start of a read.
                if (is_hit)             next_state <= STATE_IDLE;
                else if (oldest_dirty)  next_state <= STATE_WRITEBACK_READ;
@@ -146,8 +153,8 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
 
    // Update the state.
    always @(posedge clk) begin
-      if (rst) state <= STATE_IDLE;
-      else     state <= next_state;
+      if (rst)       state <= STATE_IDLE;
+      else           state <= next_state;
    end
 
    // Update the transfer count.
@@ -204,7 +211,9 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
       end
    endgenerate
    always @(posedge clk) begin
-      if (state == STATE_IDLE) begin
+      if (rst) begin
+         fill_row <= 0;
+      end else if (state == STATE_READ || state == STATE_WRITE) begin
          fill_row <= row;
       end else begin
          fill_row <= updated_fill_row;
@@ -218,19 +227,24 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    always @(posedge clk) begin
       if (!rst) begin
          if (write_hit | write_ok | fill_ok) begin
-            data[current_index] <= fill_row;
+            data[current_index]  <= updated_fill_row;
+            row                  <= updated_fill_row;
+         end else begin
+            row                  <= data[current_index];
          end
       end
    end
 
    // Drive main memory read/write.
-   assign mre = next_state == STATE_READ_MISS
-              | next_state == STATE_WRITE_FILL;
-   assign mwe = next_state == STATE_WRITEBACK_READ
-              | next_state == STATE_WRITEBACK_WRITE;
+   assign mre = state != next_state &&
+               (next_state == STATE_READ_MISS
+               | next_state == STATE_WRITE_FILL);
+   assign mwe = state != next_state &&
+               (next_state == STATE_WRITEBACK_READ
+               | next_state == STATE_WRITEBACK_WRITE);
 
    // Drive the ready bit.
-   assign ready = next_state == STATE_IDLE;
+   assign ready = state == STATE_IDLE || next_state == STATE_IDLE;
 
    // Drive dout.
    wire [WORD_WIDTH-1:0] words [0:LINE_SIZE-1];
@@ -241,6 +255,6 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          assign words[wordi] = hit_line[offset+WORD_WIDTH-1:offset];
       end
    endgenerate
-   assign dout = words[current_index];
+   assign dout = words[hit_way];
 
 endmodule

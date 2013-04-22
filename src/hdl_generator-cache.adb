@@ -1,6 +1,7 @@
 
 with Memory.Cache;      use Memory.Cache;
 with Memory.Container;  use Memory.Container;
+with Util;              use Util;
 
 package body HDL_Generator.Cache is
 
@@ -37,7 +38,7 @@ package body HDL_Generator.Cache is
       Line(r, "cache #(.ADDR_WIDTH(" & To_String(addr_bits) & "), " &
               ".WORD_WIDTH(" & To_String(word_bits) & "), " &
               ".LINE_SIZE(" & To_String(lsize) & "), " &
-              ".LINE_COUNT(" & To_String(lcount) & "), " &
+              ".LINE_COUNT_BITS(" & To_String(Log2(lcount)) & "), " &
               ".ASSOCATIVITY(" & To_String(assoc) & "))");
       Line(r, "   m" & name & "_inst (");
       Line(r, "   .clk(clk), .rst(rst),");

@@ -1,6 +1,7 @@
 
 with Ada.Unchecked_Deallocation;
 with Ada.Assertions; use Ada.Assertions;
+with Util; use Util;
 with Random_Enum;
 
 package body Memory.Cache is
@@ -438,8 +439,8 @@ package body Memory.Cache is
       assoc    : constant Cost_Type := Cost_Type(mem.associativity);
 
       -- Bits to store a tag.
-      tag_bits : constant Cost_Type := Cost_Type(Address_Type'Size /
-                                                 mem.line_size +
+      tag_bits : constant Cost_Type := Cost_Type(Address_Type'Size -
+                                                 Log2(mem.line_size) +
                                                  mem.associativity);
 
       -- Bits to store the age.

@@ -3,6 +3,7 @@
 `include "spm.v"
 `include "split.v"
 `include "combine.v"
+`include "cache.v"
 
 `define CHECK( tst ) if (!(tst)) begin $display("error"); $stop; end
 `define CYCLE        #10 clk <= 1; #10 clk <= 0;
@@ -50,6 +51,7 @@ module tb();
 
    ram r(clk, rst, ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
+/*
    combine c(clk, rst,
            combine0_addr, combine0_dout, combine0_din,
            combine0_re, combine0_we, combine0_ready,
@@ -66,6 +68,9 @@ module tb();
 
    spm s(clk, rst, spm_addr, spm_din, spm_dout, spm_re, spm_we, spm_ready,
          split_addr, split_din, split_dout, split_re, split_we, split_ready);
+*/
+   cache c(clk, rst, spm_addr, spm_din, spm_dout, spm_re, spm_we, spm_ready,
+           ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
    initial begin
 

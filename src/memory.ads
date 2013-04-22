@@ -87,6 +87,4 @@ private
    procedure Advance(mem      : in out Memory_Type'Class;
                      cycles   : in Time_Type);
 
-   function Log2(n : Natural) return Natural;
-
 end Memory;
