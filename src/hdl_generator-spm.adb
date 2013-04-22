@@ -44,8 +44,8 @@ package body HDL_Generator.SPM is
       Line(r, "   .we(m" & name & "_we),");
       Line(r, "   .ready(m" & name & "_ready),");
       Line(r, "   .maddr(m" & oname & "_addr),");
-      Line(r, "   .mdin(m" & oname & "_din),");
-      Line(r, "   .mdout(m" & oname & "_dout),");
+      Line(r, "   .min(m" & oname & "_din),");
+      Line(r, "   .mout(m" & oname & "_dout),");
       Line(r, "   .mre(m" & oname & "_re),");
       Line(r, "   .mwe(m" & oname & "_we),");
       Line(r, "   .mready(m" & oname & "_ready));");

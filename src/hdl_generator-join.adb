@@ -14,8 +14,17 @@ package body HDL_Generator.Join is
                          mem        : Memory_Pointer;
                          word_bits  : Positive;
                          addr_bits  : Positive) return String is
-      r : Unbounded_String;
+      name     : constant String := "m" & To_String(Get_ID(mem.all));
+      addr_str : constant String := "[" & To_String(addr_bits - 1) & ":0]";
+      word_str : constant String := "[" & To_String(word_bits - 1) & ":0]";
+      r        : Unbounded_String;
    begin
+      Line(r, "wire " & addr_str & " " & name & "_addr;");
+      Line(r, "wire " & word_str & " " & name & "_din;");
+      Line(r, "wire " & word_str & " " & name & "_dout;");
+      Line(r, "wire " & name & "_re;");
+      Line(r, "wire " & name & "_we;");
+      Line(r, "wire " & name & "_ready;");
       return To_String(r);
    end Process_Join;
 
