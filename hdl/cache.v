@@ -111,10 +111,12 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    end
 
    localparam STATE_IDLE            = 0;  // Ready
-   localparam STATE_READ_MISS       = 1;  // Read from memory
-   localparam STATE_WRITE_FILL      = 2;  // Read from memory for a write
-   localparam STATE_WRITEBACK_READ  = 3;  // Writeback for a read
-   localparam STATE_WRITEBACK_WRITE = 4;  // Writeback for a write
+   localparam STATE_READ            = 1;  // Start a read.
+   localparam STATE_WRITE           = 2;  // Start a write.
+   localparam STATE_READ_MISS       = 3;  // Read from memory
+   localparam STATE_WRITE_FILL      = 4;  // Read from memory for a write
+   localparam STATE_WRITEBACK_READ  = 5;  // Writeback for a read
+   localparam STATE_WRITEBACK_WRITE = 6;  // Writeback for a write
    localparam STATE_BITS            = 3;
 
    reg [31:0] transfer_count;
@@ -124,15 +126,18 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    reg [STATE_BITS-1:0] state;
    reg [STATE_BITS-1:0] next_state;
    wire is_idle = state == STATE_IDLE;
-   wire do_read  = is_idle && re;
-   wire do_write = is_idle && we;
    always @(*) begin
       if (rst) begin
          next_state <= STATE_IDLE;
       end else begin
          case (state)
             STATE_IDLE: // Idle (ready for a read/write).
-               if (do_read) begin
+               if (re) begin
+                  next_state <= STATE_READ;
+               end else if (we) begin
+                  next_state <= STATE_WRITE;
+               end
+            STATE_READ: // Process a read.
                   if (is_hit) begin
                      next_state <= STATE_IDLE;
                   end else if (oldest_dirty) begin
@@ -140,7 +145,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
                   end else begin
                      next_state <= STATE_READ_MISS;
                   end
-               end else if (do_write) begin
+            STATE_WRITE: // Process a write.
                   if (is_hit) begin
                      next_state <= STATE_IDLE;
                   end else if (!oldest_dirty) begin
@@ -149,7 +154,6 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
                   end else begin
                      next_state <= STATE_WRITEBACK_WRITE;
                   end
-               end
             STATE_READ_MISS: // Read miss; fill line.
                if (mready && transfer_done) next_state <= STATE_IDLE;
             STATE_WRITE_FILL: // Write miss; fill line.
@@ -182,14 +186,14 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    end
 
    // Build up a line used for cache accesses.
-   wire load_mem = state == STATE_WRITEBACK_WRITE
-                 | state == STATE_WRITEBACK_READ
-                 | state == STATE_READ_MISS
-                 | state == STATE_WRITE_FILL;
-   wire write_line = state == STATE_WRITEBACK_WRITE
-                   | state == STATE_WRITEBACK_READ
-                   | do_write;
-   wire update_age = do_read | do_write;
+   wire load_mem = next_state == STATE_WRITEBACK_WRITE
+                 | next_state == STATE_WRITEBACK_READ
+                 | next_state == STATE_READ_MISS
+                 | next_state == STATE_WRITE_FILL;
+   wire write_line = next_state == STATE_WRITEBACK_WRITE
+                   | next_state == STATE_WRITEBACK_READ
+                   | next_state == STATE_WRITE;
+   wire update_age = state == STATE_READ | state == STATE_WRITE;
    wire [ROW_BITS-1:0] updated_row;
    genvar row_i;
    genvar row_w;
@@ -224,7 +228,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    always @(posedge clk) begin
       if (rst) begin
          row <= 0;
-      end else if (next_state == STATE_IDLE) begin
+      end else if (state == STATE_IDLE) begin
          row <= data[current_index];
 $display("LOAD %x (%x)", current_index, data[current_index]);
       end else begin
@@ -234,7 +238,7 @@ $display("UPDATE: %x", updated_row);
    end
 
    // Update the cache.
-   wire write_hit = do_write && (is_hit || !oldest_dirty);
+   wire write_hit = next_state == STATE_WRITE && (is_hit || !oldest_dirty);
    wire write_ok  = state == STATE_WRITEBACK_WRITE && mready && transfer_done;
    wire fill_ok   = state == STATE_READ_MISS && mready && transfer_done;
    always @(posedge clk) begin
@@ -285,7 +289,7 @@ $display("WRITE %x (%x)", current_index, updated_row);
    assign mout = is_writeback ? oldest_words[transfer_count] : din;
 
    // Drive the ready bit.
-   assign ready = next_state == STATE_IDLE;
+   assign ready = state == STATE_IDLE;
 
    // Drive dout.
    wire [WORD_WIDTH-1:0] words [0:LINE_SIZE-1];

@@ -107,10 +107,14 @@ module tb();
       // Write a value to the scratchpad.
       `CHECK( mem_ready, "not ready after reset" )
       `WRITE( 1, 64'h0123456789abcdef )
+      `CHECK( !mem_ready, "ready too soon after first write [1]" )
+      `CYCLE
       `CHECK( mem_ready, "not ready after first write [1]" )
 
       // Make sure the write took (read; hit).
       `READ( 1 )
+      `CHECK( !mem_ready, "ready too soon after read [1]" )
+      `CYCLE
       `CHECK( mem_ready, "not ready after read [1]" )
 $display("data: %x", mem_dout);
       `CHECK( mem_dout === 64'h0123456789abcdef, "invalid data from read [1]" )
