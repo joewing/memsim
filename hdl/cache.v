@@ -42,7 +42,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    reg [ROW_BITS-1:0] row;
    reg  [ROW_BITS-1:0] data [0:LINE_COUNT-1];
    wire [INDEX_BITS-1:0] current_index = addr[INDEX_BITS-1:0];
-   wire [TAG_BITS-1:0] current_tag = addr[ADDR_WIDTH-1:ADDR_WIDTH-TAG_BITS];
+   wire [TAG_BITS-1:0] current_tag = addr[ADDR_WIDTH-1:ADDR_WIDTH-TAG_BITS+1];
    wire [31:0] line_offset = addr & (LINE_SIZE - 1);
 
    // Break out fields of the current row.
@@ -86,21 +86,21 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    reg                  is_hit;
    reg [31:0] wayi;
    always @(*) begin
-      oldest_addr    <= 0;
+      oldest_addr    <= {tag[0], current_index} << (LINE_SIZE - 1);
       oldest_way     <= 0;
-      oldest_line    <= 0;
-      oldest_dirty   <= 0;
-      oldest_age     <= 0;
+      oldest_line    <= line[0];
+      oldest_dirty   <= dirty[0];
+      oldest_age     <= age[0];
       hit_way        <= 0;
       hit_line       <= 0;
       is_hit         <= 0;
       for (wayi = 0; wayi < ASSOCIATIVITY; wayi = wayi + 1) begin
-         if (oldest_age <= age[wayi]) begin
+         if (oldest_age < age[wayi]) begin
             oldest_age     <= age[wayi];
             oldest_way     <= wayi;
             oldest_dirty   <= dirty[wayi];
             oldest_line    <= line[wayi];
-            oldest_addr    <= {current_index, tag[wayi]} << (LINE_SIZE - 1);
+            oldest_addr    <= {tag[wayi], current_index} << (LINE_SIZE - 1);
          end
          if (current_tag == tag[wayi]) begin
             hit_way        <= wayi;
@@ -148,11 +148,11 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
             STATE_WRITE: // Process a write.
                   if (is_hit) begin
                      next_state <= STATE_IDLE;
-                  end else if (!oldest_dirty) begin
+                  end else if (oldest_dirty) begin
+                     next_state <= STATE_WRITEBACK_WRITE;
+                  end else begin
                      next_state <= LINE_SIZE > 1 ? STATE_WRITE_FILL
                                                  : STATE_IDLE;
-                  end else begin
-                     next_state <= STATE_WRITEBACK_WRITE;
                   end
             STATE_READ_MISS: // Read miss; fill line.
                if (mready && transfer_done) next_state <= STATE_IDLE;
@@ -228,7 +228,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    always @(posedge clk) begin
       if (rst) begin
          row <= 0;
-      end else if (state == STATE_IDLE) begin
+      end else if (next_state == STATE_IDLE) begin
          row <= data[current_index];
 $display("LOAD %x (%x)", current_index, data[current_index]);
       end else begin
@@ -238,7 +238,7 @@ $display("UPDATE: %x", updated_row);
    end
 
    // Update the cache.
-   wire write_hit = next_state == STATE_WRITE && (is_hit || !oldest_dirty);
+   wire write_hit = next_state == STATE_WRITE && (is_hit || oldest_dirty);
    wire write_ok  = state == STATE_WRITEBACK_WRITE && mready && transfer_done;
    wire fill_ok   = state == STATE_READ_MISS && mready && transfer_done;
    always @(posedge clk) begin

@@ -122,19 +122,19 @@ $display("data: %x", mem_dout);
       `CYCLE
 
       // Write a value to the RAM (conflict).
-      `WRITE( 257, 123 )
+      `WRITE( 259, 123 )
       for (i = 0; i < 100; i = i + 1) begin
-         `CHECK( !mem_ready, "ready too soon after write [257]" )
+         `CHECK( !mem_ready, "ready too soon after write [259]" )
          `CYCLE
       end
-      `CHECK( mem_ready, "not ready after write [257]" )
+      `CHECK( mem_ready, "not ready after write [259]" )
 
       // Read the value from RAM (hit).
-      `READ( 257 )
+      `READ( 259 )
       `CYCLE
-      `CHECK( mem_ready, "not ready after read [257]")
+      `CHECK( mem_ready, "not ready after read [259]")
 $display("DATA: %x", mem_dout);
-      `CHECK( mem_dout === 123, "invalid data from read [257]" )
+      `CHECK( mem_dout === 123, "invalid data from read [259]" )
 
       $display("Test complete");
 
