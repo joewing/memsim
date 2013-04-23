@@ -13,14 +13,16 @@
 
 `define CYCLE        #10 clk <= 1; #10 clk <= 0;
 
+`define WAIT_READY while (!mem_ready) begin `CYCLE end
+
 `define WRITE( addr, data ) \
-   while (!mem_ready) begin `CYCLE end \
+   `WAIT_READY \
    mem_addr <= addr; mem_din <= data; mem_we <= 1; \
    `CYCLE \
    mem_we <= 0;
 
 `define READ( addr ) \
-   while (!mem_ready) begin `CYCLE end \
+   `WAIT_READY \
    mem_addr <= addr; mem_re <= 1; \
    `CYCLE \
    mem_re <= 0;
@@ -116,25 +118,44 @@ module tb();
       `CHECK( !mem_ready, "ready too soon after read [1]" )
       `CYCLE
       `CHECK( mem_ready, "not ready after read [1]" )
-$display("data: %x", mem_dout);
       `CHECK( mem_dout === 64'h0123456789abcdef, "invalid data from read [1]" )
       `CYCLE
       `CYCLE
 
       // Write a value to the RAM (conflict).
-      `WRITE( 259, 123 )
-      for (i = 0; i < 100; i = i + 1) begin
-         `CHECK( !mem_ready, "ready too soon after write [259]" )
+      `WRITE( 257, 123 )
+      for (i = 0; i < 102; i = i + 1) begin
+         `CHECK( !mem_ready, "ready too soon after write [257]" )
          `CYCLE
       end
-      `CHECK( mem_ready, "not ready after write [259]" )
+      `CHECK( mem_ready, "not ready after write [257]" )
 
       // Read the value from RAM (hit).
-      `READ( 259 )
+      `READ( 257 )
       `CYCLE
-      `CHECK( mem_ready, "not ready after read [259]")
-$display("DATA: %x", mem_dout);
-      `CHECK( mem_dout === 123, "invalid data from read [259]" )
+      `CHECK( mem_ready, "not ready after read [257]")
+      `CHECK( mem_dout === 123, "invalid data from read [257]" )
+
+      // Make sure the first write is still there (read; miss).
+      `WAIT_READY
+      `READ( 1 )
+      `WAIT_READY
+      `CHECK( mem_dout === 64'h0123456789abcdef, "invalid data from read [1]" )
+
+      // Write another value.
+      `WRITE( 256, 321 )
+      `WAIT_READY
+
+      // Make sure everything is still ok.
+      `READ( 257 )
+      `WAIT_READY
+      `CHECK( mem_dout === 123, "invalid data from read [257]" )
+      `READ( 1 )
+      `WAIT_READY
+      `CHECK( mem_dout === 64'h0123456789abcdef, "invalid data from read [1]" )
+      `READ( 256 )
+      `WAIT_READY
+      `CHECK( mem_dout === 321, "invalid data from read [256]" )
 
       $display("Test complete");
 

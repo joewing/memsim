@@ -130,6 +130,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
       if (rst) begin
          next_state <= STATE_IDLE;
       end else begin
+         next_state <= state;
          case (state)
             STATE_IDLE: // Idle (ready for a read/write).
                if (re) begin
@@ -188,10 +189,11 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    // Build up a line used for cache accesses.
    wire load_mem = next_state == STATE_WRITEBACK_WRITE
                  | next_state == STATE_WRITEBACK_READ
-                 | next_state == STATE_READ_MISS
+                 | state == STATE_READ_MISS
                  | next_state == STATE_WRITE_FILL;
-   wire write_line = next_state == STATE_WRITEBACK_WRITE
-                   | next_state == STATE_WRITEBACK_READ
+   wire write_line = state == STATE_WRITEBACK_WRITE
+                   | state == STATE_WRITEBACK_READ
+                   | state == STATE_READ_MISS
                    | next_state == STATE_WRITE;
    wire update_age = state == STATE_READ | state == STATE_WRITE;
    wire [ROW_BITS-1:0] updated_row;
@@ -225,27 +227,26 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          end
       end
    endgenerate
+   wire update_read = (state == STATE_READ_MISS && mready);
+   wire update_write = (state == STATE_WRITE && !oldest_dirty);
+   wire update_row = update_read | update_write;
    always @(posedge clk) begin
       if (rst) begin
          row <= 0;
-      end else if (next_state == STATE_IDLE) begin
+      end else if (state == STATE_IDLE && next_state != state) begin
          row <= data[current_index];
-$display("LOAD %x (%x)", current_index, data[current_index]);
-      end else begin
-$display("UPDATE: %x", updated_row);
+      end else if (update_row) begin
          row <= updated_row;
       end
    end
 
    // Update the cache.
-   wire write_hit = next_state == STATE_WRITE && (is_hit || oldest_dirty);
+   wire write_hit = next_state == STATE_WRITE && (is_hit || !oldest_dirty);
    wire write_ok  = state == STATE_WRITEBACK_WRITE && mready && transfer_done;
    wire fill_ok   = state == STATE_READ_MISS && mready && transfer_done;
    always @(posedge clk) begin
       if (!rst) begin
-$display("%d %d %d (%x)", write_hit, write_ok, fill_ok, updated_row);
          if (write_hit | write_ok | fill_ok) begin
-$display("WRITE %x (%x)", current_index, updated_row);
             data[current_index] <= updated_row;
          end
       end
