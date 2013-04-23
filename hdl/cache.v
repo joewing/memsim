@@ -188,7 +188,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
                  | state == STATE_WRITE_FILL;
    wire write_line = state == STATE_WRITEBACK_WRITE
                    | state == STATE_WRITEBACK_READ
-                   | state == STATE_WRITE;
+                   | do_write;
    wire update_age = do_read | do_write;
    wire [ROW_BITS-1:0] updated_row;
    genvar row_i;
@@ -234,7 +234,7 @@ $display("UPDATE: %x", updated_row);
    end
 
    // Update the cache.
-   wire write_hit = state == STATE_WRITE && (is_hit || !oldest_dirty);
+   wire write_hit = do_write && (is_hit || !oldest_dirty);
    wire write_ok  = state == STATE_WRITEBACK_WRITE && mready && transfer_done;
    wire fill_ok   = state == STATE_READ_MISS && mready && transfer_done;
    always @(posedge clk) begin
