@@ -157,6 +157,17 @@ module tb();
       `WAIT_READY
       `CHECK( mem_dout === 321, "invalid data from read [256]" )
 
+      // Overwrite the value at 1.
+      `WRITE( 1, 5 )
+      `WAIT_READY
+      `CHECK( mem_dout === 123, "invalid data from read [257]" )
+      `READ( 1 )
+      `WAIT_READY
+      `CHECK( mem_dout === 1, "invalid data from read [1]" )
+      `READ( 256 )
+      `WAIT_READY
+      `CHECK( mem_dout === 321, "invalid data from read [256]" )
+
       $display("Test complete");
 
    end
