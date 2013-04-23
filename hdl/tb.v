@@ -5,8 +5,25 @@
 `include "combine.v"
 `include "cache.v"
 
-`define CHECK( tst ) if (!(tst)) begin $display("error"); $stop; end
+`define CHECK( tst, msg ) \
+   if (!(tst)) begin \
+      $display("assertion failure: %s", msg); \
+      $finish(1); \
+   end
+
 `define CYCLE        #10 clk <= 1; #10 clk <= 0;
+
+`define WRITE( addr, data ) \
+   while (!mem_ready) begin `CYCLE end \
+   mem_addr <= addr; mem_din <= data; mem_we <= 1; \
+   `CYCLE \
+   mem_we <= 0;
+
+`define READ( addr ) \
+   while (!mem_ready) begin `CYCLE end \
+   mem_addr <= addr; mem_re <= 1; \
+   `CYCLE \
+   mem_re <= 0;
 
 module tb();
 
@@ -40,12 +57,12 @@ module tb();
    wire split_we;
    wire split_ready;
 
-   reg [63:0] spm_addr;
-   reg [63:0] spm_din;
-   wire [63:0] spm_dout;
-   reg spm_re;
-   reg spm_we;
-   wire spm_ready;
+   reg [63:0] mem_addr;
+   reg [63:0] mem_din;
+   wire [63:0] mem_dout;
+   reg mem_re;
+   reg mem_we;
+   wire mem_ready;
 
    integer i;
 
@@ -66,10 +83,10 @@ module tb();
          combine1_addr, combine1_din, combine1_dout,
          combine1_re, combine1_we, combine1_ready);
 
-   spm s(clk, rst, spm_addr, spm_din, spm_dout, spm_re, spm_we, spm_ready,
+   spm s(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
          split_addr, split_din, split_dout, split_re, split_we, split_ready);
 */
-   cache c(clk, rst, spm_addr, spm_din, spm_dout, spm_re, spm_we, spm_ready,
+   cache c(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
            ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
    initial begin
@@ -78,50 +95,42 @@ module tb();
 
       clk <= 0;
       rst <= 1;
-      spm_addr <= 0;
-      spm_din <= 0;
-      spm_re <= 0;
-      spm_we <= 0;
+      mem_addr <= 0;
+      mem_din <= 0;
+      mem_re <= 0;
+      mem_we <= 0;
       `CYCLE
       rst <= 0;
       `CYCLE
 
-      `CHECK( spm_ready )
-      `CHECK( ram_ready )
 
       // Write a value to the scratchpad.
-      spm_addr <= 1;
-      spm_din  <= 64'h0123456789abcdef;
-      spm_we   <= 1;
+      `CHECK( mem_ready, "not ready after reset" )
+      `WRITE( 1, 64'h0123456789abcdef )
+      `CHECK( mem_ready, "not ready after first write [1]" )
+
+      // Make sure the write took (read; hit).
+      `READ( 1 )
+      `CHECK( mem_ready, "not ready after read [1]" )
+$display("data: %x", mem_dout);
+      `CHECK( mem_dout === 64'h0123456789abcdef, "invalid data from read [1]" )
       `CYCLE
-      spm_we   <= 0;
-
-      `CHECK( spm_ready )
-      `CHECK( ram_ready )
-
-      // Make sure the write took.
-      spm_addr <= 1;
-      spm_din  <= 0;
-      spm_re   <= 1;
       `CYCLE
-      spm_re   <= 0;
 
-      `CHECK( spm_ready )
-      `CHECK( ram_ready )
-      `CHECK( spm_dout == 64'h0123456789abcdef )
-
-      // Write a value to the RAM.
-      spm_addr <= 257;
-      spm_din  <= 123;
-      spm_we   <= 1;
-      `CYCLE
-      spm_we   <= 0;
-
+      // Write a value to the RAM (conflict).
+      `WRITE( 257, 123 )
       for (i = 0; i < 100; i = i + 1) begin
-         `CHECK( spm_ready == 0 )
+         `CHECK( !mem_ready, "ready too soon after write [257]" )
          `CYCLE
       end
-      `CHECK( spm_ready == 1 )
+      `CHECK( mem_ready, "not ready after write [257]" )
+
+      // Read the value from RAM (hit).
+      `READ( 257 )
+      `CYCLE
+      `CHECK( mem_ready, "not ready after read [257]")
+$display("DATA: %x", mem_dout);
+      `CHECK( mem_dout === 123, "invalid data from read [257]" )
 
       $display("Test complete");
 
