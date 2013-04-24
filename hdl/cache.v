@@ -194,9 +194,12 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    wire write_line = state == STATE_WRITEBACK_WRITE
                    | state == STATE_WRITEBACK_READ
                    | state == STATE_READ_MISS
-                   | next_state == STATE_WRITE;
+                   | state == STATE_WRITE;
    wire update_age = state == STATE_READ | state == STATE_WRITE;
    wire [ROW_BITS-1:0] updated_row;
+   wire [31:0] write_way    = is_hit ? hit_way : oldest_way;
+   wire [31:0] write_offset = next_state == STATE_WRITE
+                            ? line_offset : transfer_count;
    genvar row_i;
    genvar row_w;
    generate
@@ -221,14 +224,14 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
             localparam line_start = row_w * WAY_BITS + LINE_OFFSET;
             localparam word_start = line_start + row_i * WORD_WIDTH;
             assign updated_row[word_start+WORD_WIDTH-1:word_start]
-               = (row_w == hit_way && row_i == transfer_count && write_line)
+               = (row_w == write_way && row_i == write_offset && write_line)
                ? (load_mem ? min : din)
                : row[word_start+WORD_WIDTH-1:word_start];
          end
       end
    endgenerate
-   wire update_read = (state == STATE_READ_MISS && mready);
-   wire update_write = (state == STATE_WRITE && !oldest_dirty);
+   wire update_read = state == STATE_READ_MISS && mready;
+   wire update_write = state == STATE_WRITE && !oldest_dirty;
    wire update_row = update_read | update_write;
    always @(posedge clk) begin
       if (rst) begin
@@ -241,7 +244,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    end
 
    // Update the cache.
-   wire write_hit = next_state == STATE_WRITE && (is_hit || !oldest_dirty);
+   wire write_hit = state == STATE_WRITE && (is_hit || !oldest_dirty);
    wire write_ok  = state == STATE_WRITEBACK_WRITE && mready && transfer_done;
    wire fill_ok   = state == STATE_READ_MISS && mready && transfer_done;
    always @(posedge clk) begin

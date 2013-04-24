@@ -119,8 +119,6 @@ module tb();
       `CYCLE
       `CHECK( mem_ready, "not ready after read [1]" )
       `CHECK( mem_dout === 64'h0123456789abcdef, "invalid data from read [1]" )
-      `CYCLE
-      `CYCLE
 
       // Write a value to the RAM (conflict).
       `WRITE( 257, 123 )
@@ -137,14 +135,12 @@ module tb();
       `CHECK( mem_dout === 123, "invalid data from read [257]" )
 
       // Make sure the first write is still there (read; miss).
-      `WAIT_READY
       `READ( 1 )
       `WAIT_READY
       `CHECK( mem_dout === 64'h0123456789abcdef, "invalid data from read [1]" )
 
       // Write another value.
       `WRITE( 256, 321 )
-      `WAIT_READY
 
       // Make sure everything is still ok.
       `READ( 257 )
@@ -159,11 +155,12 @@ module tb();
 
       // Overwrite the value at 1.
       `WRITE( 1, 5 )
-      `WAIT_READY
-      `CHECK( mem_dout === 123, "invalid data from read [257]" )
       `READ( 1 )
       `WAIT_READY
-      `CHECK( mem_dout === 1, "invalid data from read [1]" )
+      `CHECK( mem_dout === 5, "invalid data from read [1]" )
+      `READ( 257 )
+      `WAIT_READY
+      `CHECK( mem_dout === 123, "invalid data from read [257]" )
       `READ( 256 )
       `WAIT_READY
       `CHECK( mem_dout === 321, "invalid data from read [256]" )
