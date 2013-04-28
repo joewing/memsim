@@ -30,12 +30,13 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    localparam TAG_BITS     = ADDR_WIDTH - LINE_COUNT_BITS + ASSOCIATIVITY;
    localparam AGE_BITS     = ASSOCIATIVITY - 1;
    localparam LINE_BITS    = LINE_SIZE * WORD_WIDTH;
-   localparam WAY_BITS     = LINE_BITS + TAG_BITS + AGE_BITS + 1;
+   localparam WAY_BITS     = LINE_BITS + TAG_BITS + AGE_BITS + 1 + 1;
    localparam ROW_BITS     = WAY_BITS * ASSOCIATIVITY;
    localparam LINE_OFFSET  = 0;
    localparam TAG_OFFSET   = LINE_OFFSET + LINE_BITS;
    localparam AGE_OFFSET   = TAG_OFFSET + TAG_BITS;
    localparam DIRTY_OFFSET = AGE_OFFSET + AGE_BITS;
+   localparam VALID_OFFSET = DIRTY_OFFSET + 1;
    localparam MAX_AGE      = (1 << AGE_BITS) - 1;
    localparam ADDR_MASK    = ~(LINE_SIZE - 1);
 
@@ -48,19 +49,22 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    // Break out fields of the current row.
    wire [LINE_BITS-1:0] line  [0:ASSOCIATIVITY-1];
    wire [TAG_BITS-1:0]  tag   [0:ASSOCIATIVITY-1];
-   wire                 dirty [0:ASSOCIATIVITY-1];
    wire [AGE_BITS-1:0]  age   [0:ASSOCIATIVITY-1];
+   wire                 dirty [0:ASSOCIATIVITY-1];
+   wire                 valid [0:ASSOCIATIVITY-1];
    genvar i;
    generate
       for (i = 0; i < ASSOCIATIVITY; i = i + 1) begin
          localparam offset       = i * WAY_BITS;
          localparam line_start   = offset + LINE_OFFSET;
          localparam tag_start    = offset + TAG_OFFSET;
-         localparam dirty_start  = offset + DIRTY_OFFSET;
          localparam age_start    = offset + AGE_OFFSET;
-         assign line[i]    = row[line_start+LINE_BITS-1:line_start];
-         assign tag[i]     = row[tag_start+TAG_BITS-1:tag_start];
-         assign dirty[i]   = row[dirty_start];
+         localparam dirty_start  = offset + DIRTY_OFFSET;
+         localparam valid_start  = offset + VALID_OFFSET;
+         assign line[i]          = row[line_start+LINE_BITS-1:line_start];
+         assign tag[i]           = row[tag_start+TAG_BITS-1:tag_start];
+         assign dirty[i]         = row[dirty_start];
+         assign valid[i]         = row[valid_start];
          if (AGE_BITS > 0) begin
             assign age[i]  = row[age_start+AGE_BITS-1:age_start];
          end
@@ -104,7 +108,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          end
          if (current_tag == tag[wayi]) begin
             hit_way        <= wayi;
-            is_hit         <= 1;
+            is_hit         <= valid[wayi];
             hit_line       <= line[wayi];
          end
       end
@@ -120,7 +124,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    localparam STATE_BITS            = 3;
 
    reg [31:0] transfer_count;
-   wire transfer_done = transfer_count == 0;
+   wire transfer_done = mready && transfer_count == 0 && !mwe && !mre;
 
    // Determine the next state.
    reg [STATE_BITS-1:0] state;
@@ -156,13 +160,13 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
                                                  : STATE_IDLE;
                   end
             STATE_READ_MISS: // Read miss; fill line.
-               if (mready && transfer_done) next_state <= STATE_IDLE;
+               if (transfer_done) next_state <= STATE_IDLE;
             STATE_WRITE_FILL: // Write miss; fill line.
-               if (mready && transfer_done) next_state <= STATE_IDLE;
+               if (transfer_done) next_state <= STATE_IDLE;
             STATE_WRITEBACK_READ: // Read miss; writeback dirty slot.
-               if (mready && transfer_done) next_state <= STATE_READ_MISS;
+               if (transfer_done) next_state <= STATE_READ_MISS;
             STATE_WRITEBACK_WRITE: // Write miss; writeback dirty slot.
-               if (mready && transfer_done) next_state <= STATE_IDLE;
+               if (transfer_done) next_state <= STATE_IDLE;
          endcase
       end
    end
@@ -178,7 +182,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
       if (rst) begin
          transfer_count <= 0;
       end else begin
-         if (transfer_count == 0 && mready) begin
+         if (transfer_done) begin
             transfer_count <= LINE_SIZE - 1;
          end else if (mready) begin
             transfer_count <= transfer_count - 1;
@@ -207,12 +211,14 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          localparam offset       = row_w * WAY_BITS;
          localparam line_start   = offset + LINE_OFFSET;
          localparam tag_start    = offset + TAG_OFFSET;
-         localparam dirty_start  = offset + DIRTY_OFFSET;
          localparam age_start    = offset + AGE_OFFSET;
+         localparam dirty_start  = offset + DIRTY_OFFSET;
+         localparam valid_start  = offset + VALID_OFFSET;
          assign updated_row[tag_start+TAG_BITS-1:tag_start]
             = row_w == oldest_way ? current_tag : tag[row_w];
          assign updated_row[dirty_start]
             = row_w == oldest_way ? !load_mem : dirty[row_w];
+         assign updated_row[valid_start] = 1;
          if (AGE_BITS > 0) begin
             assign updated_row[age_start+AGE_BITS-1:age_start]
                = update_age ? (row_w == oldest_way ? 0 : (age[row_w] < MAX_AGE
@@ -245,8 +251,8 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
 
    // Update the cache.
    wire write_hit = state == STATE_WRITE && (is_hit || !oldest_dirty);
-   wire write_ok  = state == STATE_WRITEBACK_WRITE && mready && transfer_done;
-   wire fill_ok   = state == STATE_READ_MISS && mready && transfer_done;
+   wire write_ok  = state == STATE_WRITEBACK_WRITE && transfer_done;
+   wire fill_ok   = state == STATE_READ_MISS && transfer_done;
    always @(posedge clk) begin
       if (!rst) begin
          if (write_hit | write_ok | fill_ok) begin
@@ -267,11 +273,11 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
       end else begin
          mre <= 0;
          mwe <= 0;
-         if (state != next_state) begin
+         if (state != next_state || transfer_count > 0) begin
             if (is_miss) begin
-               mre <= 1;
+               mre <= mready;
             end else if (is_writeback) begin
-               mwe <= 1;
+               mwe <= mready;
             end
          end
       end

@@ -88,8 +88,9 @@ module tb();
    spm s(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
          split_addr, split_din, split_dout, split_re, split_we, split_ready);
 */
-   cache c(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
-           ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
+   cache #(.LINE_SIZE(2))
+      c(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
+        ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
    initial begin
 
@@ -105,12 +106,11 @@ module tb();
       rst <= 0;
       `CYCLE
 
-
       // Write a value to the scratchpad.
       `CHECK( mem_ready, "not ready after reset" )
       `WRITE( 1, 64'h0123456789abcdef )
       `CHECK( !mem_ready, "ready too soon after first write [1]" )
-      `CYCLE
+      `WAIT_READY
       `CHECK( mem_ready, "not ready after first write [1]" )
 
       // Make sure the write took (read; hit).
