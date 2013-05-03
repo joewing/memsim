@@ -195,8 +195,10 @@ package body Benchmark.Trace is
                mdata.value := To_Address(ch);
                if mdata.value < 16 then
                   state := State_Address;
+                  data.pos := data.pos + 1;
+               else
+                  state := State_Action;
                end if;
-               data.pos := data.pos + 1;
             when State_Address =>
                value := To_Address(ch);
                if value < 16 then
@@ -277,6 +279,12 @@ package body Benchmark.Trace is
             consumer.Process(sdata, done);
             exit when done;
          end loop;
+         if not done then
+            sdata.buffer(sdata.buffer'First) := 0;
+            sdata.pos := sdata.buffer'First;
+            sdata.last := sdata.pos;
+            consumer.Process(sdata, done);
+         end if;
          pool.Release(sdata);
          pool.Reset;
          if count < benchmark.iterations then

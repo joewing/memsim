@@ -58,10 +58,8 @@ package body Memory.Container is
    begin
       if mem.mem /= null then
          Idle(mem.mem.all, cycles);
-         Advance(mem, cycles);
-      else
-         Advance(mem, cycles);
       end if;
+      Advance(mem, cycles);
    end Idle;
 
    procedure Start(mem : in out Container_Type'Class) is
