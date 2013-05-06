@@ -27,7 +27,8 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
 
    localparam LINE_COUNT   = 1 << LINE_COUNT_BITS;
    localparam INDEX_BITS   = LINE_COUNT_BITS;
-   localparam TAG_BITS     = ADDR_WIDTH - LINE_COUNT_BITS + ASSOCIATIVITY;
+   localparam TAG_BITS     = ADDR_WIDTH - LINE_COUNT_BITS * LINE_SIZE
+                           + ASSOCIATIVITY;
    localparam AGE_BITS     = ASSOCIATIVITY - 1;
    localparam LINE_BITS    = LINE_SIZE * WORD_WIDTH;
    localparam WAY_BITS     = LINE_BITS + TAG_BITS + AGE_BITS + 1 + 1;
@@ -42,7 +43,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
 
    reg [ROW_BITS-1:0] row;
    reg  [ROW_BITS-1:0] data [0:LINE_COUNT-1];
-   wire [INDEX_BITS-1:0] current_index = addr[INDEX_BITS-1:0];
+   wire [INDEX_BITS-1:0] current_index = addr / LINE_SIZE;
    wire [TAG_BITS-1:0] current_tag = addr[ADDR_WIDTH-1:ADDR_WIDTH-TAG_BITS+1];
    wire [31:0] line_offset = addr & (LINE_SIZE - 1);
 
@@ -90,7 +91,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    reg                  is_hit;
    reg [31:0] wayi;
    always @(*) begin
-      oldest_addr    <= {tag[0], current_index} << (LINE_SIZE - 1);
+      oldest_addr    <= {tag[0], current_index} * LINE_SIZE;
       oldest_way     <= 0;
       oldest_line    <= line[0];
       oldest_dirty   <= dirty[0];
@@ -104,7 +105,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
             oldest_way     <= wayi;
             oldest_dirty   <= dirty[wayi];
             oldest_line    <= line[wayi];
-            oldest_addr    <= {tag[wayi], current_index} << (LINE_SIZE - 1);
+            oldest_addr    <= {tag[wayi], current_index} * LINE_SIZE;
          end
          if (current_tag == tag[wayi]) begin
             hit_way        <= wayi;
@@ -124,6 +125,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    localparam STATE_BITS            = 3;
 
    reg [31:0] transfer_count;
+   reg [31:0] next_transfer_count;
    wire transfer_done = mready && transfer_count == 0 && !mwe && !mre;
 
    // Determine the next state.
@@ -178,15 +180,20 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    end
 
    // Update the transfer count.
+   always @(*) begin
+      if (transfer_done) begin
+         next_transfer_count <= LINE_SIZE - 1;
+      end else if (mready) begin
+         next_transfer_count <= transfer_count - 1;
+      end else begin
+         next_transfer_count <= transfer_count;
+      end
+   end
    always @(posedge clk) begin
       if (rst) begin
          transfer_count <= 0;
       end else begin
-         if (transfer_done) begin
-            transfer_count <= LINE_SIZE - 1;
-         end else if (mready) begin
-            transfer_count <= transfer_count - 1;
-         end
+         transfer_count <= next_transfer_count;
       end
    end
 
@@ -194,16 +201,14 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    wire load_mem = next_state == STATE_WRITEBACK_WRITE
                  | next_state == STATE_WRITEBACK_READ
                  | state == STATE_READ_MISS
-                 | next_state == STATE_WRITE_FILL;
-   wire write_line = state == STATE_WRITEBACK_WRITE
-                   | state == STATE_WRITEBACK_READ
-                   | state == STATE_READ_MISS
-                   | state == STATE_WRITE;
+                 | state == STATE_WRITE_FILL;
+   wire write_line = state == STATE_WRITE
+                   | state == STATE_WRITEBACK_WRITE
+                   | state == STATE_WRITE_FILL;
    wire update_age = state == STATE_READ | state == STATE_WRITE;
    wire [ROW_BITS-1:0] updated_row;
    wire [31:0] write_way    = is_hit ? hit_way : oldest_way;
-   wire [31:0] write_offset = next_state == STATE_WRITE
-                            ? line_offset : transfer_count;
+   wire [31:0] write_offset = load_mem ? transfer_count : line_offset;
    genvar row_i;
    genvar row_w;
    generate
@@ -230,14 +235,16 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
             localparam line_start = row_w * WAY_BITS + LINE_OFFSET;
             localparam word_start = line_start + row_i * WORD_WIDTH;
             assign updated_row[word_start+WORD_WIDTH-1:word_start]
-               = (row_w == write_way && row_i == write_offset && write_line)
-               ? (load_mem ? min : din)
-               : row[word_start+WORD_WIDTH-1:word_start];
+               = (row_w == write_way && row_i == transfer_count && load_mem)
+               ? min :
+                  ((row_w == write_way && row_i == line_offset && write_line)
+                  ? din : row[word_start+WORD_WIDTH-1:word_start]);
          end
       end
    endgenerate
-   wire update_read = state == STATE_READ_MISS && mready;
-   wire update_write = state == STATE_WRITE && !oldest_dirty;
+   wire update_read  = state == STATE_READ_MISS && mready;
+   wire update_write = (state == STATE_WRITE && !oldest_dirty)
+                     | (state == STATE_WRITE_FILL && mready);
    wire update_row = update_read | update_write;
    always @(posedge clk) begin
       if (rst) begin
@@ -251,7 +258,8 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
 
    // Update the cache.
    wire write_hit = state == STATE_WRITE && (is_hit || !oldest_dirty);
-   wire write_ok  = state == STATE_WRITEBACK_WRITE && transfer_done;
+   wire write_ok  = (state == STATE_WRITEBACK_WRITE && transfer_done)
+                  | (state == STATE_WRITE_FILL && mready);
    wire fill_ok   = state == STATE_READ_MISS && transfer_done;
    always @(posedge clk) begin
       if (!rst) begin
@@ -262,10 +270,6 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    end
 
    // Drive main memory read/write.
-   wire is_writeback = (next_state == STATE_WRITEBACK_READ)
-                     | (next_state == STATE_WRITEBACK_WRITE);
-   wire is_miss      = (next_state == STATE_READ_MISS)
-                     | (next_state == STATE_WRITE_FILL);
    always @(posedge clk) begin
       if (rst) begin
          mre <= 0;
@@ -274,18 +278,22 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          mre <= 0;
          mwe <= 0;
          if (state != next_state || transfer_count > 0) begin
-            if (is_miss) begin
-               mre <= mready;
-            end else if (is_writeback) begin
-               mwe <= mready;
-            end
+            case (next_state)
+               STATE_WRITEBACK_READ:   mwe <= mready;
+               STATE_WRITEBACK_WRITE:  mwe <= mready;
+               STATE_READ_MISS:        mre <= mready;
+               STATE_WRITE_FILL:
+                  mre <= mready && next_transfer_count != line_offset;
+            endcase
          end
       end
    end
 
    // Drive memory address.
+   wire is_writeback = (next_state == STATE_WRITEBACK_READ)
+                     | (next_state == STATE_WRITEBACK_WRITE);
    assign maddr = ((is_writeback ? oldest_addr : addr) & ADDR_MASK)
-                + transfer_count;
+                | transfer_count;
 
    // Drive memory data.
    wire [WORD_WIDTH-1:0] oldest_words[0:LINE_SIZE-1];

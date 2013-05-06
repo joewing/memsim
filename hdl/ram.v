@@ -4,7 +4,7 @@ module ram(clk, rst, addr, din, dout, re, we, ready);
    parameter SIZE       = 65536; // Size in words.
    parameter ADDR_WIDTH = 64;    // Size of address in bits.
    parameter WORD_WIDTH = 64;    // Size of a word in bits.
-   parameter LATENCY    = 100;   // Access latency in cycles.
+   parameter LATENCY    = 10;    // Access latency in cycles.
 
    input wire clk;
    input wire rst;
@@ -19,6 +19,13 @@ module ram(clk, rst, addr, din, dout, re, we, ready);
    reg [WORD_WIDTH-1:0] data [0:SIZE-1];
 
    reg [31:0] counter;
+
+   // Initialize the ram for simulation.
+   initial begin
+      for (counter = 0; counter < SIZE; counter = counter + 1) begin
+         data[counter] <= -1;
+      end
+   end
 
    always @(posedge clk) begin
       if (rst) begin

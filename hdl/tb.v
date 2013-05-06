@@ -16,12 +16,14 @@
 `define WAIT_READY while (!mem_ready) begin `CYCLE end
 
 `define WRITE( addr, data ) \
+   $display("write [0x%x] <- 0x%x", addr, data); \
    `WAIT_READY \
    mem_addr <= addr; mem_din <= data; mem_we <= 1; \
    `CYCLE \
    mem_we <= 0;
 
 `define READ( addr ) \
+   $display("read [0x%x]", addr); \
    `WAIT_READY \
    mem_addr <= addr; mem_re <= 1; \
    `CYCLE \
@@ -96,6 +98,7 @@ module tb();
 
       $dumpvars;
 
+      // Reset
       clk <= 0;
       rst <= 1;
       mem_addr <= 0;
@@ -105,9 +108,9 @@ module tb();
       `CYCLE
       rst <= 0;
       `CYCLE
-
-      // Write a value to the scratchpad.
       `CHECK( mem_ready, "not ready after reset" )
+
+      // Write a value.
       `WRITE( 1, 64'h0123456789abcdef )
       `CHECK( !mem_ready, "ready too soon after first write [1]" )
       `WAIT_READY
@@ -119,13 +122,13 @@ module tb();
       `CYCLE
       `CHECK( mem_ready, "not ready after read [1]" )
       `CHECK( mem_dout === 64'h0123456789abcdef, "invalid data from read [1]" )
+      `READ( 0 )
+      `WAIT_READY
+      `CHECK( mem_dout === -1, "invalid data from read [0]" )
 
       // Write a value to the RAM (conflict).
       `WRITE( 257, 123 )
-      for (i = 0; i < 102; i = i + 1) begin
-         `CHECK( !mem_ready, "ready too soon after write [257]" )
-         `CYCLE
-      end
+      `WAIT_READY
       `CHECK( mem_ready, "not ready after write [257]" )
 
       // Read the value from RAM (hit).
