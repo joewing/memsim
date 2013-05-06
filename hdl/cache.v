@@ -4,9 +4,9 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
 
    parameter ADDR_WIDTH       = 64;    // Size of address in bits.
    parameter WORD_WIDTH       = 64;    // Size of a word in bits.
-   parameter LINE_SIZE        = 1;     // Words per line.
+   parameter LINE_SIZE_BITS   = 0;     // 2^n words per line.
    parameter LINE_COUNT_BITS  = 8;     // 2^n cache lines.
-   parameter ASSOCIATIVITY    = 1;     // Associativity.
+   parameter ASSOC_BITS       = 0;     // 2^n associativity.
 
    input wire clk;
    input wire rst;
@@ -25,27 +25,31 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    output reg  mwe;
    input  wire mready;
 
-   localparam LINE_COUNT   = 1 << LINE_COUNT_BITS;
-   localparam INDEX_BITS   = LINE_COUNT_BITS;
-   localparam TAG_BITS     = ADDR_WIDTH - LINE_COUNT_BITS * LINE_SIZE
-                           + ASSOCIATIVITY;
-   localparam AGE_BITS     = ASSOCIATIVITY - 1;
-   localparam LINE_BITS    = LINE_SIZE * WORD_WIDTH;
-   localparam WAY_BITS     = LINE_BITS + TAG_BITS + AGE_BITS + 1 + 1;
-   localparam ROW_BITS     = WAY_BITS * ASSOCIATIVITY;
-   localparam LINE_OFFSET  = 0;
-   localparam TAG_OFFSET   = LINE_OFFSET + LINE_BITS;
-   localparam AGE_OFFSET   = TAG_OFFSET + TAG_BITS;
-   localparam DIRTY_OFFSET = AGE_OFFSET + AGE_BITS;
-   localparam VALID_OFFSET = DIRTY_OFFSET + 1;
-   localparam MAX_AGE      = (1 << AGE_BITS) - 1;
-   localparam ADDR_MASK    = ~(LINE_SIZE - 1);
+   localparam ASSOCIATIVITY   = 1 << ASSOC_BITS;
+   localparam LINE_SIZE       = 1 << LINE_SIZE_BITS;
+   localparam LINE_COUNT      = 1 << LINE_COUNT_BITS;
+   localparam INDEX_BITS      = LINE_COUNT_BITS;
+   localparam TAG_BITS        = ADDR_WIDTH - INDEX_BITS - LINE_SIZE_BITS
+                              + ASSOC_BITS;
+   localparam AGE_BITS        = ASSOC_BITS;
+   localparam LINE_BITS       = WORD_WIDTH << LINE_SIZE_BITS;
+   localparam WAY_BITS        = LINE_BITS + TAG_BITS + AGE_BITS + 1 + 1;
+   localparam ROW_BITS        = WAY_BITS << ASSOC_BITS;
+   localparam LINE_OFFSET     = 0;
+   localparam TAG_OFFSET      = LINE_OFFSET + LINE_BITS;
+   localparam AGE_OFFSET      = TAG_OFFSET + TAG_BITS;
+   localparam DIRTY_OFFSET    = AGE_OFFSET + AGE_BITS;
+   localparam VALID_OFFSET    = DIRTY_OFFSET + 1;
+   localparam MAX_AGE         = (1 << AGE_BITS) - 1;
+   localparam MASK_BITS       = ADDR_WIDTH - LINE_SIZE_BITS;
+   localparam ADDR_MASK       = {{MASK_BITS{1'b1}},{LINE_SIZE_BITS{1'b0}}};
+   localparam TAG_SHIFT       = ADDR_WIDTH - TAG_BITS;
 
    reg [ROW_BITS-1:0] row;
    reg  [ROW_BITS-1:0] data [0:LINE_COUNT-1];
-   wire [INDEX_BITS-1:0] current_index = addr / LINE_SIZE;
-   wire [TAG_BITS-1:0] current_tag = addr[ADDR_WIDTH-1:ADDR_WIDTH-TAG_BITS+1];
-   wire [31:0] line_offset = addr & (LINE_SIZE - 1);
+   wire [INDEX_BITS-1:0] current_index = addr >> LINE_SIZE_BITS;
+   wire [TAG_BITS-1:0] current_tag = addr >> TAG_SHIFT;
+   wire [LINE_SIZE_BITS:0] line_offset = addr & (LINE_SIZE - 1);
 
    // Break out fields of the current row.
    wire [LINE_BITS-1:0] line  [0:ASSOCIATIVITY-1];
@@ -82,30 +86,30 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
 
    // Determine the line to evict if necessry and if we have a hit.
    reg [ADDR_WIDTH-1:0] oldest_addr;
-   reg [31:0]           oldest_way;
+   reg [ASSOC_BITS:0]   oldest_way;
    reg [LINE_BITS-1:0]  oldest_line;
    reg                  oldest_dirty;
    reg [AGE_BITS-1:0]   oldest_age;
-   reg [31:0]           hit_way;
+   reg [ASSOC_BITS:0]   hit_way;
    reg [LINE_BITS-1:0]  hit_line;
    reg                  is_hit;
-   reg [31:0] wayi;
+   reg [ASSOC_BITS:0]   wayi;
    always @(*) begin
-      oldest_addr    <= {tag[0], current_index} * LINE_SIZE;
+      oldest_addr    <= {tag[0], current_index} << LINE_SIZE_BITS;
       oldest_way     <= 0;
       oldest_line    <= line[0];
       oldest_dirty   <= dirty[0];
       oldest_age     <= age[0];
       hit_way        <= 0;
-      hit_line       <= 0;
-      is_hit         <= 0;
-      for (wayi = 0; wayi < ASSOCIATIVITY; wayi = wayi + 1) begin
+      hit_line       <= line[0];
+      is_hit         <= current_tag == tag[0] && valid[0];
+      for (wayi = 1; wayi < ASSOCIATIVITY; wayi = wayi + 1) begin
          if (oldest_age < age[wayi]) begin
             oldest_age     <= age[wayi];
             oldest_way     <= wayi;
             oldest_dirty   <= dirty[wayi];
             oldest_line    <= line[wayi];
-            oldest_addr    <= {tag[wayi], current_index} * LINE_SIZE;
+            oldest_addr    <= {tag[wayi], current_index} << LINE_SIZE_BITS;
          end
          if (current_tag == tag[wayi]) begin
             hit_way        <= wayi;
@@ -124,8 +128,8 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    localparam STATE_WRITEBACK_WRITE = 6;  // Writeback for a write
    localparam STATE_BITS            = 3;
 
-   reg [31:0] transfer_count;
-   reg [31:0] next_transfer_count;
+   reg [LINE_SIZE_BITS:0] transfer_count;
+   reg [LINE_SIZE_BITS:0] next_transfer_count;
    wire transfer_done = mready && transfer_count == 0 && !mwe && !mre;
 
    // Determine the next state.
@@ -207,8 +211,9 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
                    | state == STATE_WRITE_FILL;
    wire update_age = state == STATE_READ | state == STATE_WRITE;
    wire [ROW_BITS-1:0] updated_row;
-   wire [31:0] write_way    = is_hit ? hit_way : oldest_way;
-   wire [31:0] write_offset = load_mem ? transfer_count : line_offset;
+   wire [ASSOC_BITS:0] write_way = is_hit ? hit_way : oldest_way;
+   wire [LINE_SIZE_BITS:0] write_offset = load_mem
+                                        ? transfer_count : line_offset;
    genvar row_i;
    genvar row_w;
    generate
@@ -304,7 +309,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          assign oldest_words[memi] = oldest_line[offset+WORD_WIDTH-1:offset];
       end
    endgenerate
-   assign mout = is_writeback ? oldest_words[transfer_count] : din;
+   assign mout = oldest_words[transfer_count];
 
    // Drive the ready bit.
    assign ready = state == STATE_IDLE;
