@@ -42,7 +42,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    localparam VALID_OFFSET    = DIRTY_OFFSET + 1;
    localparam MAX_AGE         = (1 << AGE_BITS) - 1;
    localparam MASK_BITS       = ADDR_WIDTH - LINE_SIZE_BITS;
-   localparam ADDR_MASK       = {{MASK_BITS{1'b1}},{LINE_SIZE_BITS{1'b0}}};
+   localparam ADDR_MASK       = {MASK_BITS{1'b1}} * LINE_SIZE;
    localparam TAG_SHIFT       = ADDR_WIDTH - TAG_BITS;
 
    reg [ROW_BITS-1:0] row;
@@ -172,7 +172,10 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
             STATE_WRITEBACK_READ: // Read miss; writeback dirty slot.
                if (transfer_done) next_state <= STATE_READ_MISS;
             STATE_WRITEBACK_WRITE: // Write miss; writeback dirty slot.
-               if (transfer_done) next_state <= STATE_IDLE;
+               if (transfer_done) begin
+                  next_state <= LINE_SIZE > 1 ? STATE_WRITE_FILL
+                                              : STATE_IDLE;
+               end
          endcase
       end
    end
@@ -202,18 +205,19 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    end
 
    // Build up a line used for cache accesses.
+   wire mark_dirty = state == STATE_WRITE
+                   | state == STATE_WRITE_FILL
+                   | state == STATE_WRITEBACK_WRITE;
    wire load_mem = next_state == STATE_WRITEBACK_WRITE
                  | next_state == STATE_WRITEBACK_READ
                  | state == STATE_READ_MISS
-                 | state == STATE_WRITE_FILL;
+                 | (state == STATE_WRITE_FILL & transfer_count != line_offset);
    wire write_line = state == STATE_WRITE
                    | state == STATE_WRITEBACK_WRITE
                    | state == STATE_WRITE_FILL;
    wire update_age = state == STATE_READ | state == STATE_WRITE;
    wire [ROW_BITS-1:0] updated_row;
    wire [ASSOC_BITS:0] write_way = is_hit ? hit_way : oldest_way;
-   wire [LINE_SIZE_BITS:0] write_offset = load_mem
-                                        ? transfer_count : line_offset;
    genvar row_i;
    genvar row_w;
    generate
@@ -227,7 +231,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          assign updated_row[tag_start+TAG_BITS-1:tag_start]
             = row_w == oldest_way ? current_tag : tag[row_w];
          assign updated_row[dirty_start]
-            = row_w == oldest_way ? !load_mem : dirty[row_w];
+            = row_w == oldest_way ? mark_dirty : dirty[row_w];
          assign updated_row[valid_start] = 1;
          if (AGE_BITS > 0) begin
             assign updated_row[age_start+AGE_BITS-1:age_start]
