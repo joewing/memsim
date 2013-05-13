@@ -96,7 +96,7 @@ module tb();
    spm s(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
          split_addr, split_din, split_dout, split_re, split_we, split_ready);
 */
-   cache #(.LINE_SIZE_BITS(1), .LINE_COUNT_BITS(4), .ASSOC_BITS(2))
+   cache #(.LINE_SIZE_BITS(0), .LINE_COUNT_BITS(4), .ASSOC_BITS(1))
       c(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
         ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
@@ -174,6 +174,16 @@ module tb();
       `READ( 256 )
       `WAIT_READY
       `CHECK( mem_dout === 321, "invalid data from read [256]" )
+
+      // Test some reads/writes.
+      for (i = 0; i < 2; i = i + 1) begin
+         `WRITE( i, i )
+      end
+      for (i = 0; i < 2; i = i + 1) begin
+         `READ( i )
+         `WAIT_READY
+         `CHECK( mem_dout == i, "invalid data from read" )
+      end
 
       $display("Cycles: %d", cycles);
       $display("Test complete");
