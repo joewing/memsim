@@ -71,7 +71,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          assign dirty[i]         = row[dirty_start];
          assign valid[i]         = row[valid_start];
          if (AGE_BITS > 0) begin
-            assign age[i]  = row[age_start+AGE_BITS-1:age_start];
+            assign age[i] = row[age_start+AGE_BITS-1:age_start];
          end
       end
    endgenerate
@@ -95,26 +95,26 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    reg                  is_hit;
    reg [ASSOC_BITS:0]   wayi;
    always @(*) begin
-      oldest_addr    <= {tag[0], current_index} << LINE_SIZE_BITS;
-      oldest_way     <= 0;
-      oldest_line    <= line[0];
-      oldest_dirty   <= dirty[0];
-      oldest_age     <= age[0];
-      hit_way        <= 0;
-      hit_line       <= line[0];
-      is_hit         <= current_tag == tag[0] && valid[0];
+      oldest_addr    = {tag[0], current_index} << LINE_SIZE_BITS;
+      oldest_way     = 0;
+      oldest_line    = line[0];
+      oldest_dirty   = dirty[0];
+      oldest_age     = age[0];
+      hit_way        = 0;
+      hit_line       = line[0];
+      is_hit         = current_tag == tag[0] && valid[0];
       for (wayi = 1; wayi < ASSOCIATIVITY; wayi = wayi + 1) begin
          if (oldest_age < age[wayi]) begin
-            oldest_age     <= age[wayi];
-            oldest_way     <= wayi;
-            oldest_dirty   <= dirty[wayi];
-            oldest_line    <= line[wayi];
-            oldest_addr    <= {tag[wayi], current_index} << LINE_SIZE_BITS;
+            oldest_age     = age[wayi];
+            oldest_way     = wayi;
+            oldest_dirty   = dirty[wayi];
+            oldest_line    = line[wayi];
+            oldest_addr    = {tag[wayi], current_index} << LINE_SIZE_BITS;
          end
-         if (current_tag == tag[wayi]) begin
-            hit_way        <= wayi;
-            is_hit         <= valid[wayi];
-            hit_line       <= line[wayi];
+         if (current_tag == tag[wayi] && valid[wayi]) begin
+            hit_way        = wayi;
+            is_hit         = 1;
+            hit_line       = line[wayi];
          end
       end
    end
@@ -232,7 +232,10 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
             = row_w == oldest_way ? current_tag : tag[row_w];
          assign updated_row[dirty_start]
             = row_w == oldest_way ? mark_dirty : dirty[row_w];
-         assign updated_row[valid_start] = 1;
+         assign updated_row[valid_start]
+            = (row_w == write_way && load_mem)
+            | (row_w == write_way && write_line)
+            | row[valid_start];
          if (AGE_BITS > 0) begin
             assign updated_row[age_start+AGE_BITS-1:age_start]
                = update_age ? (row_w == oldest_way ? 0 : (age[row_w] < MAX_AGE

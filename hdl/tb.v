@@ -11,7 +11,12 @@
       $finish(1); \
    end
 
-`define CYCLE        #10 clk <= 1; #10 clk <= 0;
+`define CYCLE  \
+   begin \
+      cycles <= cycles + 1;   \
+      #10 clk <= 1; #10 clk <= 0;   \
+   end
+
 
 `define WAIT_READY while (!mem_ready) begin `CYCLE end
 
@@ -33,6 +38,7 @@ module tb();
 
    reg clk;
    reg rst;
+   integer cycles;
 
    wire [63:0] ram_addr;
    wire [63:0] ram_din;
@@ -90,7 +96,7 @@ module tb();
    spm s(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
          split_addr, split_din, split_dout, split_re, split_we, split_ready);
 */
-   cache #(.LINE_SIZE_BITS(1), .LINE_COUNT_BITS(6))
+   cache #(.LINE_SIZE_BITS(1), .LINE_COUNT_BITS(4), .ASSOC_BITS(2))
       c(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
         ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
@@ -99,6 +105,7 @@ module tb();
       $dumpvars;
 
       // Reset
+      cycles = 0;
       clk <= 0;
       rst <= 1;
       mem_addr <= 0;
@@ -168,6 +175,7 @@ module tb();
       `WAIT_READY
       `CHECK( mem_dout === 321, "invalid data from read [256]" )
 
+      $display("Cycles: %d", cycles);
       $display("Test complete");
 
    end
