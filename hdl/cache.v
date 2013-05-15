@@ -1,4 +1,59 @@
 
+module lru_policy(hit_way, ages_in, ages_out);
+
+   parameter   ASSOC_BITS     = 0;
+   localparam  ASSOCIATIVITY  = 1 << ASSOC_BITS;
+   localparam  AGES_BITS      = ASSOCIATIVITY * ASSOC_BITS;
+
+   input  wire [ASSOC_BITS:0]  hit_way;
+   input  wire [AGES_BITS-1:0] ages_in;
+   output reg  [AGES_BITS-1:0] ages_out;
+
+   // Split out individual input ages.
+   wire [ASSOC_BITS-1:0] ages [0:ASSOCIATIVITY-1];
+   genvar age_i;
+   generate
+      for (age_i = 0; age_i < ASSOCIATIVITY; age_i = age_i + 1) begin
+         localparam age_offset = age_i * ASSOC_BITS;
+         assign ages[age_i] = ages_in[age_offset+ASSOC_BITS-1:age_offset];
+      end
+   endgenerate
+
+   // Find the age of the value to move to zero.
+   reg [ASSOC_BITS:0] old_way;
+   reg [ASSOC_BITS:0] old_age;
+   always @(*) begin
+      old_age = 0;
+      for (old_way = 0; old_way < ASSOCIATIVITY; old_way = old_way + 1) begin
+         if (old_way == hit_way) begin
+            old_age = ages[hit_way];
+         end
+      end
+   end
+
+   // Set new ages.
+   // Note that the hit_way age is set to 0, all ways with ages
+   // below the old hit_way age have their ages incremented, and the
+   // remaining ages remain unchanged.
+   genvar set_i;
+   generate
+      for (set_i = 0; set_i < ASSOCIATIVITY; set_i = set_i + 1) begin
+         localparam end_offset = set_i * ASSOC_BITS;
+         localparam start_offset = end_offset + ASSOC_BITS - 1;
+         always @(*) begin
+            if (set_i == hit_way) begin
+               ages_out[start_offset:end_offset] = 0;
+            end else if (ages[set_i] < old_age || ages[set_i] == 0) begin
+               ages_out[start_offset:end_offset] = ages[set_i] + 1;
+            end else begin
+               ages_out[start_offset:end_offset] = ages[set_i];
+            end
+         end
+      end
+   endgenerate
+
+endmodule
+
 module cache(clk, rst, addr, din, dout, re, we, ready,
              maddr, mout, min, mre, mwe, mready);
 
@@ -40,7 +95,6 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    localparam AGE_OFFSET      = TAG_OFFSET + TAG_BITS;
    localparam DIRTY_OFFSET    = AGE_OFFSET + AGE_BITS;
    localparam VALID_OFFSET    = DIRTY_OFFSET + 1;
-   localparam MAX_AGE         = (1 << AGE_BITS) - 1;
    localparam MASK_BITS       = ADDR_WIDTH - LINE_SIZE_BITS;
    localparam ADDR_MASK       = {MASK_BITS{1'b1}} * LINE_SIZE;
    localparam TAG_SHIFT       = ADDR_WIDTH - TAG_BITS;
@@ -57,6 +111,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    wire [AGE_BITS-1:0]  age   [0:ASSOCIATIVITY-1];
    wire                 dirty [0:ASSOCIATIVITY-1];
    wire                 valid [0:ASSOCIATIVITY-1];
+   wire [ASSOCIATIVITY*AGE_BITS-1:0] age_array;
    genvar i;
    generate
       for (i = 0; i < ASSOCIATIVITY; i = i + 1) begin
@@ -72,6 +127,8 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          assign valid[i]         = row[valid_start];
          if (AGE_BITS > 0) begin
             assign age[i] = row[age_start+AGE_BITS-1:age_start];
+            assign age_array[i+AGE_BITS-1:i]
+               = row[age_start+AGE_BITS-1:age_start];
          end
       end
    endgenerate
@@ -216,6 +273,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
                    | state == STATE_WRITEBACK_WRITE
                    | state == STATE_WRITE_FILL;
    wire update_age = state == STATE_READ | state == STATE_WRITE;
+   wire [ASSOCIATIVITY*AGE_BITS-1:0] updated_ages;
    wire [ROW_BITS-1:0] updated_row;
    wire [ASSOC_BITS:0] write_way = is_hit ? hit_way : oldest_way;
    genvar row_i;
@@ -229,18 +287,18 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          localparam dirty_start  = offset + DIRTY_OFFSET;
          localparam valid_start  = offset + VALID_OFFSET;
          assign updated_row[tag_start+TAG_BITS-1:tag_start]
-            = row_w == oldest_way ? current_tag : tag[row_w];
+            = row_w == write_way ? current_tag : tag[row_w];
          assign updated_row[dirty_start]
-            = row_w == oldest_way ? mark_dirty : dirty[row_w];
+            = row_w == write_way ? mark_dirty : dirty[row_w];
          assign updated_row[valid_start]
             = (row_w == write_way && load_mem)
             | (row_w == write_way && write_line)
             | row[valid_start];
          if (AGE_BITS > 0) begin
+            localparam updated_end = row_w * AGE_BITS;
+            localparam updated_start = updated_end + AGE_BITS - 1;
             assign updated_row[age_start+AGE_BITS-1:age_start]
-               = update_age ? (row_w == oldest_way ? 0 : (age[row_w] < MAX_AGE
-                                                       ? (age[row_w] + 1)
-                                                       : MAX_AGE))
+               = update_age ? updated_ages[updated_start:updated_end]
                             : age[row_w];
          end
          for (row_i = 0; row_i < LINE_SIZE; row_i = row_i + 1) begin
@@ -254,25 +312,29 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          end
       end
    endgenerate
-   wire update_read  = state == STATE_READ_MISS && mready;
-   wire update_write = (state == STATE_WRITE && !oldest_dirty)
-                     | (state == STATE_WRITE_FILL && mready);
-   wire update_row = update_read | update_write;
+   wire write_hit = state == STATE_WRITE && (is_hit || !oldest_dirty);
+   wire write_ok  = (state == STATE_WRITEBACK_WRITE && transfer_done)
+                  | (state == STATE_WRITE_FILL && mready);
+   wire fill_ok   = state == STATE_READ_MISS && mready;
    always @(posedge clk) begin
       if (rst) begin
          row <= 0;
       end else if (state == STATE_IDLE && next_state != state) begin
          row <= data[current_index];
-      end else if (update_row) begin
+      end else if (write_hit | write_ok | fill_ok) begin
          row <= updated_row;
       end
    end
 
+   // Update ages.
+   generate
+      if (ASSOC_BITS > 0) begin
+         lru_policy #(.ASSOC_BITS(ASSOC_BITS)) policy (write_way, age_array,
+                                                       updated_ages);
+      end
+   endgenerate
+
    // Update the cache.
-   wire write_hit = state == STATE_WRITE && (is_hit || !oldest_dirty);
-   wire write_ok  = (state == STATE_WRITEBACK_WRITE && transfer_done)
-                  | (state == STATE_WRITE_FILL && mready);
-   wire fill_ok   = state == STATE_READ_MISS && transfer_done;
    always @(posedge clk) begin
       if (!rst) begin
          if (write_hit | write_ok | fill_ok) begin

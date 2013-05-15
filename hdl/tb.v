@@ -21,15 +21,15 @@
 `define WAIT_READY while (!mem_ready) begin `CYCLE end
 
 `define WRITE( addr, data ) \
-   $display("write [0x%x] <- 0x%x", addr, data); \
    `WAIT_READY \
+   $display("write [0x%x] <- 0x%x", addr, data); \
    mem_addr <= addr; mem_din <= data; mem_we <= 1; \
    `CYCLE \
    mem_we <= 0;
 
 `define READ( addr ) \
-   $display("read [0x%x]", addr); \
    `WAIT_READY \
+   $display("read [0x%x]", addr); \
    mem_addr <= addr; mem_re <= 1; \
    `CYCLE \
    mem_re <= 0;
@@ -74,7 +74,7 @@ module tb();
    reg mem_we;
    wire mem_ready;
 
-   integer i;
+   integer i, j;
 
    ram r(clk, rst, ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
@@ -96,7 +96,7 @@ module tb();
    spm s(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
          split_addr, split_din, split_dout, split_re, split_we, split_ready);
 */
-   cache #(.LINE_SIZE_BITS(0), .LINE_COUNT_BITS(4), .ASSOC_BITS(1))
+   cache #(.LINE_SIZE_BITS(0), .LINE_COUNT_BITS(1), .ASSOC_BITS(1))
       c(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
         ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
@@ -176,13 +176,15 @@ module tb();
       `CHECK( mem_dout === 321, "invalid data from read [256]" )
 
       // Test some reads/writes.
-      for (i = 0; i < 2; i = i + 1) begin
-         `WRITE( i, i )
-      end
-      for (i = 0; i < 2; i = i + 1) begin
-         `READ( i )
-         `WAIT_READY
-         `CHECK( mem_dout == i, "invalid data from read" )
+      for (j = 2; j < 100; j = j + 1) begin
+         for (i = 0; i < j; i = i + 1) begin
+            `WRITE( i, i )
+         end
+         for (i = 0; i < j; i = i + 1) begin
+            `READ( i )
+            `WAIT_READY
+            `CHECK( mem_dout == i, "invalid data from read" )
+         end
       end
 
       $display("Cycles: %d", cycles);
