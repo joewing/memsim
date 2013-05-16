@@ -84,8 +84,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
    localparam LINE_SIZE       = 1 << LINE_SIZE_BITS;
    localparam LINE_COUNT      = 1 << LINE_COUNT_BITS;
    localparam INDEX_BITS      = LINE_COUNT_BITS;
-   localparam TAG_BITS        = ADDR_WIDTH - INDEX_BITS - LINE_SIZE_BITS
-                              + ASSOC_BITS;
+   localparam TAG_BITS        = ADDR_WIDTH - INDEX_BITS - LINE_SIZE_BITS;
    localparam AGE_BITS        = ASSOC_BITS;
    localparam LINE_BITS       = WORD_WIDTH << LINE_SIZE_BITS;
    localparam WAY_BITS        = LINE_BITS + TAG_BITS + AGE_BITS + 1 + 1;

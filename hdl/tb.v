@@ -96,7 +96,7 @@ module tb();
    spm s(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
          split_addr, split_din, split_dout, split_re, split_we, split_ready);
 */
-   cache #(.LINE_SIZE_BITS(0), .LINE_COUNT_BITS(1), .ASSOC_BITS(1))
+   cache #(.LINE_SIZE_BITS(1), .LINE_COUNT_BITS(3), .ASSOC_BITS(3))
       c(clk, rst, mem_addr, mem_din, mem_dout, mem_re, mem_we, mem_ready,
         ram_addr, ram_din, ram_dout, ram_re, ram_we, ram_ready);
 
