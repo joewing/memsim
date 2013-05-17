@@ -126,7 +126,7 @@ module cache(clk, rst, addr, din, dout, re, we, ready,
          assign valid[i]         = row[valid_start];
          if (AGE_BITS > 0) begin
             assign age[i] = row[age_start+AGE_BITS-1:age_start];
-            assign age_array[i+AGE_BITS-1:i]
+            assign age_array[AGE_BITS*i+AGE_BITS-1:AGE_BITS*i]
                = row[age_start+AGE_BITS-1:age_start];
          end
       end
