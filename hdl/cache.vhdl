@@ -34,7 +34,7 @@ architecture cache_arch of cache is
    constant ASSOCIATIVITY  : natural := 2 ** ASSOC_BITS;
    constant LINE_SIZE      : natural := 2 ** LINE_SIZE_BITS;
    constant LINE_COUNT     : natural := 2 ** LINE_COUNT_BITS;
-   constant ROW_COUNT      : natural := LINE_COUNT / ASSOCIATIVITY;
+   constant ROW_COUNT      : natural := LINE_COUNT;
    constant INDEX_BITS     : natural := LINE_COUNT_BITS;
    constant TAG_BITS       : natural := ADDR_WIDTH - INDEX_BITS
                                         - LINE_SIZE_BITS;
@@ -50,7 +50,7 @@ architecture cache_arch of cache is
    constant MASK_BITS      : natural := ADDR_WIDTH - LINE_SIZE_BITS;
    constant TAG_SHIFT      : natural := ADDR_WIDTH - TAG_BITS;
    constant OFFSET_BOTTOM  : natural := 0;
-   constant OFFSET_TOP     : natural := OFFSET_BOTTOM + LINE_SIZE_BITS - 1;
+   constant OFFSET_TOP     : integer := OFFSET_BOTTOM + LINE_SIZE_BITS - 1;
    constant INDEX_BOTTOM   : natural := OFFSET_TOP + 1;
    constant INDEX_TOP      : natural := INDEX_BOTTOM + INDEX_BITS - 1;
    constant TAG_BOTTOM     : natural := INDEX_TOP + 1;
@@ -132,6 +132,7 @@ architecture cache_arch of cache is
 
    signal mre_temp         : std_logic;
    signal mwe_temp         : std_logic;
+   signal mem_idle         : std_logic;
 
 begin
 
@@ -190,7 +191,7 @@ begin
    end process;
 
    -- Determine the next state.
-   process(state, re, we, is_hit, transfer_done, oldest_dirty)
+   process(state, re, we, is_hit, transfer_done, mem_idle, oldest_dirty)
    begin
       next_state <= state;
       case state is
@@ -219,19 +220,19 @@ begin
                next_state <= STATE_IDLE;
             end if;
          when STATE_READ_MISS =>
-            if transfer_done = '1' then
+            if transfer_done = '1' and mem_idle = '1' then
                next_state <= STATE_IDLE;
             end if;
          when STATE_WRITE_FILL =>
-            if transfer_done = '1' then
+            if transfer_done = '1' and mem_idle = '1' then
                next_state <= STATE_IDLE;
             end if;
          when STATE_WRITEBACK_READ =>
-            if transfer_done = '1' then
+            if transfer_done = '1' and mem_idle = '1' then
                next_state <= STATE_READ_MISS;
             end if;
          when STATE_WRITEBACK_WRITE =>
-            if transfer_done = '1' then
+            if transfer_done = '1' and mem_idle = '1' then
                if LINE_SIZE > 1 then
                   next_state <= STATE_WRITE_FILL;
                else
@@ -254,11 +255,9 @@ begin
    end process;
 
    -- Update the transfer count.
-   process(transfer_done, transfer_count, mready)
+   process(transfer_count, mem_idle)
    begin
-      if transfer_done = '1' then
-         next_transfer_count <= (others => '0');
-      elsif mready = '1' then
+      if mem_idle = '1' then
          next_transfer_count <= std_logic_vector(unsigned(transfer_count) + 1);
       else
          next_transfer_count <= transfer_count;
@@ -267,17 +266,28 @@ begin
    process(clk)
    begin
       if clk'event and clk = '1' then
+         transfer_done <= '0';
          if rst = '1' then
+            transfer_count <= std_logic_vector(to_unsigned(LINE_SIZE - 1,
+                                                           LINE_SIZE_BITS + 1));
+            transfer_done <= '1';
+         elsif (mre_temp = '1' or mwe_temp = '1') and state /= next_state then
             transfer_count <= (others => '0');
+            transfer_done <= '0';
          else
             transfer_count <= next_transfer_count;
+            if unsigned(next_transfer_count) = LINE_SIZE - 1 then
+               transfer_done <= '1';
+            elsif LINE_SIZE = 1 then
+               transfer_done <= '1';
+            end if;
          end if;
       end if;
    end process;
 
    -- Update the current row.
    process(state, next_state, current_tag, tags, dirty, hit_way,
-           oldest_way, is_hit, valid)
+           oldest_way, is_hit, valid, min, din)
       variable offset      : natural;
       variable line_top    : natural;
       variable line_bottom : natural;
@@ -381,7 +391,8 @@ begin
    begin
       write_hit := state = STATE_WRITE
                    and (is_hit = '1' or oldest_dirty /= '1');
-      write_ok :=    (state = STATE_WRITEBACK_WRITE and transfer_done = '1')
+      write_ok :=    (state = STATE_WRITEBACK_WRITE
+                        and mready = '1' and transfer_done = '1')
                   or (state = STATE_WRITE_FILL and mready = '1');
       fill_ok := state = STATE_READ_MISS and mready = '1';
       if clk'event and clk = '1' then
@@ -406,7 +417,8 @@ begin
       if clk'event and clk = '1' then
          mre_temp <= '0';
          mwe_temp <= '0';
-         if state /= next_state or unsigned(transfer_count) /= LINE_SIZE then
+         if state /= next_state
+            or unsigned(transfer_count) /= LINE_SIZE - 1 then
             case next_state is
                when STATE_WRITEBACK_READ  => mwe_temp <= mready;
                when STATE_WRITEBACK_WRITE => mwe_temp <= mready;
@@ -422,16 +434,8 @@ begin
    end process;
    mre <= mre_temp;
    mwe <= mwe_temp;
-
-   process(mwe_temp, mre_temp, mready, transfer_count) is
-   begin
-      transfer_done <= '0';
-      if mwe_temp = '0' and mre_temp = '0' then
-         if unsigned(transfer_count) = LINE_SIZE - 1 then
-            transfer_done <= mready;
-         end if;
-      end if;
-   end process;
+   mem_idle <= '1' when mre_temp = '0' and mwe_temp = '0' and mready = '1'
+               else '0';
 
    -- Drive memory address.
    process(next_state, transfer_count, addr, oldest_addr) is

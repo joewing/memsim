@@ -124,9 +124,9 @@ begin
       generic map (
          ADDR_WIDTH        => ADDR_WIDTH,
          WORD_WIDTH        => WORD_WIDTH,
-         LINE_SIZE_BITS    => 0,
-         LINE_COUNT_BITS   => 8,
-         ASSOC_BITS        => 1
+         LINE_SIZE_BITS    => 1,
+         LINE_COUNT_BITS   => 6,
+         ASSOC_BITS        => 0
       )
       port map (
          clk      => clk,
@@ -222,7 +222,7 @@ begin
       assert mem_dout = x"00000321" report "read failed" severity failure;
 
       -- Test some reads/writes.
-      for j in 2 to 10 loop
+      for j in 2 to 100 loop
          for i in 1 to j loop
             mem_addr <= std_logic_vector(to_unsigned(i, ADDR_WIDTH));
             mem_din  <= std_logic_vector(to_unsigned(i, WORD_WIDTH));
