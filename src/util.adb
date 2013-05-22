@@ -12,4 +12,14 @@ package body Util is
       return r;
    end Log2;
 
+   function To_String(i : Integer) return String is
+      str : constant String := Integer'Image(i);
+   begin
+      if str(str'First) = ' ' then
+         return str(str'First + 1 .. str'Last);
+      else
+         return str;
+      end if;
+   end To_String;
+
 end Util;

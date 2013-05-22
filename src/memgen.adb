@@ -1,10 +1,11 @@
 
-with Ada.Command_Line;     use Ada.Command_Line;
-with Ada.Text_IO;          use Ada.Text_IO;
-with Memory;               use Memory;
-with Parser;               use Parser;
+with Ada.Command_Line;        use Ada.Command_Line;
+with Ada.Text_IO;             use Ada.Text_IO;
+with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+with Memory;                  use Memory;
+with Parser;                  use Parser;
 
-with HDL_Generator;        use HDL_Generator;
+with HDL_Generator;           use HDL_Generator;
 with HDL_Generator.SPM;
 with HDL_Generator.RAM;
 with HDL_Generator.Offset;
@@ -14,13 +15,42 @@ with HDL_Generator.Cache;
 
 procedure MemGen is
 
-   gen : Generator_Type;
-   mem : Memory_Pointer;
+   mem         : Memory_Pointer;
+   name        : Unbounded_String := To_Unbounded_String("memory");
+   addr_width  : Positive := 64;
+   word_width  : Positive := 32;
+   mem_index   : Integer := -1;
+
+   procedure Show_Usage is
+   begin
+      Put_Line("usage: " & Command_Name & " [options] <memory>");
+      Put_Line("options:");
+      Put_Line("  -width <int>   Address width (default" &
+               Positive'Image(addr_width) & ")");
+   end Show_Usage;
 
 begin
 
-   if Argument_Count /= 1 then
-      Put_Line("usage: " & Command_Name & " <memory>");
+   declare
+      i     : Positive := 1;
+      arg   : Unbounded_String;
+   begin
+      while i <= Argument_Count loop
+         arg := To_Unbounded_String(Argument(i));
+         if arg = "-width" and i + 1 <= Argument_Count then
+            i := i + 1;
+            addr_width := Positive'Value(Argument(i));
+         elsif mem_index < 0 then
+            mem_index := i;
+         else
+            Show_Usage;
+            return;
+         end if;
+         i := i + 1;
+      end loop;
+   end;
+   if mem_index < 0 then
+      Show_Usage;
       return;
    end if;
 
@@ -30,40 +60,15 @@ begin
       return;
    end if;
 
-   RAM.Register(gen);
-   SPM.Register(gen);
-   Offset.Register(gen);
-   Split.Register(gen);
-   Join.Register(gen);
-   Cache.Register(gen);
+   RAM.Register;
+   SPM.Register;
+   Offset.Register;
+   Split.Register;
+   Join.Register;
+   Cache.Register;
 
-   Put_Line("module memory(clk, rst, addr, din, dout, re, we, ready);");
-   New_Line;
-   Put_Line("   input wire clk;");
-   Put_Line("   input wire rst;");
-   Put_Line("   input wire [63:0] addr;");
-   Put_Line("   input wire [63:0] din;");
-   Put_Line("   output wire [63:0] dout;");
-   Put_Line("   input wire re;");
-   Put_Line("   input wire we;");
-   Put_Line("   output wire ready;");
-   New_Line;
-   Put_Line(Generate(gen, mem, 64, 64));
-   declare
-      id       : constant Natural   := Get_ID(mem.all);
-      id_str   : constant String    := Natural'Image(id);
-      name     : constant String
-                  := "m" & id_str(id_str'First + 1 .. id_str'Last);
-   begin
-      Put_Line("   assign " & name & "_addr = addr;");
-      Put_Line("   assign " & name & "_din = din;");
-      Put_Line("   assign dout = " & name & "_dout;");
-      Put_Line("   assign " & name & "_re = re;");
-      Put_Line("   assign " & name & "_we = we;");
-      Put_Line("   assign ready = " & name & "_ready;");
-   end;
-   New_Line;
-   Put_Line("endmodule");
+   Put_Line(Generate(mem, To_String(name), word_width, addr_width));
+
    Destroy(mem);
 
 end MemGen;

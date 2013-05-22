@@ -35,11 +35,16 @@ package Memory.RAM is
 
    function Get_Word_Size(mem : RAM_Type) return Positive;
 
+   function Get_Word_Count(mem : RAM_Type) return Positive;
+
+   function Get_Latency(mem : RAM_Type) return Time_Type;
+
 private
 
    type RAM_Type is new Memory_Type with record
       latency     : Time_Type    := 1;
       word_size   : Positive     := 8;
+      word_count  : Positive     := 2 ** 20 / 8;
       writes      : Long_Integer := 0;
    end record;
 

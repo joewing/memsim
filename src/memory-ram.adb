@@ -70,4 +70,14 @@ package body Memory.RAM is
       return mem.word_size;
    end Get_Word_Size;
 
+   function Get_Word_Count(mem : RAM_Type) return Positive is
+   begin
+      return mem.word_count;
+   end Get_Word_Count;
+
+   function Get_Latency(mem : RAM_Type) return Time_Type is
+   begin
+      return mem.latency;
+   end Get_Latency;
+
 end Memory.RAM;
