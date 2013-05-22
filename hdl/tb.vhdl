@@ -124,9 +124,9 @@ begin
       generic map (
          ADDR_WIDTH        => ADDR_WIDTH,
          WORD_WIDTH        => WORD_WIDTH,
-         LINE_SIZE_BITS    => 1,
-         LINE_COUNT_BITS   => 6,
-         ASSOC_BITS        => 0
+         LINE_SIZE_BITS    => 2,
+         LINE_COUNT_BITS   => 2,
+         ASSOC_BITS        => 2
       )
       port map (
          clk      => clk,
