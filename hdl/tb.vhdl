@@ -15,13 +15,6 @@ architecture tb_arch of tb is
    constant ADDR_WIDTH : integer := 64;
    constant WORD_WIDTH : integer := 32;
 
-   signal ram_addr   : std_logic_vector(ADDR_WIDTH - 1 downto 0);
-   signal ram_din    : std_logic_vector(WORD_WIDTH - 1 downto 0);
-   signal ram_dout   : std_logic_vector(WORD_WIDTH - 1 downto 0);
-   signal ram_re     : std_logic;
-   signal ram_we     : std_logic;
-   signal ram_ready  : std_logic;
-
    signal mem_addr   : std_logic_vector(ADDR_WIDTH - 1 downto 0);
    signal mem_din    : std_logic_vector(WORD_WIDTH - 1 downto 0);
    signal mem_dout   : std_logic_vector(WORD_WIDTH - 1 downto 0);
@@ -57,76 +50,12 @@ architecture tb_arch of tb is
       wait_ready(clk, rdy);
    end update;
 
---   component ram is
---      generic (
---         ADDR_WIDTH  : in natural := 64;
---         WORD_WIDTH  : in natural := 64;
---         SIZE        : in natural := 65536;
---         LATENCY     : in natural := 5
---      );
---      port (
---         clk      : in std_logic;
---         rst      : in std_logic;
---         addr     : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
---         din      : in std_logic_vector(WORD_WIDTH - 1 downto 0);
---         dout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
---         re       : in std_logic;
---         we       : in std_logic;
---         ready    : out std_logic
---      );
---   end component;
---
---   component cache is
---      generic (
---         ADDR_WIDTH        : in natural;
---         WORD_WIDTH        : in natural;
---         LINE_SIZE_BITS    : in natural;
---         LINE_COUNT_BITS   : in natural;
---         ASSOC_BITS        : in natural
---      );
---      port (
---         clk      : in std_logic;
---         rst      : in std_logic;
---         addr     : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
---         din      : in std_logic_vector(WORD_WIDTH - 1 downto 0);
---         dout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
---         re       : in std_logic;
---         we       : in std_logic;
---         ready    : out std_logic;
---         maddr    : out std_logic_vector(ADDR_WIDTH - 1 downto 0);
---         mout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
---         min      : in std_logic_vector(WORD_WIDTH - 1 downto 0);
---         mre      : out std_logic;
---         mwe      : out std_logic;
---         mready   : in std_logic
---      );
---   end component;
-
 begin
 
-   ram1 : entity work.ram
+   mem1 : entity work.memory
       generic map (
          ADDR_WIDTH  => ADDR_WIDTH,
          WORD_WIDTH  => WORD_WIDTH
-      )
-      port map (
-         clk   => clk,
-         rst   => rst,
-         addr  => ram_addr,
-         din   => ram_din,
-         dout  => ram_dout,
-         re    => ram_re,
-         we    => ram_we,
-         ready => ram_ready
-      );
-
-   cache1 : entity work.cache
-      generic map (
-         ADDR_WIDTH        => ADDR_WIDTH,
-         WORD_WIDTH        => WORD_WIDTH,
-         LINE_SIZE_BITS    => 2,
-         LINE_COUNT_BITS   => 2,
-         ASSOC_BITS        => 2
       )
       port map (
          clk      => clk,
@@ -136,13 +65,7 @@ begin
          dout     => mem_dout,
          re       => mem_re,
          we       => mem_we,
-         ready    => mem_ready,
-         maddr    => ram_addr,
-         mout     => ram_din,
-         min      => ram_dout,
-         mre      => ram_re,
-         mwe      => ram_we,
-         mready   => ram_ready
+         ready    => mem_ready
       );
 
    process

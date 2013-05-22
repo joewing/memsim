@@ -31,6 +31,7 @@ package body HDL_Generator.RAM is
       PLine(gen, "   )");
       PLine(gen, "   port map (");
       PLine(gen, "      clk      => clk,");
+      PLine(gen, "      rst      => rst,");
       PLine(gen, "      addr     => " & name & "_addr,");
       PLine(gen, "      din      => " & name & "_din,");
       PLine(gen, "      dout     => " & name & "_dout,");

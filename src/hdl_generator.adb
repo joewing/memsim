@@ -67,7 +67,7 @@ package body HDL_Generator is
       Append_Line(r, "      ADDR_WIDTH : in natural := " &
                   To_String(addr_bits) & ";");
       Append_Line(r, "      WORD_WIDTH : in natural := " &
-                  To_String(word_bits) & ";");
+                  To_String(word_bits));
       Append_Line(r, "   );");
       Append_Line(r, "   port (");
       Append_Line(r, "      clk     : in  std_logic;");
@@ -80,7 +80,7 @@ package body HDL_Generator is
                   "WORD_WIDTH - 1 downto 0);");
       Append_Line(r, "      re      : in  std_logic;");
       Append_Line(r, "      we      : in  std_logic;");
-      Append_Line(r, "      ready   : out std_logic;");
+      Append_Line(r, "      ready   : out std_logic");
       Append_Line(r, "   );");
       Append_Line(r, "end " & name & ";");
       Append_Line(r);
@@ -88,7 +88,7 @@ package body HDL_Generator is
       Append(r, gen.decl);
       Append_Line(r, "begin");
       Append(r, gen.proc);
-      Append_Line(r, "end " & name & "_arch");
+      Append_Line(r, "end " & name & "_arch;");
       return To_String(r);
    end Generate;
 

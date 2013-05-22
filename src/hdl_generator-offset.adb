@@ -20,7 +20,6 @@ package body HDL_Generator.Offset is
       name     : constant String := "m" & To_String(Get_ID(mem.all));
       oname    : constant String := "m" & To_String(Get_ID(other.all));
       offset   : constant Address_Type := Get_Offset(op.all);
-      r        : Unbounded_String;
    begin
       Process(gen, other, word_bits, addr_bits);
       Declare_Signals(gen, name, word_bits, addr_bits);
@@ -28,10 +27,10 @@ package body HDL_Generator.Offset is
              "std_logic_vector(unsigned(" & name & "_addr) + " &
              To_String(offset) & ")");
       Assign(gen, oname & "_din", name & "_din");
-      Assign(gen, oname & "_dout", name & "_dout");
+      Assign(gen, name & "_dout", oname & "_dout");
       Assign(gen, oname & "_re", name & "_re");
       Assign(gen, oname & "_we", name & "_we");
-      Assign(gen, oname & "_ready", name & "_ready");
+      Assign(gen, name & "_ready", oname & "_ready");
    end Process_Offset;
 
    procedure Register is

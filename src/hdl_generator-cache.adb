@@ -44,8 +44,8 @@ package body HDL_Generator.Cache is
       PLine(gen, "      we       => " & name & "_we,");
       PLine(gen, "      ready    => " & name & "_ready,");
       PLine(gen, "      maddr    => " & oname & "_addr,");
-      PLine(gen, "      min      => " & oname & "_din,");
-      PLine(gen, "      mout     => " & oname & "_dout,");
+      PLine(gen, "      min      => " & oname & "_dout,");
+      PLine(gen, "      mout     => " & oname & "_din,");
       PLine(gen, "      mre      => " & oname & "_re,");
       PLine(gen, "      mwe      => " & oname & "_we,");
       PLine(gen, "      mready   => " & oname & "_ready");
