@@ -58,8 +58,10 @@ architecture cache_arch of cache is
 
    type state_type is (
       STATE_IDLE,
-      STATE_READ,
-      STATE_WRITE,
+      STATE_READ1,
+      STATE_READ2,
+      STATE_WRITE1,
+      STATE_WRITE2,
       STATE_READ_MISS1,
       STATE_READ_MISS2,
       STATE_WRITE_FILL1,
@@ -205,11 +207,13 @@ begin
       case state is
          when STATE_IDLE =>
             if re = '1' then
-               next_state <= STATE_READ;
+               next_state <= STATE_READ1;
             elsif we = '1' then
-               next_state <= STATE_WRITE;
+               next_state <= STATE_WRITE1;
             end if;
-         when STATE_READ =>
+         when STATE_READ1 =>
+            next_state <= STATE_READ2;
+         when STATE_READ2 =>
             if is_hit = '1' then
                next_state <= STATE_IDLE;
             elsif oldest_dirty = '1' then
@@ -219,7 +223,9 @@ begin
                next_state           <= STATE_READ_MISS1;
                next_transfer_count  <= (others => '0');
             end if;
-         when STATE_WRITE =>
+         when STATE_WRITE1 =>
+            next_state <= STATE_WRITE2;
+         when STATE_WRITE2 =>
             if is_hit = '1' then
                next_state <= STATE_IDLE;
             elsif oldest_dirty = '1' then
@@ -345,7 +351,7 @@ begin
                or next_state = STATE_WRITEBACK_READ1
                or state = STATE_READ_MISS2
                or state = STATE_WRITE_FILL2;
-      write_line :=  state = STATE_WRITE
+      write_line :=  state = STATE_WRITE2
                   or state = STATE_WRITEBACK_WRITE2
                   or state = STATE_WRITE_FILL2;
       for way in 0 to ASSOCIATIVITY - 1 loop
@@ -375,7 +381,7 @@ begin
             updated_row(dirty_start) <= dirty(way);
             updated_row(valid_start) <= valid(way);
          end if;
-         if state = STATE_READ or state = STATE_WRITE then
+         if state = STATE_READ2 or state = STATE_WRITE2 then
             updated_row(age_top downto age_bottom) <= updated_ages(way);
          else
             updated_row(age_top downto age_bottom) <= ages(way);
@@ -419,7 +425,7 @@ begin
       variable fill_ok     : boolean;
    begin
       if clk'event and clk = '1' then
-         write_hit := state = STATE_WRITE
+         write_hit := state = STATE_WRITE2
                      and (is_hit = '1' or oldest_dirty /= '1');
          write_ok :=    (state = STATE_WRITEBACK_WRITE2
                            and mready = '1' and transfer_done = '1')
@@ -428,7 +434,7 @@ begin
          if rst = '1' then
             row <= (others => '0');
          else
-            if state = STATE_READ or state = STATE_WRITE then
+            if state = STATE_READ1 or state = STATE_WRITE1 then
                row <= data(rindex);
             elsif write_hit or write_ok or fill_ok then
                row <= updated_row;
