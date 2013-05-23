@@ -290,7 +290,7 @@ begin
    end process;
 
    -- Drive transfer_done and inc_transfer_count.
-   process(transfer_count, current_offset)
+   process(transfer_count, current_offset, state)
       variable upd      : transfer_type;
       variable inc1     : transfer_type;
       variable inc2     : transfer_type;
@@ -317,7 +317,8 @@ begin
 
    -- Update the current row.
    process(hit_way, oldest_way, state, next_state, current_tag, valid,
-           dirty, tags, updated_ages, ages, min, din)
+           dirty, tags, updated_ages, ages, min, din, current_offset,
+           transfer_count, row, is_hit)
       variable offset      : natural;
       variable line_top    : natural;
       variable line_bottom : natural;
@@ -416,13 +417,13 @@ begin
       variable write_ok    : boolean;
       variable fill_ok     : boolean;
    begin
-      write_hit := state = STATE_WRITE
-                   and (is_hit = '1' or oldest_dirty /= '1');
-      write_ok :=    (state = STATE_WRITEBACK_WRITE2
-                        and mready = '1' and transfer_done = '1')
-                  or (state = STATE_WRITE_FILL2 and mready = '1');
-      fill_ok := state = STATE_READ_MISS2 and mready = '1';
       if clk'event and clk = '1' then
+         write_hit := state = STATE_WRITE
+                     and (is_hit = '1' or oldest_dirty /= '1');
+         write_ok :=    (state = STATE_WRITEBACK_WRITE2
+                           and mready = '1' and transfer_done = '1')
+                     or (state = STATE_WRITE_FILL2 and mready = '1');
+         fill_ok := state = STATE_READ_MISS2 and mready = '1';
          if rst = '1' then
             row <= (others => '0');
          else

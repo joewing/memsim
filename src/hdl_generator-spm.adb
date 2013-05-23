@@ -17,11 +17,9 @@ package body HDL_Generator.SPM is
                          addr_bits  : in Positive) is
       sp       : constant SPM_Pointer     := SPM_Pointer(mem);
       other    : constant Memory_Pointer  := Get_Memory(sp.all);
-      name     : constant String          := To_String(Get_ID(mem.all));
-      oname    : constant String          := To_String(Get_ID(other.all));
-      addr_str : constant String := "[" & To_String(addr_bits - 1) & ":0]";
-      word_str : constant String := "[" & To_String(word_bits - 1) & ":0]";
-      size     : constant Natural := (8 * Get_Size(sp.all)) / word_bits;
+      name     : constant String    := "m" & To_String(Get_ID(mem.all));
+      oname    : constant String    := "m" & To_String(Get_ID(other.all));
+      size     : constant Natural   := (8 * Get_Size(sp.all)) / word_bits;
    begin
       Process(gen, other, word_bits, addr_bits);
       Declare_Signals(gen, name, word_bits, addr_bits);
@@ -41,8 +39,8 @@ package body HDL_Generator.SPM is
       PLine(gen, "      we       => " & name & "_we,");
       PLine(gen, "      ready    => " & name & "_ready,");
       PLine(gen, "      maddr    => " & oname & "_addr,");
-      PLine(gen, "      min      => " & oname & "_din,");
-      PLine(gen, "      mout     => " & oname & "_dout,");
+      PLine(gen, "      min      => " & oname & "_dout,");
+      PLine(gen, "      mout     => " & oname & "_din,");
       PLine(gen, "      mre      => " & oname & "_re,");
       PLine(gen, "      mwe      => " & oname & "_we,");
       PLine(gen, "      mready   => " & oname & "_ready");

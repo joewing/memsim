@@ -83,6 +83,11 @@ begin
       assert mem_ready = '1' report "not ready" severity failure;
 
       -- Write a value.
+      mem_addr <= x"00000000_00000000";
+      mem_din <= x"FFFFFFFF";
+      update(clk, mem_we, mem_ready);
+
+      -- Write a value.
       mem_addr <= x"00000000_00000001";
       mem_din <= x"01234567";
       update(clk, mem_we, mem_ready);
@@ -145,7 +150,7 @@ begin
       assert mem_dout = x"00000321" report "read failed" severity failure;
 
       -- Test some reads/writes.
-      for j in 2 to 100 loop
+      for j in 2 to 10 loop
          for i in 1 to j loop
             mem_addr <= std_logic_vector(to_unsigned(i, ADDR_WIDTH));
             mem_din  <= std_logic_vector(to_unsigned(i, WORD_WIDTH));
