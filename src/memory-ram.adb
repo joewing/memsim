@@ -1,12 +1,14 @@
 
 package body Memory.RAM is
 
-   function Create_RAM(latency   : Time_Type := 1;
-                       word_size : Positive  := 8) return RAM_Pointer is
+   function Create_RAM(latency    : Time_Type := 1;
+                       word_size  : Positive  := 8;
+                       word_count : Positive  := 65536) return RAM_Pointer is
       result : constant RAM_Pointer := new RAM_Type;
    begin
-      result.latency := latency;
-      result.word_size := word_size;
+      result.latency    := latency;
+      result.word_size  := word_size;
+      result.word_count := word_count;
       return result;
    end Create_RAM;
 

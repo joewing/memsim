@@ -1,5 +1,4 @@
 
-with Ada.Text_IO; use Ada.Text_IO;
 with Memory.RAM; use Memory.RAM;
 
 package body HDL_Generator.RAM is
