@@ -505,7 +505,23 @@ begin
            words(to_integer(unsigned(current_offset)));
 
    -- Drive the ready bit.
-   ready <= '1' when state = STATE_IDLE else '0';
+   process(state, next_state)
+      variable next_idle : std_logic;
+   begin
+      if next_state = STATE_IDLE then
+         next_idle := '1';
+      else
+         next_idle := '0';
+      end if;
+      case state is
+         when STATE_IDLE               => ready <= '1';
+         when STATE_READ2              => ready <= next_idle;
+         when STATE_WRITE2             => ready <= next_idle;
+         when STATE_WRITEBACK_WRITE2   => ready <= next_idle;
+         when STATE_WRITE_FILL2        => ready <= next_idle;
+         when others                   => ready <= '0';
+      end case;
+   end process;
 
    current_offset <= addr(OFFSET_TOP downto OFFSET_BOTTOM);
    current_index  <= addr(INDEX_TOP downto INDEX_BOTTOM);
