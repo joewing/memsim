@@ -27,9 +27,10 @@ architecture ram_arch of ram is
    subtype word_type is std_logic_vector(WORD_WIDTH - 1 downto 0);
    type word_array_type is array (0 to SIZE - 1) of word_type;
 
-   signal data    : word_array_type;
-   signal value   : word_type;
-   signal counter : natural;
+   signal data       : word_array_type;
+   signal value      : word_type;
+   signal counter    : natural;
+   signal nat_addr   : natural;
 
 begin
 
@@ -41,16 +42,23 @@ begin
          else
             if re = '1' then
                counter <= LATENCY - 1;
-               value <= data(to_integer(unsigned(addr)));
+               value <= data(nat_addr);
             elsif we = '1' then
                counter <= LATENCY - 1;
-               data(to_integer(unsigned(addr))) <= din;
+               data(nat_addr) <= din;
             elsif counter > 0 then
                counter <= counter - 1;
             end if;
          end if;
       end if;
    end process;
+
+   large_address : if ADDR_WIDTH > 32 generate
+      nat_addr <= to_integer(unsigned(addr(31 downto 0)));
+   end generate;
+   small_address : if ADDR_WIDTH <= 32 generate
+      nat_addr <= to_integer(unsigned(addr));
+   end generate;
 
    ready <= '1' when counter = 0 else '0';
    dout  <= value when counter = 0 else (others => 'Z');
