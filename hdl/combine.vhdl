@@ -8,7 +8,7 @@ entity combine is
    generic (
       ADDR_WIDTH  : in natural := 64;
       WORD_WIDTH  : in natural := 64;
-      OFFSET      : in natural := 128;
+      OFFSET      : in natural := 128
    );
    port (
       clk      : in  std_logic;

@@ -7,7 +7,7 @@ entity spm is
    generic (
       ADDR_WIDTH  : in natural := 64;
       WORD_WIDTH  : in natural := 64;
-      SIZE        : in natural := 128;
+      SIZE        : in natural := 128
    );
    port (
       clk      : in std_logic;
@@ -55,7 +55,8 @@ begin
    maddr <= addr;
    mre   <= '1' when is_hit = '0' and re = '1' else '0';
    mwe   <= '1' when is_hit = '0' and we = '1' else '0';
-   dout  <= value when is_hit = '1' else mout;
+   dout  <= value when is_hit = '1' else min;
+   mout  <= din;
    ready <= mready;
 
 end spm_arch;

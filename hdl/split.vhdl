@@ -7,7 +7,7 @@ entity split is
    generic (
       ADDR_WIDTH  : in natural := 64;
       WORD_WIDTH  : in natural := 64;
-      OFFSET      : in natural := 128;
+      OFFSET      : in natural := 128
    );
    port (
       clk      : in  std_logic;
@@ -18,12 +18,12 @@ entity split is
       re       : in  std_logic;
       we       : in  std_logic;
       ready    : out std_logic;
-      maddr0   : in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
+      maddr0   : out std_logic_vector(ADDR_WIDTH - 1 downto 0);
       min0     : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
       mout0    : out std_logic_vector(WORD_WIDTH - 1 downto 0);
-      mre0     : in  std_logic;
-      mwe0     : in  std_logic;
-      mready0  : out std_logic;
+      mre0     : out std_logic;
+      mwe0     : out std_logic;
+      mready0  : in  std_logic;
       maddr1   : out std_logic_vector(ADDR_WIDTH - 1 downto 0);
       mout1    : out std_logic_vector(WORD_WIDTH - 1 downto 0);
       min1     : in  std_logic_vector(WORD_WIDTH - 1 downto 0);

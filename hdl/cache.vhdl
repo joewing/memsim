@@ -102,8 +102,8 @@ architecture cache_arch of cache is
       end if;
    end is_eq;
 
-   signal data          : row_array_type := (others => (others => '0'));
-   signal row           : row_type := (others => '0');
+   signal data          : row_array_type;
+   signal row           : row_type;
    signal updated_row   : row_type;
    signal updated_ages  : age_array_type;
 
@@ -142,7 +142,7 @@ architecture cache_arch of cache is
 begin
 
    -- Break out fields in the current row.
-   process(all)
+   process(row)
       variable offset      : natural;
       variable line_start  : natural;
       variable tag_start   : natural;
@@ -162,7 +162,7 @@ begin
    end process;
 
    -- Determine the oldest line and if we have a hit.
-   process(all)
+   process(tags, dirty, lines, ages, valid, current_index, current_tag)
       variable temp_age : age_type;
    begin
       oldest_addr    <= tags(0) & current_index & ZERO_OFFSET;
@@ -196,7 +196,8 @@ begin
    end process;
 
    -- Determine the next state.
-   process(all)
+   process(state, transfer_count, re, we, is_hit, oldest_dirty,
+           transfer_done, mready, updated_transfer_count)
    begin
       next_state           <= state;
       next_transfer_count  <= transfer_count;
@@ -289,7 +290,7 @@ begin
    end process;
 
    -- Drive transfer_done and inc_transfer_count.
-   process(all)
+   process(transfer_count, current_offset)
       variable upd      : transfer_type;
       variable inc1     : transfer_type;
       variable inc2     : transfer_type;
@@ -315,7 +316,8 @@ begin
    end process;
 
    -- Update the current row.
-   process(all)
+   process(hit_way, oldest_way, state, next_state, current_tag, valid,
+           dirty, tags, updated_ages, ages, min, din)
       variable offset      : natural;
       variable line_top    : natural;
       variable line_bottom : natural;
@@ -394,7 +396,7 @@ begin
    end process;
 
    -- Update ages.
-   process(all)
+   process(oldest_age, ages, hit_way)
    begin
       for i in 0 to ASSOCIATIVITY - 1 loop
          if i = unsigned(hit_way) then
@@ -437,7 +439,7 @@ begin
    end process;
 
    -- Drive main memory read/write.
-   process(all)
+   process(next_state)
    begin
       mwe_temp <= '0';
       mre_temp <= '0';
@@ -453,7 +455,7 @@ begin
    mwe <= mwe_temp;
 
    -- Drive memory address.
-   process(all)
+   process(next_transfer_count, oldest_addr, addr, next_state)
       subtype high_bits_type is
          std_logic_vector(ADDR_WIDTH - 1 downto LINE_SIZE_BITS);
       variable low_bits       : std_logic_vector(LINE_SIZE_BITS - 1 downto 0);
@@ -473,7 +475,7 @@ begin
    end process;
 
    -- Break out words of the oldest and hit lines.
-   process(all)
+   process(oldest_line, hit_line)
       variable start : natural;
       variable stop  : natural;
    begin

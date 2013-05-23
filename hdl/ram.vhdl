@@ -27,7 +27,7 @@ architecture ram_arch of ram is
    subtype word_type is std_logic_vector(WORD_WIDTH - 1 downto 0);
    type word_array_type is array (0 to SIZE - 1) of word_type;
 
-   signal data    : word_array_type := (others => (others => '1'));
+   signal data    : word_array_type;
    signal value   : word_type;
    signal counter : natural;
 
