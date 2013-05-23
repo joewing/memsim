@@ -34,6 +34,7 @@ architecture spm_arch of spm is
 
    signal data    : word_array_type;
    signal value   : word_type;
+   signal raddr   : natural;
 
    signal is_hit : std_logic;
 
@@ -45,9 +46,20 @@ begin
    begin
       if clk'event and clk = '1' and rst = '0' then
          if is_hit = '1' and re = '1' then
-            value <= data(to_integer(unsigned(addr)));
+            value <= data(raddr);
          elsif is_hit = '1' and we = '1' then
-            data(to_integer(unsigned(addr))) <= din;
+            data(raddr) <= din;
+         end if;
+      end if;
+   end process;
+
+   process(clk)
+   begin
+      if clk'event and clk = '1' then
+         if ADDR_WIDTH > 32 then
+            raddr <= to_integer(unsigned(addr(31 downto 0)));
+         else
+            raddr <= to_integer(unsigned(addr));
          end if;
       end if;
    end process;

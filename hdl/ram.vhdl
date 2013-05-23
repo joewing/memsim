@@ -31,34 +31,46 @@ architecture ram_arch of ram is
    signal value      : word_type;
    signal counter    : natural;
    signal nat_addr   : natural;
+   signal do_read    : std_logic;
+   signal do_write   : std_logic;
 
 begin
 
-   process(clk) is
+   process(clk)
    begin
       if clk'event and clk = '1' then
+         do_read <= '0';
+         do_write <= '0';
          if rst = '1' then
             counter <= 0;
-         else
-            if re = '1' then
-               counter <= LATENCY - 1;
-               value <= data(nat_addr);
-            elsif we = '1' then
-               counter <= LATENCY - 1;
-               data(nat_addr) <= din;
-            elsif counter > 0 then
-               counter <= counter - 1;
-            end if;
+         elsif re = '1' then
+            counter <= LATENCY - 1;
+            do_read <= '1';
+         elsif we = '1' then
+            counter <= LATENCY - 1;
+            do_write <= '1';
+            value <= din;
+         elsif counter > 0 then
+            counter <= counter - 1;
+         end if;
+         if do_read = '1' then
+            value <= data(nat_addr);
+         elsif do_write = '1' then
+            data(nat_addr) <= din;
          end if;
       end if;
    end process;
 
-   large_address : if ADDR_WIDTH > 32 generate
-      nat_addr <= to_integer(unsigned(addr(31 downto 0)));
-   end generate;
-   small_address : if ADDR_WIDTH <= 32 generate
-      nat_addr <= to_integer(unsigned(addr));
-   end generate;
+   process(clk)
+   begin
+      if clk'event and clk = '1' then
+         if ADDR_WIDTH > 32 then
+            nat_addr <= to_integer(unsigned(addr(31 downto 0)));
+         else
+            nat_addr <= to_integer(unsigned(addr));
+         end if;
+      end if;
+   end process;
 
    ready <= '1' when counter = 0 else '0';
    dout  <= value when counter = 0 else (others => 'Z');

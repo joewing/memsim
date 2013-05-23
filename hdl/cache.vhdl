@@ -125,6 +125,7 @@ architecture cache_arch of cache is
    signal current_offset   : std_logic_vector(LINE_SIZE_BITS - 1 downto 0);
    signal current_index    : std_logic_vector(INDEX_BITS - 1 downto 0);
    signal current_tag      : std_logic_vector(TAG_BITS - 1 downto 0);
+   signal rindex           : natural;
 
    signal oldest_addr      : std_logic_vector(ADDR_WIDTH - 1 downto 0);
    signal oldest_way       : way_type;
@@ -427,13 +428,13 @@ begin
          if rst = '1' then
             row <= (others => '0');
          else
-            if state = STATE_IDLE and next_state /= state then
-               row <= data(to_integer(unsigned(current_index)));
+            if state = STATE_READ or state = STATE_WRITE then
+               row <= data(rindex);
             elsif write_hit or write_ok or fill_ok then
                row <= updated_row;
             end if;
             if write_hit or write_ok or fill_ok then
-               data(to_integer(unsigned(current_index))) <= updated_row;
+               data(rindex) <= updated_row;
             end if;
          end if;
       end if;
@@ -503,5 +504,12 @@ begin
    current_offset <= addr(OFFSET_TOP downto OFFSET_BOTTOM);
    current_index  <= addr(INDEX_TOP downto INDEX_BOTTOM);
    current_tag    <= addr(TAG_TOP downto TAG_BOTTOM);
+
+   process(clk)
+   begin
+      if clk'event and clk = '1' then
+         rindex <= to_integer(unsigned(current_index));
+      end if;
+   end process;
 
 end cache_arch;
