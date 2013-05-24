@@ -5,8 +5,8 @@ use ieee.numeric_std.all;
 
 entity cache is
    generic (
-      ADDR_WIDTH        : in natural := 64;
-      WORD_WIDTH        : in natural := 64;
+      ADDR_WIDTH        : in natural := 32;
+      WORD_WIDTH        : in natural := 32;
       LINE_SIZE_BITS    : in natural := 0;
       LINE_COUNT_BITS   : in natural := 8;
       ASSOC_BITS        : in natural := 1
@@ -74,7 +74,7 @@ architecture cache_arch of cache is
 
    subtype line_type is std_logic_vector(LINE_BITS - 1 downto 0);
    subtype tag_type is std_logic_vector(TAG_BITS - 1 downto 0);
-   subtype age_type is std_logic_vector(AGE_BITS - 1 downto 0);
+   subtype age_type is std_logic_vector(AGE_BITS downto 0);
    subtype row_type is std_logic_vector(ROW_BITS - 1 downto 0);
    subtype word_type is std_logic_vector(WORD_WIDTH - 1 downto 0);
    subtype way_type is std_logic_vector(ASSOC_BITS downto 0);
@@ -89,22 +89,7 @@ architecture cache_arch of cache is
 
    constant ZERO_OFFSET    : offset_type := (others => '0');
 
-   function is_eq(a, b : std_logic_vector) return boolean is
-      variable upper : integer;
-   begin
-      if a'left > b'left then
-         upper := b'left;
-      else
-         upper := a'left;
-      end if;
-      if a'length = 0 or b'length = 0 then
-         return true;
-      else
-         return unsigned(a(upper downto 0)) = unsigned(b(upper downto 0));
-      end if;
-   end is_eq;
-
-   signal data          : row_array_type;
+   signal data          : row_array_type := (others => (others => '0'));
    signal row           : row_type;
    signal updated_row   : row_type;
    signal updated_ages  : age_array_type;
@@ -119,12 +104,12 @@ architecture cache_arch of cache is
 
    signal lines   : line_array_type;
    signal tags    : tag_array_type;
-   signal ages    : age_array_type;
    signal words   : word_array_type;
    signal dirty   : std_logic_vector(ASSOCIATIVITY - 1 downto 0);
    signal valid   : std_logic_vector(ASSOCIATIVITY - 1 downto 0);
+   signal ages    : age_array_type;
 
-   signal current_offset   : std_logic_vector(LINE_SIZE_BITS - 1 downto 0);
+   signal current_offset   : std_logic_vector(LINE_SIZE_BITS downto 0);
    signal current_index    : std_logic_vector(INDEX_BITS - 1 downto 0);
    signal current_tag      : std_logic_vector(TAG_BITS - 1 downto 0);
    signal rindex           : natural;
@@ -145,7 +130,7 @@ architecture cache_arch of cache is
 begin
 
    -- Break out fields in the current row.
-   process(row)
+   process(row, updated_row)
       variable offset      : natural;
       variable line_start  : natural;
       variable tag_start   : natural;
@@ -156,9 +141,11 @@ begin
          line_start  := offset + LINE_OFFSET;
          tag_start   := offset + TAG_OFFSET;
          age_start   := offset + AGE_OFFSET;
-         lines(i) <= row(line_start + LINE_BITS - 1 downto line_start);
+         lines(i) <= updated_row(line_start + LINE_BITS - 1 downto line_start);
          tags(i)  <= row(tag_start + TAG_BITS - 1 downto tag_start);
-         ages(i)  <= row(age_start + AGE_BITS - 1 downto age_start);
+         if AGE_BITS > 0 then
+            ages(i) <= "0" & row(age_start + AGE_BITS - 1 downto age_start);
+         end if;
          dirty(i) <= row(offset + DIRTY_OFFSET);
          valid(i) <= row(offset + VALID_OFFSET);
       end loop;
@@ -340,7 +327,6 @@ begin
       variable write_way   : way_type;
       variable load_mem    : boolean;
       variable write_line  : boolean;
-      variable i_offset    : offset_type;
    begin
       if is_hit = '1' then
          write_way := hit_way;
@@ -381,21 +367,24 @@ begin
             updated_row(dirty_start) <= dirty(way);
             updated_row(valid_start) <= valid(way);
          end if;
-         if state = STATE_READ2 or state = STATE_WRITE2 then
-            updated_row(age_top downto age_bottom) <= updated_ages(way);
-         else
-            updated_row(age_top downto age_bottom) <= ages(way);
+         if AGE_BITS > 0 then
+            if state = STATE_READ2 or state = STATE_WRITE2 then
+               updated_row(age_top downto age_bottom)
+                  <= updated_ages(way)(AGE_BITS - 1 downto 0);
+            else
+               updated_row(age_top downto age_bottom)
+                  <= ages(way)(AGE_BITS - 1 downto 0);
+            end if;
          end if;
          for i in 0 to LINE_SIZE - 1 loop
-            i_offset    := std_logic_vector(to_unsigned(i, LINE_SIZE_BITS));
             word_bottom := line_bottom + i * WORD_WIDTH;
             word_top    := word_bottom + WORD_WIDTH - 1;
             updated_row(word_top downto word_bottom)
                <= row(word_top downto word_bottom);
             if unsigned(write_way) = way then
-               if is_eq(transfer_count, i_offset) and load_mem then
+               if unsigned(transfer_count) = i and load_mem then
                   updated_row(word_top downto word_bottom) <= min;
-               elsif is_eq(current_offset, i_offset) and write_line then
+               elsif unsigned(current_offset) = i and write_line then
                   updated_row(word_top downto word_bottom) <= din;
                end if;
             end if;
@@ -466,20 +455,30 @@ begin
    process(next_transfer_count, oldest_addr, addr, next_state)
       subtype high_bits_type is
          std_logic_vector(ADDR_WIDTH - 1 downto LINE_SIZE_BITS);
-      variable low_bits       : std_logic_vector(LINE_SIZE_BITS - 1 downto 0);
+      variable low_bits       : offset_type;
       variable oldest_high    : high_bits_type;
       variable current_high   : high_bits_type;
    begin
-      low_bits       := next_transfer_count(LINE_SIZE_BITS - 1 downto 0);
       oldest_high    := oldest_addr(ADDR_WIDTH - 1 downto LINE_SIZE_BITS);
       current_high   := addr(ADDR_WIDTH - 1 downto LINE_SIZE_BITS);
-      case next_state is
-         when STATE_WRITEBACK_READ1    | STATE_WRITEBACK_READ2 |
-              STATE_WRITEBACK_WRITE1   | STATE_WRITEBACK_WRITE2 =>
-            maddr <= oldest_high & low_bits;
-         when others =>
-            maddr <= current_high & low_bits;
-      end case;
+      if LINE_SIZE > 1 then
+         low_bits := next_transfer_count(LINE_SIZE_BITS - 1 downto 0);
+         case next_state is
+            when STATE_WRITEBACK_READ1    | STATE_WRITEBACK_READ2 |
+                 STATE_WRITEBACK_WRITE1   | STATE_WRITEBACK_WRITE2 =>
+               maddr <= oldest_high & low_bits;
+            when others =>
+               maddr <= current_high & low_bits;
+         end case;
+      else
+         case next_state is
+            when STATE_WRITEBACK_READ1    | STATE_WRITEBACK_READ2 |
+                 STATE_WRITEBACK_WRITE1   | STATE_WRITEBACK_WRITE2 =>
+               maddr <= oldest_high;
+            when others =>
+               maddr <= current_high;
+         end case;
+      end if;
    end process;
 
    -- Break out words of the oldest and hit lines.
@@ -496,34 +495,22 @@ begin
    end process;
 
    -- Drive memory data (mout).
-   mout <= oldest_words(0) when LINE_SIZE = 1 else
-           oldest_words(to_integer(unsigned(
-                        next_transfer_count(LINE_SIZE_BITS - 1 downto 0))));
+   drive_mout1 : if LINE_SIZE = 1 generate
+      mout <= oldest_words(0);
+   end generate;
+   drive_moutn : if LINE_SIZE > 1 generate
+      mout <= oldest_words(to_integer(unsigned(
+                           next_transfer_count(LINE_SIZE_BITS - 1 downto 0))));
+   end generate;
 
    -- Drive dout.
    dout <= words(0) when LINE_SIZE = 1 else
            words(to_integer(unsigned(current_offset)));
 
    -- Drive the ready bit.
-   process(state, next_state)
-      variable next_idle : std_logic;
-   begin
-      if next_state = STATE_IDLE then
-         next_idle := '1';
-      else
-         next_idle := '0';
-      end if;
-      case state is
-         when STATE_IDLE               => ready <= '1';
-         when STATE_READ2              => ready <= next_idle;
-         when STATE_WRITE2             => ready <= next_idle;
-         when STATE_WRITEBACK_WRITE2   => ready <= next_idle;
-         when STATE_WRITE_FILL2        => ready <= next_idle;
-         when others                   => ready <= '0';
-      end case;
-   end process;
+   ready <= '1' when next_state = STATE_IDLE else '0';
 
-   current_offset <= addr(OFFSET_TOP downto OFFSET_BOTTOM);
+   current_offset <= "0" & addr(OFFSET_TOP downto OFFSET_BOTTOM);
    current_index  <= addr(INDEX_TOP downto INDEX_BOTTOM);
    current_tag    <= addr(TAG_TOP downto TAG_BOTTOM);
 
