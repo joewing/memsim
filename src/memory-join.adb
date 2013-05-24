@@ -75,6 +75,12 @@ package body Memory.Join is
       return 0;
    end Get_Cost;
 
+   function Get_Word_Size(mem : Join_Type) return Positive is
+   begin
+      Assert(False, "Memory.Join.Get_Word_Size not implemented");
+      return 1;
+   end Get_Word_Size;
+
    procedure Adjust(mem : in out Join_Type) is
    begin
       mem.split := null;

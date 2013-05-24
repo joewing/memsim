@@ -1,4 +1,6 @@
 
+with BRAM;
+
 package body Memory.SPM is
 
    function Create_SPM(mem       : access Memory_Type'Class;
@@ -118,10 +120,14 @@ package body Memory.SPM is
    end To_String;
 
    function Get_Cost(mem : SPM_Type) return Cost_Type is
-      size : constant Cost_Type := Cost_Type(mem.size) * 8;
+      wsize    : constant Positive  := Get_Word_Size(mem);
+      width    : constant Natural   := wsize * 8;
+      depth    : constant Natural   := mem.size / wsize;
+      result   : Cost_Type := 0;
    begin
-      return (size + BRAM_SIZE - 1) / BRAM_SIZE +
-             Get_Cost(Container_Type(mem));
+      result := Cost_Type(BRAM.Get_Count(width, depth));
+      result := result + Get_Cost(Container_Type(mem));
+      return result;
    end Get_Cost;
 
    function Get_Size(mem : SPM_Type) return Natural is

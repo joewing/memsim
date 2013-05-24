@@ -10,8 +10,7 @@ package Memory is
 
    type Generator_Pointer is access all RNG.Generator;
 
-   Prune_Error : exception;
-   BRAM_SIZE   : constant := 2 ** 14;
+   Prune_Error    : exception;
 
    procedure Destroy is new Ada.Unchecked_Deallocation(RNG.Generator,
                                                        Generator_Pointer);
@@ -60,6 +59,8 @@ package Memory is
    function To_String(mem : Memory_Type) return Unbounded_String is abstract;
 
    function Get_Cost(mem : Memory_Type) return Cost_Type is abstract;
+
+   function Get_Word_Size(mem : Memory_Type) return Positive is abstract;
 
    procedure Destroy(mem : in out Memory_Pointer);
 

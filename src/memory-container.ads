@@ -61,6 +61,9 @@ package Memory.Container is
    function Get_Writes(mem : Container_Type) return Long_Integer;
 
    overriding
+   function Get_Word_Size(mem : Container_Type) return Positive;
+
+   overriding
    procedure Adjust(mem : in out Container_Type);
 
    overriding

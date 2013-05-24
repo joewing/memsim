@@ -143,6 +143,15 @@ package body Memory.Container is
       end if;
    end Get_Writes;
 
+   function Get_Word_Size(mem : Container_Type) return Positive is
+   begin
+      if mem.mem /= null then
+         return Get_Word_Size(mem.mem.all);
+      else
+         return 1;
+      end if;
+   end Get_Word_Size;
+
    procedure Adjust(mem : in out Container_Type) is
    begin
       if mem.mem /= null then

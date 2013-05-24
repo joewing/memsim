@@ -36,6 +36,9 @@ package Memory.Flash is
    overriding
    function Get_Writes(mem : Flash_Type) return Long_Integer;
 
+   overriding
+   function Get_Word_Size(mem : Flash_Type) return Positive;
+
 private
 
    type Flash_Type is new Memory_Type with record

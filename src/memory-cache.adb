@@ -2,6 +2,7 @@
 with Ada.Unchecked_Deallocation;
 with Ada.Assertions; use Ada.Assertions;
 with Util; use Util;
+with BRAM;
 with Random_Enum;
 
 package body Memory.Cache is
@@ -434,45 +435,45 @@ package body Memory.Cache is
 
    function Get_Cost(mem : Cache_Type) return Cost_Type is
 
-      lines    : constant Cost_Type := Cost_Type(mem.line_count);
-      lsize    : constant Cost_Type := Cost_Type(mem.line_size) * 8;
-      assoc    : constant Cost_Type := Cost_Type(mem.associativity);
+      -- Bits per line for storing data.
+      lines       : constant Natural   := mem.line_count;
+      lsize       : constant Natural   := mem.line_size;
+      line_bits   : constant Natural   := lsize * 8;
 
       -- Bits to store a tag.
-      tag_bits : constant Cost_Type := Cost_Type(Address_Type'Size -
-                                                 Log2(mem.line_size) +
-                                                 mem.associativity);
+      addr_bits   : constant Positive  := Address_Type'Size;   -- FIXME
+      wsize       : constant Positive  := Get_Word_Size(mem);
+      index_bits  : constant Natural   := Log2(lines - 1);
+      ls_bits     : constant Natural   := Log2((lsize / wsize) - 1);
+      tag_bits    : constant Natural   := addr_bits - index_bits - ls_bits;
 
       -- Bits to store the age.
-      age_bits : constant Cost_Type := assoc - 1;
+      assoc       : constant Positive  := mem.associativity;
+      age_bits    : constant Natural   := Log2(assoc - 1);
 
-      -- Minimum number of banks needed.
-      min_banks : constant Cost_Type := Cost_Type(mem.associativity) /
-                                        Cost_Type(mem.latency);
+      -- Bits used for storing valid and dirty.
+      valid_bits  : constant Natural := 1;
+      dirty_bits  : constant Natural := 1;
 
-      -- Bits per line.
-      line_bits   : Cost_Type := lsize + tag_bits;
+      -- Bits per way.  This is the width of the memory.
+      width       : Natural := valid_bits + line_bits + tag_bits + age_bits;
 
       result : Cost_Type;
 
    begin
 
-      -- Determine how many bits are in each line.
-      line_bits := lsize + tag_bits + age_bits;
-
       -- If this cache is a write-back cache, we need to track a dirty
       -- bit for each cache line.
       if mem.write_back then
-         line_bits := line_bits + 1;
+         width := width + dirty_bits;
       end if;
 
-      -- Divide the line bits amoung the banks.
-      line_bits := (line_bits + min_banks - 1) / min_banks;
+      -- The memory must be wide enough to allow access to each way.
+      width := width * assoc;
 
-      -- Now we need to store (line_bits * lines) bits of data in each bank.
-      -- If this is too much for a BRAM, we need to split further.
-      Assert(min_banks > 0);
-      result := min_banks * ((line_bits * lines + BRAM_SIZE - 1) / BRAM_SIZE);
+      -- Given the width and depth of the cache, determine the number
+      -- of BRAMs required.
+      result := Cost_Type(BRAM.Get_Count(width, lines));
 
       -- Add the cost of the contained memory.
       result := result + Get_Cost(Container_Type(mem));

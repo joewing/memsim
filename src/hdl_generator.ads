@@ -14,7 +14,6 @@ package HDL_Generator is
 
    function Generate(mem         : Memory_Pointer;
                      name        : String;
-                     word_bits   : Positive;
                      addr_bits   : Positive) return String;
 
    function Get_Port_Count(port : Port_Type) return Natural;

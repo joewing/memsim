@@ -45,6 +45,9 @@ package Memory.Dup is
    function Get_Writes(mem : Dup_Type) return Long_Integer;
 
    overriding
+   function Get_Word_Size(mem : Dup_Type) return Positive;
+
+   overriding
    procedure Adjust(mem : in out Dup_Type);
 
    overriding

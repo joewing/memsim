@@ -37,6 +37,9 @@ package Memory.Join is
    function Get_Cost(mem : Join_Type) return Cost_Type;
 
    overriding
+   function Get_Word_Size(mem : Join_Type) return Positive;
+
+   overriding
    procedure Adjust(mem : in out Join_Type);
 
 private

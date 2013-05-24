@@ -12,6 +12,11 @@ package body Util is
       return r;
    end Log2;
 
+   function Round_Power2(n : Natural) return Natural is
+   begin
+      return 2 ** Log2(n);
+   end Round_Power2;
+
    function To_String(i : Integer) return String is
       str : constant String := Integer'Image(i);
    begin

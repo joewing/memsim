@@ -34,6 +34,7 @@ package Memory.RAM is
    overriding
    function Get_Writes(mem : RAM_Type) return Long_Integer;
 
+   overriding
    function Get_Word_Size(mem : RAM_Type) return Positive;
 
    function Get_Word_Count(mem : RAM_Type) return Positive;

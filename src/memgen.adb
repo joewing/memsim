@@ -18,7 +18,6 @@ procedure MemGen is
    mem         : Memory_Pointer;
    name        : Unbounded_String := To_Unbounded_String("memory");
    addr_width  : Positive := 64;
-   word_width  : Positive := 32;
    mem_index   : Integer := -1;
 
    procedure Show_Usage is
@@ -67,7 +66,7 @@ begin
    Join.Register;
    Cache.Register;
 
-   Put_Line(Generate(mem, To_String(name), word_width, addr_width));
+   Put_Line(Generate(mem, To_String(name), addr_width));
 
    Destroy(mem);
 

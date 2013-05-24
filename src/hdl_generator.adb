@@ -41,11 +41,11 @@ package body HDL_Generator is
 
    function Generate(mem         : Memory_Pointer;
                      name        : String;
-                     word_bits   : Positive;
                      addr_bits   : Positive) return String is
-      mname : constant String := "m" & To_String(Get_ID(mem.all));
-      gen   : Generator_Type;
-      r     : Unbounded_String;
+      mname       : constant String := "m" & To_String(Get_ID(mem.all));
+      word_bits   : constant Positive := 8 * Get_Word_Size(mem.all);
+      gen         : Generator_Type;
+      r           : Unbounded_String;
    begin
 
       gen.shift := 1;

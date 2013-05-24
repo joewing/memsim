@@ -23,9 +23,15 @@ package body HDL_Generator.Offset is
    begin
       Process(gen, other, word_bits, addr_bits);
       Declare_Signals(gen, name, word_bits, addr_bits);
-      Assign(gen, oname & "_addr",
-             "std_logic_vector(unsigned(" & name & "_addr) + " &
-             To_String(offset) & ")");
+      if (offset and 2 ** 63) /= 0 then
+         Assign(gen, oname & "_addr",
+                "std_logic_vector(unsigned(" & name & "_addr) - " &
+                To_String(-offset) & ")");
+      else
+         Assign(gen, oname & "_addr",
+                "std_logic_vector(unsigned(" & name & "_addr) + " &
+                To_String(offset) & ")");
+      end if;
       Assign(gen, oname & "_din", name & "_din");
       Assign(gen, name & "_dout", oname & "_dout");
       Assign(gen, oname & "_re", name & "_re");

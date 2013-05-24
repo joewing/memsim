@@ -115,6 +115,17 @@ package body Memory.Dup is
       return result;
    end Get_Writes;
 
+   function Get_Word_Size(mem : Dup_Type) return Positive is
+      temp   : Positive;
+      result : Positive := 1;
+   begin
+      for i in mem.memories.First_Index .. mem.memories.Last_Index loop
+         temp := Get_Word_Size(mem.memories.Element(i).all);
+         result := Positive'Max(result, temp);
+      end loop;
+      return result;
+   end Get_Word_Size;
+
    procedure Adjust(mem : in out Dup_Type) is
       ptr : Memory_Pointer;
    begin
