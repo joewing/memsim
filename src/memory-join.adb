@@ -77,8 +77,8 @@ package body Memory.Join is
 
    function Get_Word_Size(mem : Join_Type) return Positive is
    begin
-      Assert(False, "Memory.Join.Get_Word_Size not implemented");
-      return 1;
+      Assert(mem.split /= null, "Memory.Join.Get_Word_Size not implemented");
+      return Get_Word_Size(mem.split.all);
    end Get_Word_Size;
 
    procedure Adjust(mem : in out Join_Type) is

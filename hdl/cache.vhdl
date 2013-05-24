@@ -90,7 +90,7 @@ architecture cache_arch of cache is
    constant ZERO_OFFSET    : offset_type := (others => '0');
 
    signal data          : row_array_type := (others => (others => '0'));
-   signal row           : row_type;
+   signal row           : row_type := (others => '0');
    signal updated_row   : row_type;
    signal updated_ages  : age_array_type;
 

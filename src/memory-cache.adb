@@ -47,7 +47,7 @@ package body Memory.Cache is
       result.line_size     := 1;
       result.line_count    := 1;
       result.associativity := 1;
-      result.latency       := 1;
+      result.latency       := 2;
       result.policy        := LRU;
       result.exclusive     := False;
       result.write_back    := True;
@@ -96,20 +96,6 @@ package body Memory.Cache is
                if result.associativity > result.line_count or else
                   Get_Cost(result.all) > max_cost then
                   result.associativity := associativity;
-                  exit;
-               end if;
-            end if;
-         end;
-
-         -- Latency.
-         declare
-            latency : constant Time_Type := result.latency;
-         begin
-            if Random_Boolean(RNG.Random(generator)) then
-               result.latency := result.latency * 2;
-               if result.latency > Time_Type(result.associativity) or else
-                  Get_Cost(result.all) > max_cost then
-                  result.latency := latency;
                   exit;
                end if;
             end if;
@@ -167,7 +153,8 @@ package body Memory.Cache is
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
 
-      param          : Natural := RNG.Random(generator) mod 10;
+      param_count    : constant Natural := 8;
+      param          : Natural := RNG.Random(generator) mod param_count;
       line_size      : constant Positive     := mem.line_size;
       line_count     : constant Positive     := mem.line_count;
       associativity  : constant Positive     := mem.associativity;
@@ -180,7 +167,7 @@ package body Memory.Cache is
 
       -- Loop until we either change a parameter or we are unable to
       -- change any parameter.
-      for i in 1 .. 10 loop
+      for i in 1 .. param_count loop
          case param is
             when 0 =>      -- Increase line size
                mem.line_size := line_size * 2;
@@ -214,19 +201,7 @@ package body Memory.Cache is
                   exit when Get_Cost(mem) <= max_cost;
                   mem.associativity := associativity;
                end if;
-            when 6 =>      -- Increase latency.
-               if latency < Time_Type(associativity) then
-                  mem.latency := latency * 2;
-                  exit when Get_Cost(mem) <= max_cost;
-                  mem.latency := latency;
-               end if;
-            when 7 =>      -- Decrease latency.
-               if latency > 1 then
-                  mem.latency := latency / 2;
-                  exit when Get_Cost(mem) <= max_cost;
-                  mem.latency := latency;
-               end if;
-            when 8 =>      -- Change policy
+            when 6 =>      -- Change policy
                mem.policy := Random_Policy(RNG.Random(generator));
                exit when Get_Cost(mem) <= max_cost;
                mem.policy := policy;
@@ -237,7 +212,7 @@ package body Memory.Cache is
                mem.exclusive := exclusive;
                mem.write_back := write_back;
          end case;
-         param := (param + 1) mod 10;
+         param := (param + 1) mod param_count;
       end loop;
 
       mem.data.Set_Length(Count_Type(mem.line_count));
@@ -267,6 +242,23 @@ package body Memory.Cache is
       return Natural(base mod set_count);
    end Get_Index;
 
+   procedure Update_Ages(mem     : in out Cache_Type;
+                         first   : in Natural;
+                         hit_age : in Long_Integer) is
+      data : Cache_Data_Pointer;
+      line : Natural;
+   begin
+      for i in 0 .. mem.associativity - 1 loop
+         line := first + i * mem.line_count / mem.associativity;
+         data := mem.data.Element(line);
+         if data.age = hit_age then
+            data.age := 0;
+         elsif data.age < hit_age then
+            data.age := data.age + 1;
+         end if;
+      end loop;
+   end Update_Ages;
+
    procedure Get_Data(mem      : in out Cache_Type;
                       address  : in Address_Type;
                       size     : in Positive;
@@ -284,13 +276,6 @@ package body Memory.Cache is
       -- Advance the time.
       Advance(mem, mem.latency);
 
-      -- Update the age of all items in this set.
-      for i in 0 .. mem.associativity - 1 loop
-         line := first + i * mem.line_count / mem.associativity;
-         data := mem.data.Element(line);
-         data.age := data.age + 1;
-      end loop;
-
       -- First check if this address is already in the cache.
       -- Here we also keep track of the line to be replaced.
       if mem.policy = MRU then
@@ -302,8 +287,10 @@ package body Memory.Cache is
          line := first + i * mem.line_count / mem.associativity;
          data := mem.data.Element(line);
          if tag = data.address then    -- Cache hit.
-            if mem.policy /= FIFO then
-               data.age := 0;
+            if mem.policy = FIFO then
+               Update_Ages(mem, first, Long_Integer'Last);
+            else
+               Update_Ages(mem, first, data.age);
             end if;
             if is_read or mem.write_back then
                data.dirty := data.dirty or not is_read;
@@ -342,12 +329,14 @@ package body Memory.Cache is
             data.dirty := False;
          end if;
 
+         -- Update the ages.
+         Update_Ages(mem, first, data.age);
+
          -- Read the new entry.
          -- We skip this if this was a write that wrote the entire line.
          if is_read or size /= mem.line_size then
             data.address := tag;
             Read(Container_Type(mem), data.address, mem.line_size);
-            data.age := 0;
             data.dirty := not is_read;
          end if;
 
@@ -444,7 +433,8 @@ package body Memory.Cache is
       addr_bits   : constant Positive  := Address_Type'Size;   -- FIXME
       wsize       : constant Positive  := Get_Word_Size(mem);
       index_bits  : constant Natural   := Log2(lines - 1);
-      ls_bits     : constant Natural   := Log2((lsize / wsize) - 1);
+      line_words  : constant Natural   := (lsize + wsize - 1) / wsize;
+      ls_bits     : constant Natural   := Log2(line_words - 1);
       tag_bits    : constant Natural   := addr_bits - index_bits - ls_bits;
 
       -- Bits to store the age.

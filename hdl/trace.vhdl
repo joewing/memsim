@@ -10,7 +10,7 @@ end trace;
 architecture trace_arch of trace is
 
    constant ADDR_BITS : natural := 64;
-   constant WORD_BITS : natural := 32;
+   constant WORD_BITS : natural := 64;
 
    function log2(n : natural) return natural is
       variable i        : natural := n;
@@ -106,6 +106,8 @@ begin
       variable address  : unsigned(ADDR_BITS - 1 downto 0);
       variable size     : integer;
       variable value    : integer;
+      variable offset   : integer;
+      variable count    : integer;
 
    begin
 
@@ -148,32 +150,30 @@ begin
                when STATE_SIZE =>
                   value := parse_number(ch);
                   if value < 0 then
-                     address := shift_left(address, WORD_SHIFT);
+                     offset  := to_integer(unsigned(address))
+                                 mod (2 ** WORD_SHIFT);
+                     count   := ((size / WORD_BYTES) + offset + WORD_BYTES - 1)
+                                 / WORD_BYTES;
+                     address := shift_right(address, WORD_SHIFT);
                      case action is
                         when 'R' =>
-                           size := size / WORD_BYTES;
-                           for i in 1 to size loop
+                           for i in 1 to count loop
                               mem_addr <= std_logic_vector(address);
                               update(clk, mem_re, mem_ready);
-                              address := address
-                                 + to_unsigned(WORD_BYTES, ADDR_BITS);
+                              address := address + to_unsigned(1, ADDR_BITS);
                            end loop;
                         when 'W' =>
-                           size := size / WORD_BYTES;
-                           for i in 1 to size loop
+                           for i in 1 to count loop
                               mem_addr <= std_logic_vector(address);
                               update(clk, mem_we, mem_ready);
-                              address := address
-                                 + to_unsigned(WORD_BYTES, ADDR_BITS);
+                              address := address + to_unsigned(WORD_BYTES, 1);
                            end loop;
                         when 'M' =>
-                           size := size / WORD_BYTES;
-                           for i in 1 to size loop
+                           for i in 1 to count loop
                               mem_addr <= std_logic_vector(address);
                               update(clk, mem_re, mem_ready);
                               update(clk, mem_we, mem_ready);
-                              address := address
-                                 + to_unsigned(WORD_BYTES, ADDR_BITS);
+                              address := address + to_unsigned(WORD_BYTES, 1);
                            end loop;
                         when 'I' =>
                            for i in 1 to size loop
@@ -183,6 +183,7 @@ begin
                            report "invalid action" severity failure;
                      end case;
                      state := STATE_ACTION;
+                     action := '?';
                   else
                      size := size * 16 + value;
                      read(temp, ch, good);
@@ -190,6 +191,36 @@ begin
             end case;
          end loop;
       end loop;
+
+      offset  := to_integer(unsigned(address)) mod (2 ** WORD_SHIFT);
+      count   := ((size / WORD_BYTES) + offset + WORD_BYTES - 1) / WORD_BYTES;
+      address := shift_right(address, WORD_SHIFT);
+      case action is
+         when 'R' =>
+            for i in 1 to count loop
+               mem_addr <= std_logic_vector(address);
+               update(clk, mem_re, mem_ready);
+               address := address + to_unsigned(1, ADDR_BITS);
+            end loop;
+         when 'W' =>
+            for i in 1 to count loop
+               mem_addr <= std_logic_vector(address);
+               update(clk, mem_we, mem_ready);
+               address := address + to_unsigned(WORD_BYTES, 1);
+            end loop;
+         when 'M' =>
+            for i in 1 to count loop
+               mem_addr <= std_logic_vector(address);
+               update(clk, mem_re, mem_ready);
+               update(clk, mem_we, mem_ready);
+               address := address + to_unsigned(WORD_BYTES, 1);
+            end loop;
+         when 'I' =>
+            for i in 1 to size loop
+               cycle(clk);
+            end loop;
+         when others => null;
+      end case;
 
       report "cycles: " & natural'image(cycle_count);
       wait;
@@ -208,5 +239,21 @@ begin
    end process;
 
    mem_din  <= (others => '0');
+
+   mem1 : entity work.memory
+      generic map (
+         ADDR_WIDTH => ADDR_BITS,
+         WORD_WIDTH => WORD_BITS
+      )
+      port map (
+         clk     => clk,
+         rst     => rst,
+         addr    => mem_addr,
+         din     => mem_din,
+         dout    => mem_dout,
+         re      => mem_re,
+         we      => mem_we,
+         ready   => mem_ready
+      );
 
 end trace_arch;
