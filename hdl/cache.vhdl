@@ -169,7 +169,7 @@ begin
          is_hit      <= '0';
       end if;
       for i in 1 to ASSOCIATIVITY - 1 loop
-         if unsigned(temp_age) < unsigned(ages(i)) then
+         if unsigned(temp_age) < unsigned(ages(i)) or valid(i) /= '1' then
             oldest_addr    <= tags(i) & current_index & ZERO_OFFSET;
             oldest_way     <= std_logic_vector(to_unsigned(i, ASSOC_BITS + 1));
             oldest_dirty   <= dirty(i);
@@ -368,7 +368,7 @@ begin
             updated_row(valid_start) <= valid(way);
          end if;
          if AGE_BITS > 0 then
-            if state = STATE_READ2 or state = STATE_WRITE2 then
+            if next_state = STATE_IDLE then
                updated_row(age_top downto age_bottom)
                   <= updated_ages(way)(AGE_BITS - 1 downto 0);
             else
@@ -396,10 +396,11 @@ begin
    process(oldest_age, ages, hit_way)
    begin
       for i in 0 to ASSOCIATIVITY - 1 loop
-         if i = unsigned(hit_way) then
+         if is_hit = '1' and i = unsigned(hit_way) then
             updated_ages(i) <= (others => '0');
-         elsif unsigned(ages(i)) < unsigned(oldest_age)
-            or unsigned(ages(i)) = 0 then
+         elsif is_hit = '0' and i = unsigned(oldest_way) then
+            updated_ages(i) <= (others => '0');
+         elsif unsigned(ages(i)) <= unsigned(oldest_age) then
             updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
          else
             updated_ages(i) <= ages(i);
@@ -436,11 +437,11 @@ begin
    end process;
 
    -- Drive main memory read/write.
-   process(next_state)
+   process(state)
    begin
       mwe_temp <= '0';
       mre_temp <= '0';
-      case next_state is
+      case state is
          when STATE_WRITEBACK_READ1    => mwe_temp <= '1';
          when STATE_WRITEBACK_WRITE1   => mwe_temp <= '1';
          when STATE_READ_MISS1         => mre_temp <= '1';

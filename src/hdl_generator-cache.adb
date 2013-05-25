@@ -33,7 +33,7 @@ package body HDL_Generator.Cache is
       PLine(gen, "      LINE_SIZE_BITS  => " &
             To_String(Log2(lsize - 1)) & ",");
       PLine(gen, "      LINE_COUNT_BITS => " &
-            To_String(Log2(lcount - 1)) & ",");
+            To_String(Log2(lcount / assoc - 1)) & ",");
       PLine(gen, "      ASSOC_BITS      => " & To_String(Log2(assoc - 1)));
       PLine(gen, "   )");
       PLine(gen, "   port map (");
