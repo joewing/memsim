@@ -116,7 +116,6 @@ begin
       mem_we   <= '0';
       cycle(clk);
       rst      <= '0';
-      cycle(clk);
 
       while not endfile(infile) loop
          readline(infile, temp);
@@ -150,10 +149,8 @@ begin
                when STATE_SIZE =>
                   value := parse_number(ch);
                   if value < 0 then
-                     offset  := to_integer(unsigned(address))
-                                 mod (2 ** WORD_SHIFT);
-                     count   := ((size / WORD_BYTES) + offset + WORD_BYTES - 1)
-                                 / WORD_BYTES;
+                     offset  := to_integer(unsigned(address)) mod WORD_BYTES;
+                     count   := (size + offset + WORD_BYTES - 1) / WORD_BYTES;
                      address := shift_right(address, WORD_SHIFT);
                      case action is
                         when 'R' =>
@@ -192,8 +189,8 @@ begin
          end loop;
       end loop;
 
-      offset  := to_integer(unsigned(address)) mod (2 ** WORD_SHIFT);
-      count   := ((size / WORD_BYTES) + offset + WORD_BYTES - 1) / WORD_BYTES;
+      offset  := to_integer(unsigned(address)) mod WORD_BYTES;
+      count   := (size + offset + WORD_BYTES - 1) / WORD_BYTES;
       address := shift_right(address, WORD_SHIFT);
       case action is
          when 'R' =>
