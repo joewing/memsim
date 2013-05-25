@@ -3,7 +3,7 @@ package body Memory.RAM is
 
    function Create_RAM(latency    : Time_Type := 1;
                        word_size  : Positive  := 8;
-                       word_count : Positive  := 65536) return RAM_Pointer is
+                       word_count : Natural   := 65536) return RAM_Pointer is
       result : constant RAM_Pointer := new RAM_Type;
    begin
       result.latency    := latency;
@@ -53,6 +53,7 @@ package body Memory.RAM is
       Append(result, "(ram ");
       Append(result, "(latency" & Time_Type'Image(mem.latency) & ")");
       Append(result, "(word_size" & Positive'Image(mem.word_size) & ")");
+      Append(result, "(word_count" & Natural'Image(mem.word_count) & ")");
       Append(result, ")");
       return result;
    end To_String;
@@ -72,7 +73,7 @@ package body Memory.RAM is
       return mem.word_size;
    end Get_Word_Size;
 
-   function Get_Word_Count(mem : RAM_Type) return Positive is
+   function Get_Word_Count(mem : RAM_Type) return Natural is
    begin
       return mem.word_count;
    end Get_Word_Count;

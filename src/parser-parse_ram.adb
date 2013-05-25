@@ -7,7 +7,7 @@ procedure Parse_RAM(lexer  : in out Lexer_Type;
 
    latency     : Time_Type := 1;
    word_size   : Positive  := 8;
-   word_count  : Positive  := 65536;
+   word_count  : Natural   := 65536;
 
 begin
    while Get_Type(lexer) = Open loop
@@ -25,7 +25,7 @@ begin
             elsif name = "word_size" then
                word_size := Positive'Value(value);
             elsif name = "word_count" then
-               word_count := Positive'Value(value);
+               word_count := Natural'Value(value);
             else
                Raise_Error(lexer, "invalid ram attribute: " & name);
             end if;

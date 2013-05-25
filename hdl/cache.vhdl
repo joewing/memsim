@@ -122,6 +122,7 @@ architecture cache_arch of cache is
    signal oldest_words     : word_array_type;
    signal hit_way          : way_type;
    signal hit_line         : line_type;
+   signal hit_age          : age_type;
    signal is_hit           : std_logic;
 
    signal mre_temp         : std_logic;
@@ -163,6 +164,7 @@ begin
       temp_age       := ages(0);
       hit_way        <= (others => '0');
       hit_line       <= lines(0);
+      hit_age        <= ages(0);
       if current_tag = tags(0) and valid(0) = '1' then
          is_hit      <= '1';
       else
@@ -180,6 +182,7 @@ begin
          if current_tag = tags(i) and valid(i) = '1' then
             hit_way  <= std_logic_vector(to_unsigned(i, ASSOC_BITS + 1));
             hit_line <= lines(i);
+            hit_age  <= ages(i);
             is_hit   <= '1';
          end if;
       end loop;
@@ -396,14 +399,22 @@ begin
    process(oldest_age, ages, hit_way)
    begin
       for i in 0 to ASSOCIATIVITY - 1 loop
-         if is_hit = '1' and i = unsigned(hit_way) then
-            updated_ages(i) <= (others => '0');
-         elsif is_hit = '0' and i = unsigned(oldest_way) then
-            updated_ages(i) <= (others => '0');
-         elsif unsigned(ages(i)) <= unsigned(oldest_age) then
-            updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
+         if is_hit = '1' then
+            if i = unsigned(hit_way) then
+               updated_ages(i) <= (others => '0');
+            elsif unsigned(ages(i)) <= unsigned(hit_age) then
+               updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
+            else
+               updated_ages(i) <= ages(i);
+            end if;
          else
-            updated_ages(i) <= ages(i);
+            if i = unsigned(oldest_way) then
+               updated_ages(i) <= (others => '0');
+            elsif unsigned(ages(i)) <= unsigned(oldest_age) then
+               updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
+            else
+               updated_ages(i) <= ages(i);
+            end if;
          end if;
       end loop;
    end process;
@@ -426,10 +437,11 @@ begin
          else
             if state = STATE_READ1 or state = STATE_WRITE1 then
                row <= data(rindex);
-            elsif write_hit or write_ok or fill_ok then
+            elsif write_hit or write_ok or fill_ok or
+               (state /= STATE_IDLE and next_state = STATE_IDLE) then
                row <= updated_row;
             end if;
-            if write_hit or write_ok or fill_ok then
+            if state /= STATE_IDLE and next_state = STATE_IDLE then
                data(rindex) <= updated_row;
             end if;
          end if;

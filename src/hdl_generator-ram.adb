@@ -17,7 +17,7 @@ package body HDL_Generator.RAM is
                          addr_bits  : in Positive) is
       rp       : constant RAM_Pointer := RAM_Pointer(mem);
       name     : constant String := "m" & To_String(Get_ID(mem.all));
-      words    : constant Positive := Get_Word_Count(rp.all);
+      words    : constant Natural := Get_Word_Count(rp.all);
       latency  : constant Time_Type := Get_Latency(rp.all);
    begin
       Declare_Signals(gen, name, word_bits, addr_bits);
