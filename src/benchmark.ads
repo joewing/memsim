@@ -46,11 +46,22 @@ private
 
    function Get_Random(benchmark : Benchmark_Type'Class) return Natural;
 
-   function Read(benchmark : Benchmark_Type'Class;
-                 address   : Natural) return Integer;
+   function Read_Value(benchmark : Benchmark_Type'Class;
+                       address   : Natural) return Integer;
 
-   procedure Write(benchmark  : in out Benchmark_Type'Class;
-                   address    : in Natural;
-                   value      : in Integer);
+   procedure Write_Value(benchmark  : in out Benchmark_Type'Class;
+                         address    : in Natural;
+                         value      : in Integer);
+
+   procedure Read(benchmark   : in Benchmark_Type'Class;
+                  address     : in Address_Type;
+                  size        : in Positive);
+
+   procedure Write(benchmark  : in Benchmark_Type'Class;
+                   address    : in Address_Type;
+                   size       : in Positive);
+
+   procedure Idle(benchmark   : in Benchmark_Type'Class;
+                  cycles      : in Time_Type);
 
 end Benchmark;

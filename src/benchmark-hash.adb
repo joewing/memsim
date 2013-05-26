@@ -26,7 +26,7 @@ package body Benchmark.Hash is
    begin
 
       for i in 0 .. benchmark.size - 1 loop
-         Write(benchmark, i, Get_Random(benchmark));
+         Write_Value(benchmark, i, Get_Random(benchmark));
       end loop;
 
       for i in 1 .. benchmark.iterations loop
@@ -35,7 +35,7 @@ package body Benchmark.Hash is
             index : constant Natural := rand mod benchmark.size;
             temp  : Integer;
          begin
-            temp := Read(benchmark, index);
+            temp := Read_Value(benchmark, index);
             pragma Unreferenced(temp);
          end;
       end loop;

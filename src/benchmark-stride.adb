@@ -28,15 +28,15 @@ package body Benchmark.Stride is
    begin
 
       for i in 0 .. benchmark.size - 1 loop
-         Write(benchmark, i, Get_Random(benchmark));
+         Write_Value(benchmark, i, Get_Random(benchmark));
       end loop;
 
       for i in 1 .. benchmark.iterations loop
          for offset in 0 .. benchmark.size - 1 loop
             declare
-               temp   : constant Integer := Read(benchmark, offset) + 1;
+               temp : constant Integer := Read_Value(benchmark, offset) + 1;
             begin
-               Write(benchmark, offset, temp);
+               Write_Value(benchmark, offset, temp);
             end;
          end loop;
       end loop;

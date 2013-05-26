@@ -5,6 +5,8 @@ with Util; use Util;
 with BRAM;
 with Random_Enum;
 
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Memory.Cache is
 
    function Create_Cache(mem           : access Memory_Type'Class;
@@ -310,7 +312,6 @@ package body Memory.Cache is
 
          -- Look up the line to replace and reset its age.
          data := mem.data.Element(to_replace);
-         data.age := 0;
 
          -- Evict the oldest entry.
          -- On write-through caches, the dirty flag will never be set.
@@ -318,6 +319,10 @@ package body Memory.Cache is
             Write(Container_Type(mem), data.address, mem.line_size);
             data.dirty := False;
          end if;
+
+         data.age       := 0;
+         data.address   := tag;
+         data.valid     := True;
 
          -- Read the new entry.
          -- We skip this if this was a write that wrote the entire line.

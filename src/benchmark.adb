@@ -51,25 +51,76 @@ package body Benchmark is
       return Random.Random(benchmark.generator);
    end Get_Random;
 
-   function Read(benchmark : Benchmark_Type'Class;
-                 address   : Natural) return Integer is
+   function Read_Value(benchmark : Benchmark_Type'Class;
+                       address   : Natural) return Integer is
    begin
-      Memory.Read(benchmark.mem.all, Memory.Address_Type(address * 4), 4);
-      Memory.Idle(benchmark.mem.all, benchmark.spacing);
+      Read(benchmark, Address_Type(address * 4), 4);
+      Idle(benchmark, benchmark.spacing);
       return benchmark.data.Element(address);
-   end Read;
+   end Read_Value;
 
-   procedure Write(benchmark  : in out Benchmark_Type'Class;
-                   address    : in Natural;
-                   value      : in Integer) is
+   procedure Write_Value(benchmark  : in out Benchmark_Type'Class;
+                         address    : in Natural;
+                         value      : in Integer) is
    begin
-      Memory.Write(benchmark.mem.all, Memory.Address_Type(address * 4), 4);
-      Memory.Idle(benchmark.mem.all, benchmark.spacing);
+      Write(benchmark, Address_Type(address * 4), 4);
+      Idle(benchmark, benchmark.spacing);
       if Count_Type(address) >= benchmark.data.Length then
          benchmark.data.Set_Length(Count_Type(address + 1));
       end if;
       benchmark.data.Replace_Element(address, value);
+   end Write_Value;
+
+   procedure Read(benchmark   : in Benchmark_Type'Class;
+                  address     : in Address_Type;
+                  size        : in Positive) is
+      wsize    : constant Natural := Get_Word_Size(benchmark.mem.all);
+      offset   : constant Natural := Natural(address mod Address_Type(wsize));
+      start    : constant Address_Type := address / Address_Type(wsize);
+      count    : constant Positive := (size + wsize + offset - 1) / wsize;
+   begin
+      for i in Address_Type range Address_Type(1) .. Address_Type(count) loop
+         Read(benchmark.mem.all, (start + i - 1) * Address_Type(wsize), wsize);
+      end loop;
+   end Read;
+
+   procedure Write(benchmark  : in Benchmark_Type'Class;
+                   address    : in Address_Type;
+                   size       : in Positive) is
+      wsize    : constant Natural := Get_Word_Size(benchmark.mem.all);
+      offset   : constant Natural := Natural(address mod Address_Type(wsize));
+      start    : constant Address_Type := address / Address_Type(wsize);
+      count    : constant Positive := (size + wsize + offset - 1) / wsize;
+   begin
+
+      -- If the write doesn't start at a word boundary, we need to
+      -- read the first word.
+      if offset /= 0 then
+         Read(benchmark.mem.all, start * Address_Type(wsize), wsize);
+      elsif offset + size < wsize then
+         Read(benchmark.mem.all, start * Address_Type(wsize), wsize);
+      end if;
+
+      -- If the write doesn't end at a word boundary, we must read
+      -- the last word.
+      if offset + size > wsize and ((offset + size) mod wsize) /= 0 then
+         Read(benchmark.mem.all,
+              (start + Address_Type(count - 1)) * Address_Type(wsize), wsize);
+      end if;
+
+      -- Perform the write(s).
+      for i in Address_Type range Address_Type(1) .. Address_Type(count) loop
+         Write(benchmark.mem.all,
+               (start + i - 1) * Address_Type(wsize), wsize);
+      end loop;
+
    end Write;
+
+   procedure Idle(benchmark   : in Benchmark_Type'Class;
+                  cycles      : in Time_Type) is
+   begin
+      Idle(benchmark.mem.all, cycles);
+   end Idle;
 
    procedure Deallocate is
       new Ada.Unchecked_Deallocation(Benchmark_Type'Class, Benchmark_Pointer);

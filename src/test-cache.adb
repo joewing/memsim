@@ -21,7 +21,7 @@ package body Test.Cache is
 
       Check(Get_Time(cache1.all) = 0);
       Check(Get_Writes(cache1.all) = 0);
-      Check(Get_Cost(cache1.all) = 1);
+      Check(Get_Cost(cache1.all) = 3);
 
       Read(cache1.all, 0, 1);
       Check(Get_Time(cache1.all) = 201);
@@ -65,7 +65,7 @@ package body Test.Cache is
 
    begin
 
-      Check(Get_Cost(cache1.all) = 2);
+      Check(Get_Cost(cache1.all) = 5);
 
       Read(cache1.all, 0, 1);
       Check(Get_Time(cache1.all) = 201);
@@ -116,8 +116,8 @@ package body Test.Cache is
                                                       write_back     => True);
    begin
 
-      Check(Get_Cost(cache1.all) = 1);
-      Check(Get_Cost(cache2.all) = 2);
+      Check(Get_Cost(cache1.all) = 3);
+      Check(Get_Cost(cache2.all) = 6);
 
       Read(cache2.all, 0, 1);
       Check(Get_Time(cache2.all) = 102);

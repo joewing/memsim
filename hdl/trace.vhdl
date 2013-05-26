@@ -108,6 +108,7 @@ begin
       variable value    : integer;
       variable offset   : integer;
       variable count    : integer;
+variable start : integer;
 
    begin
 
@@ -160,6 +161,13 @@ begin
                               address := address + to_unsigned(1, ADDR_BITS);
                            end loop;
                         when 'W' =>
+                           if offset /= 0 then
+                              mem_addr <= std_logic_vector(address);
+                              update(clk, mem_re, mem_ready);
+                           elsif offset + size < WORD_BYTES then
+                              mem_addr <= std_logic_vector(address);
+                              update(clk, mem_re, mem_ready);
+                           end if;
                            for i in 1 to count loop
                               mem_addr <= std_logic_vector(address);
                               update(clk, mem_we, mem_ready);
@@ -200,6 +208,13 @@ begin
                address := address + to_unsigned(1, ADDR_BITS);
             end loop;
          when 'W' =>
+            if offset /= 0 then
+               mem_addr <= std_logic_vector(address);
+               update(clk, mem_re, mem_ready);
+            elsif offset + size < WORD_BYTES then
+               mem_addr <= std_logic_vector(address);
+               update(clk, mem_re, mem_ready);
+            end if;
             for i in 1 to count loop
                mem_addr <= std_logic_vector(address);
                update(clk, mem_we, mem_ready);

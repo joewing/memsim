@@ -6,8 +6,9 @@ package body Test.RAM is
 
    procedure Run_Tests is
 
-      mem : RAM_Pointer := Create_RAM(latency   => 100,
-                                      word_size => 4);
+      mem : RAM_Pointer := Create_RAM(latency      => 100,
+                                      word_size    => 4,
+                                      word_count   => 8);
       other : Memory_Pointer := null;
 
    begin
@@ -39,7 +40,8 @@ package body Test.RAM is
       Reset(mem.all);
       Check(Get_Time(mem.all) = 0);
 
-      Check(To_String(mem.all) = "(ram (latency 100)(word_size 4))");
+      Check(To_String(mem.all) =
+            "(ram (latency 100)(word_size 4)(word_count 8))");
 
       other := Clone(mem.all);
       Check(To_String(other.all) = To_String(mem.all));
