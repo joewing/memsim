@@ -72,7 +72,6 @@ private
       address  : Address_Type := Address_Type'Last;
       age      : Long_Integer := 0;
       dirty    : Boolean      := False;
-      valid    : Boolean      := False;
    end record;
 
    type Cache_Data_Pointer is access Cache_Data;

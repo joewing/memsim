@@ -5,8 +5,6 @@ with Util; use Util;
 with BRAM;
 with Random_Enum;
 
-with Ada.Text_IO; use Ada.Text_IO;
-
 package body Memory.Cache is
 
    function Create_Cache(mem           : access Memory_Type'Class;
@@ -320,16 +318,14 @@ package body Memory.Cache is
             data.dirty := False;
          end if;
 
-         data.age       := 0;
+         data.dirty     := not is_read;
          data.address   := tag;
-         data.valid     := True;
+         data.age       := 0;
 
          -- Read the new entry.
          -- We skip this if this was a write that wrote the entire line.
          if is_read or size /= mem.line_size then
-            data.address := tag;
-            Read(Container_Type(mem), data.address, mem.line_size);
-            data.dirty := not is_read;
+            Read(Container_Type(mem), tag, mem.line_size);
          end if;
 
       end if;
