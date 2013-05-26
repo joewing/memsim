@@ -20,7 +20,7 @@ package body Memory.SPM is
       result : SPM_Pointer := new SPM_Type;
    begin
 
-      result.latency := 1;
+      result.latency := 2;
       result.size := 1;
       for i in 1 .. 10 loop
 
