@@ -16,13 +16,16 @@ package body Memory.Transform.Shift is
       return result;
    end Create_Shift;
 
-   function Random_Shift(generator  : RNG.Generator;
+   function Random_Shift(next       : access Memory_Type'Class;
+                         generator  : RNG.Generator;
                          max_cost   : Cost_Type) return Memory_Pointer is
       result : Shift_Pointer := new Shift_Type;
    begin
+      Set_Memory(result.all, next);
       if Get_Cost(result.all) > max_cost then
+         Set_Memory(result.all, null);
          Destroy(Memory_Pointer(result));
-         return null;
+         return Memory_Pointer(next);
       end if;
       result.shift := (RNG.Random(generator) mod 16) + 1;
       result.word_size := 2 ** (RNG.Random(generator) mod 8);

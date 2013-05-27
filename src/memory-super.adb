@@ -15,71 +15,76 @@ package body Memory.Super is
    package Float_Math is new Ada.Numerics.Generic_Elementary_Functions(Float);
 
    function Create_Memory(mem       : Super_Type;
+                          next      : access Memory_Type'Class;
                           cost      : Cost_Type;
                           in_split  : Boolean)
                           return Memory_Pointer;
 
    function Create_Split(mem        : Super_Type;
+                         next       : access Memory_Type'Class;
                          cost       : Cost_Type)
                          return Memory_Pointer;
 
    function Create_Memory(mem       : Super_Type;
+                          next      : access Memory_Type'Class;
                           cost      : Cost_Type;
                           in_split  : Boolean)
                           return Memory_Pointer is
-      result : Memory_Pointer := null;
+      tcost    : constant Cost_Type := cost + Get_Cost(next.all);
+      result   : Memory_Pointer := null;
    begin
       if in_split then
          case RNG.Random(mem.generator.all) mod 4 is
             when 0      =>
-               result := Random_Prefetch(mem.generator.all, cost);
+               result := Random_Prefetch(next, mem.generator.all, tcost);
             when 1      =>
-               result := Random_SPM(mem.generator.all, cost);
+               result := Random_SPM(next, mem.generator.all, tcost);
             when 2      =>
-               result := Random_Cache(mem.generator.all, cost);
+               result := Random_Cache(next, mem.generator.all, tcost);
             when others =>
-               result := Create_Split(mem, cost);
+               result := Create_Split(mem, next, cost);
          end case;
       else
          case RNG.Random(mem.generator.all) mod 6 is
             when 0      =>
-               result := Random_Shift(mem.generator.all, cost);
+               result := Random_Shift(next, mem.generator.all, tcost);
             when 1      =>
-               result := Random_Offset(mem.generator.all, cost);
+               result := Random_Offset(next, mem.generator.all, tcost);
             when 2      =>
-               result := Random_Prefetch(mem.generator.all, cost);
+               result := Random_Prefetch(next, mem.generator.all, tcost);
             when 3      =>
-               result := Random_SPM(mem.generator.all, cost);
+               result := Random_SPM(next, mem.generator.all, tcost);
             when 4      =>
-               result := Random_Cache(mem.generator.all, cost);
+               result := Random_Cache(next, mem.generator.all, tcost);
             when others =>
-               result := Create_Split(mem, cost);
+               result := Create_Split(mem, next, cost);
          end case;
       end if;
       return result;
    end Create_Memory;
 
    function Create_Split(mem        : Super_Type;
+                         next       : access Memory_Type'Class;
                          cost       : Cost_Type)
                          return Memory_Pointer is
       result   : constant Split_Pointer
-                  := Split_Pointer(Random_Split(mem.generator.all, cost));
-      bank0    : constant Memory_Pointer
-                  := Create_Memory(mem, (cost + 1) / 2, True);
-      bank1    : constant Memory_Pointer
-                  := Create_Memory(mem, cost / 2, True);
+               := Split_Pointer(Random_Split(next, mem.generator.all, cost));
+      j0    : constant Join_Pointer := Create_Join(result, 0);
+      c0    : constant Cost_Type := (cost + 1) / 2;
+      bank0 : constant Memory_Pointer := Create_Memory(mem, j0, c0, True);
+      j1    : constant Join_Pointer := Create_Join(result, 1);
+      c1    : constant Cost_Type := cost / 2;
+      bank1 : constant Memory_Pointer := Create_Memory(mem, j1, c1, True);
    begin
       if bank0 /= null and then bank0.all in Container_Type'Class then
-         Set_Memory(Container_Pointer(bank0).all, Create_Join);
          Set_Bank(result, 0, bank0);
       else
-         Set_Bank(result, 0, Create_Join);
+         Set_Bank(result, 0, j0);
       end if;
       if bank1 /= null and then bank1.all in Container_Type'Class then
-         Set_Memory(Container_Pointer(bank1).all, Create_Join);
          Set_Bank(result, 1, bank1);
       else
-         Set_Bank(result, 1, Create_Join);
+         Set_Bank(result, 1, j1);
       end if;
       return Memory_Pointer(result);
    end Create_Split;
@@ -269,15 +274,7 @@ package body Memory.Super is
       if index = 0 then
 
          -- Insert other before ptr.
-         declare
-            temp : constant Memory_Pointer :=
-                   Create_Memory(mem, cost, in_split);
-         begin
-            if temp /= null then
-               Set_Memory(Container_Pointer(temp).all, ptr);
-               ptr := temp;
-            end if;
-         end;
+         ptr := Create_Memory(mem, ptr, cost, in_split);
 
       elsif ptr.all in Split_Type'Class then
 
@@ -406,7 +403,7 @@ package body Memory.Super is
       temp  : Container_Pointer := null;
       len   : constant Natural := Count_Memories(mem.current);
       pos   : Natural;
-      cost  : constant Cost_Type := Get_Cost(mem);
+      cost  : constant Cost_Type := Get_Cost(mem.current.all);
       left  : constant Cost_Type := mem.max_cost - cost;
    begin
 

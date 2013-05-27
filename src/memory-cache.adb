@@ -37,14 +37,16 @@ package body Memory.Cache is
 
    function Random_Boolean is new Random_Enum(Boolean);
 
-   function Random_Cache(generator  : RNG.Generator;
+   function Random_Cache(next       : access Memory_Type'Class;
+                         generator  : RNG.Generator;
                          max_cost   : Cost_Type)
                          return Memory_Pointer is
       result : Cache_Pointer := new Cache_Type;
    begin
 
       -- Start with everything set to the minimum.
-      result.line_size     := 1;
+      Set_Memory(result.all, next);
+      result.line_size     := Get_Word_Size(next.all);
       result.line_count    := 1;
       result.associativity := 1;
       result.latency       := 3;
@@ -54,8 +56,9 @@ package body Memory.Cache is
 
       -- If even the minimum cache is too costly, return nulll.
       if Get_Cost(result.all) > max_cost then
+         Set_Memory(result.all, null);
          Destroy(Memory_Pointer(result));
-         return null;
+         return Memory_Pointer(next);
       end if;
 
       -- Randomly increase parameters, reverting them if we exceed the cost.
@@ -173,7 +176,7 @@ package body Memory.Cache is
                exit when Get_Cost(mem) <= max_cost;
                mem.line_size := line_size;
             when 1 =>      -- Decrease line size
-               if line_size > 1 then
+               if line_size > Get_Word_Size(Get_Memory(mem).all) then
                   mem.line_size := line_size / 2;
                   exit when Get_Cost(mem) <= max_cost;
                   mem.line_size := line_size;

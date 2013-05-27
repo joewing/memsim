@@ -8,7 +8,8 @@ package Memory.Transform.Offset is
    function Create_Offset(mem    : access Memory_Type'Class;
                           offset : Integer) return Offset_Pointer;
 
-   function Random_Offset(generator : RNG.Generator;
+   function Random_Offset(next      : access Memory_Type'Class;
+                          generator : RNG.Generator;
                           max_cost  : Cost_Type) return Memory_Pointer;
 
    function Get_Offset(mem : Offset_Type) return Address_Type;

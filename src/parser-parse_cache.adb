@@ -2,7 +2,7 @@
 with Memory.Cache;
 
 separate (Parser)
-procedure Parse_Cache(lexer   : in out Lexer_Type;
+procedure Parse_Cache(parser  : in out Parser_Type;
                       result  : out Memory_Pointer) is
 
    type Policy_Map_Type is record
@@ -28,23 +28,23 @@ procedure Parse_Cache(lexer   : in out Lexer_Type;
    write_back     : Boolean := True;
 
 begin
-   while Get_Type(lexer) = Open loop
-      Match(lexer, Open);
+   while Get_Type(parser) = Open loop
+      Match(parser, Open);
       declare
-         name : constant String := Get_Value(lexer);
+         name : constant String := Get_Value(parser);
       begin
-         Match(lexer, Literal);
+         Match(parser, Literal);
          if name = "memory" then
             if mem /= null then
-               Raise_Error(lexer,
+               Raise_Error(parser,
                            "memory declared multipled times in cache");
             end if;
-            Parse_Memory(lexer, mem);
+            Parse_Memory(parser, mem);
          else
             declare
-               value : constant String := Get_Value(lexer);
+               value : constant String := Get_Value(parser);
             begin
-               Match(lexer, Literal);
+               Match(parser, Literal);
                if name = "line_count" then
                   line_count := Positive'Value(value);
                elsif name = "line_size" then
@@ -69,19 +69,20 @@ begin
                         end if;
                      end loop;
                      if not found then
-                        Raise_Error(lexer, "invalid cache replacement policy");
+                        Raise_Error(parser,
+                                    "invalid cache replacement policy");
                      end if;
                   end;
                else
-                  Raise_Error(lexer, "invalid cache attribute: " & name);
+                  Raise_Error(parser, "invalid cache attribute: " & name);
                end if;
             end;
          end if;
       end;
-      Match(lexer, Close);
+      Match(parser, Close);
    end loop;
    if mem = null then
-      Raise_Error(lexer, "no memory specified in cache");
+      Raise_Error(parser, "no memory specified in cache");
    end if;
    result := Memory_Pointer(Cache.Create_Cache(mem,
                                                line_count,
@@ -94,7 +95,7 @@ begin
 exception
    when Data_Error | Constraint_Error =>
       Destroy(mem);
-      Raise_Error(lexer, "invalid value in cache");
+      Raise_Error(parser, "invalid value in cache");
    when Parse_Error =>
       Destroy(mem);
       raise Parse_Error;

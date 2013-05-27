@@ -4,7 +4,7 @@ with Memory.Super_Writes;
 with Memory.Super_None;
 
 separate (Parser)
-procedure Parse_Super(lexer   : in out Lexer_Type;
+procedure Parse_Super(parser  : in out Parser_Type;
                       result  : out Memory_Pointer) is
 
    type Opt_Type is (Opt_Time, Opt_Writes, Opt_None);
@@ -17,24 +17,24 @@ procedure Parse_Super(lexer   : in out Lexer_Type;
 
 begin
 
-   while Get_Type(lexer) = Open loop
-      Match(lexer, Open);
+   while Get_Type(parser) = Open loop
+      Match(parser, Open);
       declare
-         name : constant String := Get_Value(lexer);
+         name : constant String := Get_Value(parser);
       begin
-         Match(lexer, Literal);
+         Match(parser, Literal);
          if name = "memory" then
             if dram = null then
-               Parse_Memory(lexer, dram);
+               Parse_Memory(parser, dram);
             else
                Destroy(dram);
-               Raise_Error(lexer, "duplicate memory in super");
+               Raise_Error(parser, "duplicate memory in super");
             end if;
          else
             declare
-               value : constant String := Get_Value(lexer);
+               value : constant String := Get_Value(parser);
             begin
-               Match(lexer, Literal);
+               Match(parser, Literal);
                if name = "max_cost" then
                   max_cost := Cost_Type'Value(value);
                elsif name = "seed" then
@@ -49,16 +49,16 @@ begin
                   elsif value = "none" then
                      opt := Opt_None;
                   else
-                     Raise_Error(lexer, "invalid optimization target: " &
+                     Raise_Error(parser, "invalid optimization target: " &
                                  value);
                   end if;
                else
-                  Raise_Error(lexer, "invalid attribute in super: " & name);
+                  Raise_Error(parser, "invalid attribute in super: " & name);
                end if;
             end;
          end if;
       end;
-      Match(lexer, Close);
+      Match(parser, Close);
    end loop;
    case opt is
       when Opt_Time =>
@@ -76,5 +76,5 @@ exception
       if dram /= null then
          Destroy(dram);
       end if;
-      Raise_Error(lexer, "invalid value in super");
+      Raise_Error(parser, "invalid value in super");
 end Parse_Super;

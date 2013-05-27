@@ -27,10 +27,6 @@ package Memory is
 
    function Clone(mem : Memory_Type) return Memory_Pointer is abstract;
 
-   procedure Set_Split(mem    : in out Memory_Type;
-                       index  : in Natural;
-                       other  : in Memory_Pointer) is null;
-
    procedure Permute(mem         : in out Memory_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type);

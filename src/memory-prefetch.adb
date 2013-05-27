@@ -13,14 +13,17 @@ package body Memory.Prefetch is
       return result;
    end Create_Prefetch;
 
-   function Random_Prefetch(generator  : RNG.Generator;
+   function Random_Prefetch(next       : access Memory_Type'Class;
+                            generator  : RNG.Generator;
                             max_cost   : Cost_Type)
                             return Memory_Pointer is
       result : Prefetch_Pointer := new Prefetch_Type;
    begin
+      Set_Memory(result.all, next);
       if Get_Cost(result.all) > max_cost then
+         Set_Memory(result.all, null);
          Destroy(Memory_Pointer(result));
-         return null;
+         return Memory_Pointer(next);
       end if;
       result.stride     := Address_Type(RNG.Random(generator) mod 3) - 1;
       result.multiplier := Address_Type(RNG.Random(generator) mod 3) - 1;

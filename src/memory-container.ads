@@ -11,11 +11,6 @@ package Memory.Container is
                         other : access Memory_Type'Class);
 
    overriding
-   procedure Set_Split(mem    : in out Container_Type;
-                       index  : in Natural;
-                       other  : in Memory_Pointer);
-
-   overriding
    procedure Reset(mem : in out Container_Type);
 
    overriding

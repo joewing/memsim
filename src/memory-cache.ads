@@ -23,7 +23,8 @@ package Memory.Cache is
                          write_back    : Boolean := True)
                          return Cache_Pointer;
 
-   function Random_Cache(generator  : RNG.Generator;
+   function Random_Cache(next       : access Memory_Type'Class;
+                         generator  : RNG.Generator;
                          max_cost   : Cost_Type)
                          return Memory_Pointer;
 

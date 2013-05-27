@@ -12,7 +12,8 @@ package Memory.Prefetch is
                             multiplier : Address_Type := 1)
                             return Prefetch_Pointer;
 
-   function Random_Prefetch(generator  : RNG.Generator;
+   function Random_Prefetch(next       : access Memory_Type'Class;
+                            generator  : RNG.Generator;
                             max_cost   : Cost_Type)
                             return Memory_Pointer;
 

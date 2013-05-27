@@ -9,15 +9,18 @@ package body Test.Split is
       ram   : constant Monitor_Pointer := new Monitor_Type;
       mon1  : constant Monitor_Pointer := new Monitor_Type;
       mon2  : constant Monitor_Pointer := new Monitor_Type;
-      join1 : constant Join_Pointer    := Create_Join;
-      join2 : constant Join_Pointer    := Create_Join;
-      split : Split_Pointer;
+      split : Split_Pointer := Create_Split;
+      join1 : constant Join_Pointer    := Create_Join(split, 0);
+      join2 : constant Join_Pointer    := Create_Join(split, 1);
 
    begin
 
+      Set_Offset(split.all, 256);
+      Set_Memory(split.all, ram);
+      Set_Bank(split, 0, mon1);
+      Set_Bank(split, 1, mon2);
       Set_Memory(mon1.all, join1);
       Set_Memory(mon2.all, join2);
-      split := Create_Split(ram, mon1, mon2, 256);
 
       Check(ram.reads = 0);
       Check(ram.writes = 0);

@@ -188,7 +188,7 @@ package body Benchmark.Trace is
       end loop;
       Stream_IO.Close(file);
    exception
-      when ex: others =>
+      when ex: Device_Error =>
          Put_Line("error: could not read " & To_String(benchmark.file_name) &
                   ": " & Exception_Name(ex) & ": " & Exception_Message(ex));
          Stream_IO.Close(file);

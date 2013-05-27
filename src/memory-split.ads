@@ -7,12 +7,10 @@ package Memory.Split is
 
    type Split_Pointer is access all Split_Type'Class;
 
-   function Create_Split(mem     : access Memory_Type'Class;
-                         banka   : access Memory_Type'Class;
-                         bankb   : access Memory_Type'Class;
-                         offset  : Address_Type) return Split_Pointer;
+   function Create_Split return Split_Pointer;
 
-   function Random_Split(generator  : RNG.Generator;
+   function Random_Split(next       : access Memory_Type'Class;
+                         generator  : RNG.Generator;
                          max_cost   : Cost_Type)
                          return Memory_Pointer;
 
@@ -32,6 +30,9 @@ package Memory.Split is
                       other : access Memory_Type'Class);
 
    function Get_Offset(mem : Split_Type'Class) return Address_Type;
+
+   procedure Set_Offset(mem      : in out Split_Type'Class;
+                        offset   : in Address_Type);
 
    overriding
    procedure Reset(mem : in out Split_Type);

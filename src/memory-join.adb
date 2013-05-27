@@ -5,19 +5,14 @@ with Memory.Container; use Memory.Container;
 
 package body Memory.Join is
 
-   function Create_Join return Join_Pointer is
+   function Create_Join(split : Split_Pointer;
+                        index : Natural)  return Join_Pointer is
       result : constant Join_Pointer := new Join_Type;
    begin
+      result.split   := split;
+      result.index   := index;
       return result;
    end Create_Join;
-
-   procedure Set_Split(mem    : in out Join_Type;
-                       index  : in Natural;
-                       other  : in Memory_Pointer) is
-   begin
-      mem.split := Split_Pointer(other);
-      mem.index := index;
-   end Set_Split;
 
    function Clone(mem : Join_Type) return Memory_Pointer is
       result : constant Join_Pointer := new Join_Type'(mem);
@@ -77,7 +72,6 @@ package body Memory.Join is
 
    function Get_Word_Size(mem : Join_Type) return Positive is
    begin
-      Assert(mem.split /= null, "Memory.Join.Get_Word_Size not implemented");
       return Get_Word_Size(mem.split.all);
    end Get_Word_Size;
 
@@ -85,5 +79,11 @@ package body Memory.Join is
    begin
       mem.split := null;
    end Adjust;
+
+   procedure Set_Split(mem    : in out Join_Type;
+                       split  : in Split_Pointer) is
+   begin
+      mem.split := split;
+   end Set_Split;
 
 end Memory.Join;

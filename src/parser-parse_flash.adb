@@ -2,7 +2,7 @@
 with Memory.Flash;
 
 separate (Parser)
-procedure Parse_Flash(lexer   : in out Lexer_Type;
+procedure Parse_Flash(parser  : in out Parser_Type;
                       result  : out Memory_Pointer) is
 
    word_size      : Positive := 8;
@@ -12,16 +12,16 @@ procedure Parse_Flash(lexer   : in out Lexer_Type;
 
 begin
 
-   while Get_Type(lexer) = Open loop
-      Match(lexer, Open);
+   while Get_Type(parser) = Open loop
+      Match(parser, Open);
       declare
-         name : constant String := Get_Value(lexer);
+         name : constant String := Get_Value(parser);
       begin
-         Match(lexer, Literal);
+         Match(parser, Literal);
          declare
-            value : constant String := Get_Value(lexer);
+            value : constant String := Get_Value(parser);
          begin
-            Match(lexer, Literal);
+            Match(parser, Literal);
             if name = "word_size" then
                word_size := Positive'Value(value);
             elsif name = "block_size" then
@@ -31,15 +31,15 @@ begin
             elsif name = "write_latency" then
                write_latency := Time_Type'Value(value);
             else
-               Raise_Error(lexer, "invalid attribute in flash: " & name);
+               Raise_Error(parser, "invalid attribute in flash: " & name);
             end if;
          end;
       end;
-      Match(lexer, Close);
+      Match(parser, Close);
    end loop;
    result := Memory_Pointer(Flash.Create_Flash(word_size, block_size,
                                                read_latency, write_latency));
 exception
    when Data_Error | Constraint_Error =>
-      Raise_Error(lexer, "invalid value in flash");
+      Raise_Error(parser, "invalid value in flash");
 end Parse_Flash;

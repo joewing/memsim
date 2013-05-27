@@ -14,13 +14,16 @@ package body Memory.Transform.Offset is
       return result;
    end Create_Offset;
 
-   function Random_Offset(generator : RNG.Generator;
+   function Random_Offset(next      : access Memory_Type'Class;
+                          generator : RNG.Generator;
                           max_cost  : Cost_Type) return Memory_Pointer is
       result   : Offset_Pointer := new Offset_Type;
    begin
+      Set_Memory(result.all, next);
       if Get_Cost(result.all) > max_cost then
+         Set_Memory(result.all, null);
          Destroy(Memory_Pointer(result));
-         return null;
+         return Memory_Pointer(next);
       end if;
       if (RNG.Random(generator) mod 2) = 0 then
          result.offset := 0 - Address_Type(1);

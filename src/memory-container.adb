@@ -1,4 +1,6 @@
 
+with Ada.Assertions; use Ada.Assertions;
+
 package body Memory.Container is
 
    function Get_Memory(mem : Container_Type'Class) return Memory_Pointer is
@@ -11,13 +13,6 @@ package body Memory.Container is
    begin
       mem.mem := other;
    end Set_Memory;
-
-   procedure Set_Split(mem    : in out Container_Type;
-                       index  : in Natural;
-                       other  : in Memory_Pointer) is
-   begin
-      Set_Split(mem.mem.all, index, other);
-   end Set_Split;
 
    procedure Reset(mem : in out Container_Type) is
    begin
@@ -145,11 +140,8 @@ package body Memory.Container is
 
    function Get_Word_Size(mem : Container_Type) return Positive is
    begin
-      if mem.mem /= null then
-         return Get_Word_Size(mem.mem.all);
-      else
-         return 1;
-      end if;
+      Assert(mem.mem /= null, "null memory in Memory.Container.Get_Word_Size");
+      return Get_Word_Size(mem.mem.all);
    end Get_Word_Size;
 
    procedure Adjust(mem : in out Container_Type) is

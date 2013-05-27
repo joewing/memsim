@@ -2,7 +2,7 @@
 with Memory.RAM;
 
 separate (Parser)
-procedure Parse_RAM(lexer  : in out Lexer_Type;
+procedure Parse_RAM(parser : in out Parser_Type;
                     result : out Memory_Pointer) is
 
    latency     : Time_Type := 1;
@@ -10,16 +10,16 @@ procedure Parse_RAM(lexer  : in out Lexer_Type;
    word_count  : Natural   := 65536;
 
 begin
-   while Get_Type(lexer) = Open loop
-      Match(lexer, Open);
+   while Get_Type(parser) = Open loop
+      Match(parser, Open);
       declare
-         name : constant String := Get_Value(lexer);
+         name : constant String := Get_Value(parser);
       begin
-         Match(lexer, Literal);
+         Match(parser, Literal);
          declare
-            value : constant String := Get_Value(lexer);
+            value : constant String := Get_Value(parser);
          begin
-            Match(lexer, Literal);
+            Match(parser, Literal);
             if name = "latency" then
                latency := Time_Type'Value(value);
             elsif name = "word_size" then
@@ -27,14 +27,14 @@ begin
             elsif name = "word_count" then
                word_count := Natural'Value(value);
             else
-               Raise_Error(lexer, "invalid ram attribute: " & name);
+               Raise_Error(parser, "invalid ram attribute: " & name);
             end if;
          end;
       end;
-      Match(lexer, Close);
+      Match(parser, Close);
    end loop;
    result := Memory_Pointer(RAM.Create_RAM(latency, word_size, word_count));
 exception
    when Data_Error | Constraint_Error =>
-      Raise_Error(lexer, "invalid value in ram");
+      Raise_Error(parser, "invalid value in ram");
 end Parse_RAM;

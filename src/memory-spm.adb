@@ -14,29 +14,29 @@ package body Memory.SPM is
       return result;
    end Create_SPM;
 
-   function Random_SPM(generator : RNG.Generator;
+   function Random_SPM(next      : access Memory_Type'Class;
+                       generator : RNG.Generator;
                        max_cost  : Cost_Type)
                        return Memory_Pointer is
       result : SPM_Pointer := new SPM_Type;
    begin
 
+      Set_Memory(result.all, next);
       result.latency := 2;
-      result.size := 1;
+      result.size := Get_Word_Size(next.all);
       for i in 1 .. 10 loop
-
          result.size := result.size * 2;
          if Get_Cost(result.all) > max_cost then
             result.size := result.size / 2;
             exit;
          end if;
-
          exit when Get_Cost(result.all) >= max_cost;
-
       end loop;
 
       if Get_Cost(result.all) > max_cost then
+         Set_Memory(result.all, null);
          Destroy(Memory_Pointer(result));
-         return null;
+         return Memory_Pointer(next);
       else
          return Memory_Pointer(result);
       end if;

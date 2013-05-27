@@ -1,41 +1,45 @@
 
 with Ada.Assertions; use Ada.Assertions;
+with Memory.Join;    use Memory.Join;
 
 package body Memory.Split is
 
-   function Create_Split(mem     : access Memory_Type'Class;
-                         banka   : access Memory_Type'Class;
-                         bankb   : access Memory_Type'Class;
-                         offset  : Address_Type) return Split_Pointer is
+   function Create_Split return Split_Pointer is
       result : constant Split_Pointer := new Split_Type;
    begin
-      Set_Memory(result.all, mem);
-      result.banks(0).mem := banka;
-      result.banks(1).mem := bankb;
-      result.offset := offset;
-      if banka /= null then
-         Set_Split(banka.all, 0, Memory_Pointer(result));
-      end if;
-      if bankb /= null then
-         Set_Split(bankb.all, 1, Memory_Pointer(result));
-      end if;
       return result;
    end Create_Split;
 
-   function Random_Split(generator  : RNG.Generator;
+   function Random_Split(next       : access Memory_Type'Class;
+                         generator  : RNG.Generator;
                          max_cost   : Cost_Type)
                          return Memory_Pointer is
-      result : constant Split_Pointer := new Split_Type;
+      result   : constant Split_Pointer := Create_Split;
+      wsize    : constant Natural := Get_Word_Size(next.all);
    begin
-      result.offset := 2 ** ((RNG.Random(generator) mod 16) + 3);
+      Set_Memory(result.all, next);
+      result.offset := Address_Type(wsize * (RNG.Random(generator) mod 256));
       return Memory_Pointer(result);
    end Random_Split;
 
    function Clone(mem : Split_Type) return Memory_Pointer is
-      result : constant Split_Pointer := new Split_Type'(mem);
+      result   : constant Split_Pointer := new Split_Type'(mem);
+      ptr      : Memory_Pointer;
+      cp       : Container_Pointer;
+      jp       : Join_Pointer;
    begin
       for i in result.banks'Range loop
-         Set_Split(result.banks(i).mem.all, i, Memory_Pointer(result));
+         ptr := Memory_Pointer(result.banks(i).mem);
+         loop
+            if ptr.all in Join_Type'Class then
+               jp := Join_Pointer(ptr);
+               Set_Split(jp.all, result);
+               exit;
+            else
+               cp := Container_Pointer(ptr);
+               ptr := Get_Memory(cp.all);
+            end if;
+         end loop;
       end loop;
       return Memory_Pointer(result);
    end Clone;
@@ -43,8 +47,9 @@ package body Memory.Split is
    procedure Permute(mem         : in out Split_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
+      wsize : constant Address_Type := Address_Type(Get_Word_Size(mem));
    begin
-      if mem.offset > 1 and then (RNG.Random(generator) mod 2) = 0 then
+      if mem.offset > wsize and then (RNG.Random(generator) mod 2) = 0 then
          mem.offset := mem.offset / 2;
       else
          mem.offset := mem.offset * 2;
@@ -65,13 +70,18 @@ package body Memory.Split is
    begin
       Assert(index < 2);
       mem.banks(index).mem := other;
-      Set_Split(other.all, index, Memory_Pointer(mem));
    end Set_Bank;
 
    function Get_Offset(mem : Split_Type'Class) return Address_Type is
    begin
       return mem.offset;
    end Get_Offset;
+
+   procedure Set_Offset(mem      : in out Split_Type'Class;
+                        offset   : in Address_Type) is
+   begin
+      mem.offset := offset;
+   end Set_Offset;
 
    procedure Reset(mem : in out Split_Type) is
    begin

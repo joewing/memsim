@@ -7,12 +7,8 @@ package Memory.Join is
 
    type Join_Pointer is access all Join_Type'Class;
 
-   function Create_Join return Join_Pointer;
-
-   overriding
-   procedure Set_Split(mem    : in out Join_Type;
-                       index  : in Natural;
-                       other  : in Memory_Pointer);
+   function Create_Join(split : Split_Pointer;
+                        index : Natural) return Join_Pointer;
 
    overriding
    function Clone(mem : Join_Type) return Memory_Pointer;
@@ -41,6 +37,10 @@ package Memory.Join is
 
    overriding
    procedure Adjust(mem : in out Join_Type);
+
+   -- This should be used only in Memory.Split.Clone.
+   procedure Set_Split(mem    : in out Join_Type;
+                       split  : in Split_Pointer);
 
 private
 

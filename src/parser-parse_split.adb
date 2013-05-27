@@ -1,67 +1,73 @@
 
-with Memory.Split;
+with Memory.Split;      use Memory.Split;
+with Memory.Container;  use Memory.Container;
 
 separate (Parser)
-procedure Parse_Split(lexer   : in out Lexer_Type;
+procedure Parse_Split(parser  : in out Parser_Type;
                       result  : out Memory_Pointer) is
+   split    : Split_Pointer := Create_Split;
    mem      : Memory_Pointer  := null;
    bank0    : Memory_Pointer  := null;
    bank1    : Memory_Pointer  := null;
    offset   : Address_Type    := 0;
 begin
-   while Get_Type(lexer) = Open loop
-      Match(lexer, Open);
+   while Get_Type(parser) = Open loop
+      Match(parser, Open);
       declare
-         name : constant String := Get_Value(lexer);
+         name : constant String := Get_Value(parser);
       begin
-         Match(lexer, Literal);
+         Match(parser, Literal);
          if name = "bank0" then
             if bank0 = null then
-               Parse_Memory(lexer, bank0);
+               Parse_Memory(parser, bank0);
             else
                Destroy(bank0);
-               Raise_Error(lexer, "duplicate bank0 in split");
+               Raise_Error(parser, "duplicate bank0 in split");
             end if;
          elsif name = "bank1" then
             if bank1 = null then
-               Parse_Memory(lexer, bank1);
+               Parse_Memory(parser, bank1);
             else
                Destroy(bank1);
-               Raise_Error(lexer, "duplicate bank1 in split");
+               Raise_Error(parser, "duplicate bank1 in split");
             end if;
          elsif name = "memory" then
             if mem = null then
-               Parse_Memory(lexer, mem);
+               Parse_Memory(parser, mem);
             else
                Destroy(mem);
-               Raise_Error(lexer, "duplicate memory in split");
+               Raise_Error(parser, "duplicate memory in split");
             end if;
          else
             declare
-               value : constant String := Get_Value(lexer);
+               value : constant String := Get_Value(parser);
             begin
-               Match(lexer, Literal);
+               Match(parser, Literal);
                if name = "offset" then
                   offset := Address_Type'Value(value);
                else
-                  Raise_Error(lexer,
+                  Raise_Error(parser,
                               "invalid attribute in split: " & name);
                end if;
             end;
          end if;
       end;
-      Match(lexer, Close);
+      Match(parser, Close);
    end loop;
    if bank0 = null then
-      Raise_Error(lexer, "bank0 not specified in split");
+      Raise_Error(parser, "bank0 not specified in split");
    elsif bank1 = null then
-      Raise_Error(lexer, "bank1 not specified in split");
+      Raise_Error(parser, "bank1 not specified in split");
    elsif mem = null then
-      Raise_Error(lexer, "memory not specified in split");
+      Raise_Error(parser, "memory not specified in split");
    end if;
-   result := Memory_Pointer(Memory.Split.Create_Split(mem, bank0, bank1,
-                                                      offset));
+   Set_Bank(split, 0, bank0);
+   Set_Bank(split, 1, bank1);
+   Set_Memory(split.all, mem);
+   Set_Offset(split.all, offset);
+   result := Memory_Pointer(split);
 exception
    when Data_Error | Constraint_Error =>
-      Raise_Error(lexer, "invalid value in split");
+      Destroy(Memory_Pointer(split));
+      Raise_Error(parser, "invalid value in split");
 end Parse_Split;

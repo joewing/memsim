@@ -9,7 +9,8 @@ package Memory.Transform.Shift is
                          word_size  : Natural;
                          shift      : Integer) return Shift_Pointer;
 
-   function Random_Shift(generator  : RNG.Generator;
+   function Random_Shift(next       : access Memory_Type'Class;
+                         generator  : RNG.Generator;
                          max_cost   : Cost_Type) return Memory_Pointer;
 
    function Get_Shift(mem : Shift_Type) return Natural;

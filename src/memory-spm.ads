@@ -11,7 +11,8 @@ package Memory.SPM is
                        size      : Natural;
                        latency   : Time_Type := 1) return SPM_Pointer;
 
-   function Random_SPM(generator : RNG.Generator;
+   function Random_SPM(next      : access Memory_Type'Class;
+                       generator : RNG.Generator;
                        max_cost  : Cost_Type)
                        return Memory_Pointer;
 
