@@ -11,6 +11,7 @@ procedure Parse_Split(parser  : in out Parser_Type;
    bank1    : Memory_Pointer  := null;
    offset   : Address_Type    := 0;
 begin
+   parser.splits.Append(Split_Node'(split, 0));
    while Get_Type(parser) = Open loop
       Match(parser, Open);
       declare
@@ -69,5 +70,6 @@ begin
 exception
    when Data_Error | Constraint_Error =>
       Destroy(Memory_Pointer(split));
+      parser.splits.Delete_Last;
       Raise_Error(parser, "invalid value in split");
 end Parse_Split;

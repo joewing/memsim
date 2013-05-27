@@ -12,5 +12,5 @@ run-tb:
 run-trace:
 	ghdl -a $(FILES)
 	ghdl -e trace
-	ghdl -r trace --wave=dump.ghw
+	ghdl -r trace 
 
