@@ -20,9 +20,9 @@ procedure Parse_Cache(parser  : in out Parser_Type;
 
    mem            : Memory_Pointer := null;
    line_count     : Positive := 1;
-   line_size      : Positive := 1;
+   line_size      : Positive := 8;
    associativity  : Positive := 1;
-   latency        : Time_Type := 1;
+   latency        : Time_Type := 3;
    policy         : Cache.Policy_Type := Cache.LRU;
    exclusive      : Boolean := False;
    write_back     : Boolean := True;

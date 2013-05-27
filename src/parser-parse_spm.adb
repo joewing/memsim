@@ -7,7 +7,7 @@ procedure Parse_SPM(parser : in out Parser_Type;
 
    mem      : Memory_Pointer := null;
    size     : Natural := 0;
-   latency  : Time_Type := 1;
+   latency  : Time_Type := 2;
 
 begin
    while Get_Type(parser) = Open loop
