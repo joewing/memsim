@@ -83,6 +83,63 @@ architecture trace_arch of trace is
       wait_ready(clk, rdy);
    end update;
 
+   procedure run_action(signal clk     : out std_logic;
+                        variable act   : in  character;
+                        variable addr  : in  unsigned(ADDR_BITS - 1 downto 0);
+                        variable size  : in  integer;
+                        signal maddr   : out std_logic_vector(ADDR_BITS - 1
+                                                              downto 0);
+                        signal re      : out std_logic;
+                        signal we      : out std_logic;
+                        signal rdy     : in  std_logic) is
+      variable r_act       : character := 'R';
+      variable w_act       : character := 'W';
+      variable offset      : integer;
+      variable count       : integer;
+      variable word_addr   : unsigned(ADDR_BITS - 1 downto 0);
+   begin
+      offset      := to_integer(addr) mod WORD_BYTES;
+      count       := (size + offset + WORD_BYTES - 1) / WORD_BYTES;
+      word_addr   := shift_right(addr, WORD_SHIFT);
+      case act is
+         when 'R' =>
+            for i in 1 to count loop
+               maddr <= std_logic_vector(word_addr);
+               update(clk, re, rdy);
+               word_addr := word_addr + to_unsigned(1, ADDR_BITS);
+            end loop;
+         when 'W' =>
+            if offset /= 0 then
+               maddr <= std_logic_vector(word_addr);
+               update(clk, re, rdy);
+            elsif offset + size < WORD_BYTES then
+               maddr <= std_logic_vector(word_addr);
+               update(clk, re, rdy);
+            end if;
+            if offset + size > WORD_BYTES and
+               ((offset + size) mod WORD_BYTES) /= 0 then
+               maddr <= std_logic_vector(word_addr +
+                                         to_unsigned(count - 1, ADDR_BITS));
+               update(clk, re, rdy);
+            end if;
+            for i in 1 to count loop
+               maddr <= std_logic_vector(word_addr);
+               update(clk, we, rdy);
+               word_addr := word_addr + to_unsigned(WORD_BYTES, 1);
+            end loop;
+         when 'M' =>
+            run_action(clk, r_act, addr, size, maddr, re, we, rdy);
+            run_action(clk, w_act, addr, size, maddr, re, we, rdy);
+         when 'I' =>
+            for i in 1 to size loop
+               cycle(clk);
+            end loop;
+         when '?' => null;
+         when others =>
+            report "invalid action" severity failure;
+      end case;
+   end run_action;
+
    signal clk           : std_logic;
    signal rst           : std_logic;
    signal mem_addr      : std_logic_vector(ADDR_BITS - 1 downto 0);
@@ -97,18 +154,16 @@ begin
 
    process
 
-      file infile       : text is "input.trace";
-      variable temp     : line;
-      variable ch       : character;
-      variable good     : boolean;
-      variable state    : state_type := STATE_ACTION;
-      variable action   : character;
-      variable address  : unsigned(ADDR_BITS - 1 downto 0);
-      variable size     : integer;
-      variable value    : integer;
-      variable offset   : integer;
-      variable count    : integer;
-variable start : integer;
+      file infile          : text is "input.trace";
+      variable temp        : line;
+      variable ch          : character;
+      variable good        : boolean;
+      variable state       : state_type := STATE_ACTION;
+      variable action      : character;
+      variable address     : unsigned(ADDR_BITS - 1 downto 0);
+      variable temp_addr   : unsigned(ADDR_BITS - 1 downto 0);
+      variable size        : integer;
+      variable value       : integer;
 
    begin
 
@@ -150,43 +205,8 @@ variable start : integer;
                when STATE_SIZE =>
                   value := parse_number(ch);
                   if value < 0 then
-                     offset  := to_integer(unsigned(address)) mod WORD_BYTES;
-                     count   := (size + offset + WORD_BYTES - 1) / WORD_BYTES;
-                     address := shift_right(address, WORD_SHIFT);
-                     case action is
-                        when 'R' =>
-                           for i in 1 to count loop
-                              mem_addr <= std_logic_vector(address);
-                              update(clk, mem_re, mem_ready);
-                              address := address + to_unsigned(1, ADDR_BITS);
-                           end loop;
-                        when 'W' =>
-                           if offset /= 0 then
-                              mem_addr <= std_logic_vector(address);
-                              update(clk, mem_re, mem_ready);
-                           elsif offset + size < WORD_BYTES then
-                              mem_addr <= std_logic_vector(address);
-                              update(clk, mem_re, mem_ready);
-                           end if;
-                           for i in 1 to count loop
-                              mem_addr <= std_logic_vector(address);
-                              update(clk, mem_we, mem_ready);
-                              address := address + to_unsigned(WORD_BYTES, 1);
-                           end loop;
-                        when 'M' =>
-                           for i in 1 to count loop
-                              mem_addr <= std_logic_vector(address);
-                              update(clk, mem_re, mem_ready);
-                              update(clk, mem_we, mem_ready);
-                              address := address + to_unsigned(WORD_BYTES, 1);
-                           end loop;
-                        when 'I' =>
-                           for i in 1 to size loop
-                              cycle(clk);
-                           end loop;
-                        when others =>
-                           report "invalid action" severity failure;
-                     end case;
+                     run_action(clk, action, address, size,
+                                mem_addr, mem_re, mem_we, mem_ready);
                      state := STATE_ACTION;
                      action := '?';
                   else
@@ -197,42 +217,8 @@ variable start : integer;
          end loop;
       end loop;
 
-      offset  := to_integer(unsigned(address)) mod WORD_BYTES;
-      count   := (size + offset + WORD_BYTES - 1) / WORD_BYTES;
-      address := shift_right(address, WORD_SHIFT);
-      case action is
-         when 'R' =>
-            for i in 1 to count loop
-               mem_addr <= std_logic_vector(address);
-               update(clk, mem_re, mem_ready);
-               address := address + to_unsigned(1, ADDR_BITS);
-            end loop;
-         when 'W' =>
-            if offset /= 0 then
-               mem_addr <= std_logic_vector(address);
-               update(clk, mem_re, mem_ready);
-            elsif offset + size < WORD_BYTES then
-               mem_addr <= std_logic_vector(address);
-               update(clk, mem_re, mem_ready);
-            end if;
-            for i in 1 to count loop
-               mem_addr <= std_logic_vector(address);
-               update(clk, mem_we, mem_ready);
-               address := address + to_unsigned(WORD_BYTES, 1);
-            end loop;
-         when 'M' =>
-            for i in 1 to count loop
-               mem_addr <= std_logic_vector(address);
-               update(clk, mem_re, mem_ready);
-               update(clk, mem_we, mem_ready);
-               address := address + to_unsigned(WORD_BYTES, 1);
-            end loop;
-         when 'I' =>
-            for i in 1 to size loop
-               cycle(clk);
-            end loop;
-         when others => null;
-      end case;
+      run_action(clk, action, address, size,
+                 mem_addr, mem_re, mem_we, mem_ready);
 
       report "cycles: " & natural'image(cycle_count);
       wait;
