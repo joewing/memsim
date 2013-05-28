@@ -13,7 +13,7 @@ architecture tb_arch of tb is
    signal cycles  : integer;
 
    constant ADDR_WIDTH : integer := 64;
-   constant WORD_WIDTH : integer := 32;
+   constant WORD_WIDTH : integer := 64;
 
    signal mem_addr   : std_logic_vector(ADDR_WIDTH - 1 downto 0);
    signal mem_din    : std_logic_vector(WORD_WIDTH - 1 downto 0);
@@ -84,70 +84,80 @@ begin
 
       -- Write a value.
       mem_addr <= x"00000000_00000000";
-      mem_din <= x"FFFFFFFF";
+      mem_din  <= x"00000000_FFFFFFFF";
       update(clk, mem_we, mem_ready);
 
       -- Write a value.
       mem_addr <= x"00000000_00000001";
-      mem_din <= x"01234567";
+      mem_din <= x"00000000_01234567";
       update(clk, mem_we, mem_ready);
 
       -- Make sure the write took (hit).
       mem_addr <= x"00000000_00000001";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"01234567" report "read failed" severity failure;
+      assert mem_dout = x"00000000_01234567"
+         report "read failed" severity failure;
 
       -- Read another value (cold miss).
       mem_addr <= x"00000000_00000000";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"FFFFFFFF" report "read failed" severity failure;
+      assert mem_dout = x"00000000_FFFFFFFF"
+         report "read failed" severity failure;
 
       -- Write another value (conflict).
       mem_addr <= x"00000000_00000100";
-      mem_din  <= x"00000321";
+      mem_din  <= x"00000000_00000321";
       update(clk, mem_we, mem_ready);
 
       -- Read the value (hit).
       mem_addr <= x"00000000_00000100";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"00000321" report "read failed" severity failure;
+      assert mem_dout = x"00000000_00000321"
+         report "read failed" severity failure;
 
       -- Read the previous value.
       mem_addr <= x"00000000_00000001";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"01234567" report "read failed" severity failure;
+      assert mem_dout = x"00000000_01234567"
+         report "read failed" severity failure;
 
       -- Another write.
       mem_addr <= x"00000000_00000101";
-      mem_din  <= x"00000abc";
+      mem_din  <= x"00000000_00000abc";
       update(clk, mem_we, mem_ready);
 
       -- Some reads.
       mem_addr <= x"00000000_00000101";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"00000abc" report "read failed" severity failure;
+      assert mem_dout = x"0000000000000abc"
+         report "read failed" severity failure;
       mem_addr <= x"00000000_00000001";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"01234567" report "read failed" severity failure;
+      assert mem_dout = x"0000000001234567"
+         report "read failed" severity failure;
       mem_addr <= x"00000000_00000100";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"00000321" report "read failed" severity failure;
+      assert mem_dout = x"0000000000000321"
+         report "read failed" severity failure;
 
       -- Overwite.
       mem_addr <= x"00000000_00000001";
-      mem_din  <= x"55555555";
+      mem_din  <= x"00000000_55555555";
       update(clk, mem_we, mem_ready);
 
       -- More reads.
       mem_addr <= x"00000000_00000001";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"55555555" report "read failed" severity failure;
+      assert mem_dout = x"0000000055555555"
+         report "read failed" severity failure;
       mem_addr <= x"00000000_00000101";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"00000abc" report "read failed" severity failure;
+      assert mem_dout = x"0000000000000abc"
+         report "read failed" severity failure;
       mem_addr <= x"00000000_00000100";
       update(clk, mem_re, mem_ready);
-      assert mem_dout = x"00000321" report "read failed" severity failure;
+      assert mem_dout = x"0000000000000321"
+         report "read failed" severity failure;
 
       -- Test some reads/writes.
       for j in 2 to 10 loop
@@ -160,7 +170,7 @@ begin
             mem_addr <= std_logic_vector(to_unsigned(i, ADDR_WIDTH));
             update(clk, mem_re, mem_ready);
             assert unsigned(mem_dout) = i
-               report "failed at j=" & natural'image(j);
+               report "failed at j=" & natural'image(j) severity failure;
          end loop;
       end loop;
 

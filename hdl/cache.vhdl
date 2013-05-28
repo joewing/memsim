@@ -131,7 +131,7 @@ architecture cache_arch of cache is
 begin
 
    -- Break out fields in the current row.
-   process(row, updated_row)
+   process(row)
       variable offset      : natural;
       variable line_start  : natural;
       variable tag_start   : natural;
@@ -142,7 +142,7 @@ begin
          line_start  := offset + LINE_OFFSET;
          tag_start   := offset + TAG_OFFSET;
          age_start   := offset + AGE_OFFSET;
-         lines(i) <= updated_row(line_start + LINE_BITS - 1 downto line_start);
+         lines(i) <= row(line_start + LINE_BITS - 1 downto line_start);
          tags(i)  <= row(tag_start + TAG_BITS - 1 downto tag_start);
          if AGE_BITS > 0 then
             ages(i) <= "0" & row(age_start + AGE_BITS - 1 downto age_start);
@@ -336,8 +336,8 @@ begin
       else
          write_way := oldest_way;
       end if;
-      load_mem := next_state = STATE_WRITEBACK_WRITE1
-               or next_state = STATE_WRITEBACK_READ1
+      load_mem := state = STATE_WRITEBACK_WRITE1
+               or state = STATE_WRITEBACK_READ1
                or state = STATE_READ_MISS2
                or state = STATE_WRITE_FILL2;
       write_line :=  state = STATE_WRITE2
@@ -355,7 +355,7 @@ begin
          valid_start := offset + VALID_OFFSET;
          if way = unsigned(write_way) then
             updated_row(tag_top downto tag_bottom) <= current_tag;
-            if write_line then
+            if write_line or dirty(way) = '1' then
                updated_row(dirty_start) <= '1';
             else
                updated_row(dirty_start) <= '0';
@@ -426,12 +426,10 @@ begin
       variable fill_ok     : boolean;
    begin
       if clk'event and clk = '1' then
-         write_hit := state = STATE_WRITE2
-                     and (is_hit = '1' or oldest_dirty /= '1');
-         write_ok :=    (state = STATE_WRITEBACK_WRITE2
-                           and mready = '1' and transfer_done = '1')
-                     or (state = STATE_WRITE_FILL2 and mready = '1');
-         fill_ok := state = STATE_READ_MISS2 and mready = '1';
+         write_hit := state = STATE_WRITE2 and next_state = STATE_IDLE;
+         write_ok  := (state = STATE_WRITEBACK_WRITE2 and transfer_done = '1')
+                   or (state = STATE_WRITE_FILL2 and mready = '1');
+         fill_ok   := state = STATE_READ_MISS2 and mready = '1';
          if rst = '1' then
             row <= (others => '0');
          else
@@ -517,8 +515,21 @@ begin
    end generate;
 
    -- Drive dout.
-   dout <= words(0) when LINE_SIZE = 1 else
-           words(to_integer(unsigned(current_offset)));
+   process(state, min, words, current_offset)
+   begin
+      if LINE_SIZE = 1 then
+         if state = STATE_READ_MISS2 then
+            dout <= min;
+         else
+            dout <= words(0);
+         end if;
+      elsif state = STATE_READ_MISS2
+         and unsigned(current_offset) = LINE_SIZE - 1 then
+         dout <= min;
+      else
+         dout <= words(to_integer(unsigned(current_offset)));
+      end if;
+   end process;
 
    -- Drive the ready bit.
    ready <= '1' when next_state = STATE_IDLE else '0';

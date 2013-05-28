@@ -226,32 +226,19 @@ package body Memory.Cache is
 
    end Permute;
 
-   function Get_Tag(mem       : Cache_Type;
-                    address   : Address_Type) return Address_Type is
-      mask : constant Address_Type := not Address_Type(mem.line_size - 1);
-   begin
-      return address and mask;
-   end Get_Tag;
-
-   function Get_Index(mem     : Cache_Type;
-                      address : Address_Type) return Natural is
-      line_size   : constant Address_Type := Address_Type(mem.line_size);
-      line_count  : constant Address_Type := Address_Type(mem.line_count);
-      assoc       : constant Address_Type := Address_Type(mem.associativity);
-      set_count   : constant Address_Type := line_count / assoc;
-      base        : constant Address_Type := address / line_size;
-   begin
-      return Natural(base mod set_count);
-   end Get_Index;
-
    procedure Get_Data(mem      : in out Cache_Type;
                       address  : in Address_Type;
                       size     : in Positive;
                       is_read  : in Boolean) is
 
       data        : Cache_Data_Pointer;
-      tag         : constant Address_Type := Get_Tag(mem, address);
-      first       : constant Natural := Get_Index(mem, address);
+      mask        : constant Address_Type := Address_Type(mem.line_size - 1);
+      tag         : constant Address_Type := address and not mask;
+      set_count   : constant Natural := mem.line_count / mem.associativity;
+      line_size   : constant Address_Type := Address_Type(mem.line_size);
+      word_addr   : constant Address_Type := address / line_size;
+      first       : constant Natural :=
+                    Natural(word_addr mod Address_Type(set_count));
       line        : Natural;
       to_replace  : Natural := 0;
       age         : Long_Integer;
@@ -263,9 +250,10 @@ package body Memory.Cache is
 
       -- Update the age of all items in this set.
       for i in 0 .. mem.associativity - 1 loop
-         line := first + i * mem.line_count / mem.associativity;
+         line := first + i * set_count;
          data := mem.data.Element(line);
          data.age := data.age + 1;
+         Assert(data.age > 0, "invalid age");
       end loop;
 
       -- First check if this address is already in the cache.
@@ -276,7 +264,7 @@ package body Memory.Cache is
          age := Long_Integer'First;
       end if;
       for i in 0 .. mem.associativity - 1 loop
-         line := first + i * mem.line_count / mem.associativity;
+         line := first + i * set_count;
          data := mem.data.Element(line);
          if tag = data.address then    -- Cache hit.
             if mem.policy /= FIFO then
@@ -321,9 +309,9 @@ package body Memory.Cache is
             data.dirty := False;
          end if;
 
-         data.dirty     := not is_read;
          data.address   := tag;
          data.age       := 0;
+         data.dirty     := not is_read;
 
          -- Read the new entry.
          -- We skip this if this was a write that wrote the entire line.

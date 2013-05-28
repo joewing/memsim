@@ -7,7 +7,7 @@ all: run-tb
 run-tb:
 	ghdl -a $(FILES)
 	ghdl -e tb
-	ghdl -r tb --wave=dump.ghw --stop-time=100us
+	ghdl -r tb --wave=dump.ghw --stop-time=1ms
 
 run-trace:
 	ghdl -a $(FILES)
