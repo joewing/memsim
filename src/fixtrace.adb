@@ -1,5 +1,6 @@
 
 with Ada.Command_Line;        use Ada.Command_Line;
+with Ada.Exceptions;          use Ada.Exceptions;
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Sequential_IO;
 
@@ -72,6 +73,8 @@ procedure FixTrace is
             Character_IO.Read(input, ch);
          end if;
       end loop;
+   exception
+      when End_Error => null;
    end Compute_Min_Address;
 
    -- Output an updated address trace.
@@ -104,6 +107,8 @@ procedure FixTrace is
             Character_IO.Read(input, ch);
          end if;
       end loop;
+   exception
+      when End_Error => null;
    end Update_Addresses;
 
 begin
@@ -120,7 +125,7 @@ begin
    Character_IO.Close(input);
 
 exception
-   when others =>
-      Put_Line("ERROR: could not convert trace");
+   when ex: others =>
+      Put_Line("ERROR: could not convert trace: " & Exception_Name(ex));
 
 end FixTrace;

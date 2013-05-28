@@ -453,7 +453,7 @@ package body Memory.Cache is
 
       -- Given the width and depth of the cache, determine the number
       -- of BRAMs required.
-      result := Cost_Type(BRAM.Get_Count(width, lines));
+      result := Cost_Type(BRAM.Get_Count(width, lines / assoc));
 
       -- Add the cost of the contained memory.
       result := result + Get_Cost(Container_Type(mem));
