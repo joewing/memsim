@@ -35,17 +35,19 @@ architecture spm_arch of spm is
    signal data    : word_array_type;
    signal value   : word_type;
    signal raddr   : natural;
-   signal is_hit  : std_logic;
+   signal rin     : std_logic_vector(WORD_WIDTH - 1 downto 0);
+   signal rre     : std_logic;
+   signal rwe     : std_logic;
 
 begin
 
    process(clk)
    begin
       if clk'event and clk = '1' and rst = '0' then
-         if is_hit = '1' and re = '1' then
+         if rre = '1' then
             value <= data(raddr);
-         elsif is_hit = '1' and we = '1' then
-            data(raddr) <= din;
+         elsif rwe = '1' then
+            data(raddr) <= rin;
          end if;
       end if;
    end process;
@@ -53,15 +55,23 @@ begin
    process(clk)
    begin
       if clk'event and clk = '1' then
-         if ADDR_WIDTH > 31 then
-            raddr <= to_integer(unsigned(addr(30 downto 0)));
+         if rst = '1' then
+            rre <= '0';
+            rwe <= '0';
          else
-            raddr <= to_integer(unsigned(addr));
-         end if;
-         if unsigned(addr) < SIZE then
-            is_hit <= '1';
-         else
-            is_hit <= '0';
+            if ADDR_WIDTH > 31 then
+               raddr <= to_integer(unsigned(addr(30 downto 0)));
+            else
+               raddr <= to_integer(unsigned(addr));
+            end if;
+            if unsigned(addr) < SIZE then
+               rre <= re;
+               rwe <= we;
+               rin <= din;
+            else
+               rre <= '0';
+               rwe <= '0';
+            end if;
          end if;
       end if;
    end process;
@@ -71,6 +81,6 @@ begin
    mwe   <= we when unsigned(addr) >= SIZE else '0';
    dout  <= value when unsigned(addr) < SIZE else min;
    mout  <= din;
-   ready <= mready;
+   ready <= mready when rre = '0' and rwe = '0' else '0';
 
 end spm_arch;

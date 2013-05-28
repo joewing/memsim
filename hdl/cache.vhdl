@@ -452,11 +452,11 @@ begin
    end process;
 
    -- Drive main memory read/write.
-   process(state)
+   process(next_state)
    begin
       mwe_temp <= '0';
       mre_temp <= '0';
-      case state is
+      case next_state is
          when STATE_WRITEBACK_READ1    => mwe_temp <= '1';
          when STATE_WRITEBACK_WRITE1   => mwe_temp <= '1';
          when STATE_READ_MISS1         => mre_temp <= '1';
@@ -537,7 +537,7 @@ begin
    end process;
 
    -- Drive the ready bit.
-   ready <= '1' when next_state = STATE_IDLE else '0';
+   ready <= '1' when state = STATE_IDLE else '0';
 
    current_offset <= "0" & addr(OFFSET_TOP downto OFFSET_BOTTOM);
    current_index  <= addr(INDEX_TOP downto INDEX_BOTTOM);

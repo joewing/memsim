@@ -74,13 +74,13 @@ architecture trace_arch of trace is
    procedure update(signal clk : out std_logic;
                     signal ena : out std_logic;
                     signal rdy : in std_logic) is
+      variable updated : boolean := false;
    begin
-      wait_ready(clk, rdy);
       ena <= '1';
+      wait_ready(clk, rdy);
       cycle(clk);
       ena <= '0';
       cycle(clk);
-      wait_ready(clk, rdy);
    end update;
 
    procedure run_action(signal clk     : out std_logic;
@@ -131,7 +131,8 @@ architecture trace_arch of trace is
             run_action(clk, r_act, addr, size, maddr, re, we, rdy);
             run_action(clk, w_act, addr, size, maddr, re, we, rdy);
          when 'I' =>
-            for i in 1 to size loop
+            wait_ready(clk, rdy);
+            for i in 2 to size loop
                cycle(clk);
             end loop;
          when '?' => null;
@@ -149,6 +150,8 @@ architecture trace_arch of trace is
    signal mem_we        : std_logic;
    signal mem_ready     : std_logic;
    signal cycle_count   : natural := 0;
+   signal do_read       : std_logic;
+   signal do_write      : std_logic;
 
 begin
 
@@ -168,8 +171,8 @@ begin
    begin
 
       rst      <= '1';
-      mem_re   <= '0';
-      mem_we   <= '0';
+      do_read  <= '0';
+      do_write <= '0';
       cycle(clk);
       rst      <= '0';
 
@@ -206,7 +209,7 @@ begin
                   value := parse_number(ch);
                   if value < 0 then
                      run_action(clk, action, address, size,
-                                mem_addr, mem_re, mem_we, mem_ready);
+                                mem_addr, do_read, do_write, mem_ready);
                      state := STATE_ACTION;
                      action := '?';
                   else
@@ -218,7 +221,7 @@ begin
       end loop;
 
       run_action(clk, action, address, size,
-                 mem_addr, mem_re, mem_we, mem_ready);
+                 mem_addr, do_read, do_write, mem_ready);
 
       report "cycles: " & natural'image(cycle_count);
       wait;
@@ -237,6 +240,8 @@ begin
    end process;
 
    mem_din  <= (others => '0');
+   mem_re   <= mem_ready when do_read = '1' else '0';
+   mem_we   <= mem_ready when do_write = '1' else '0';
 
    mem1 : entity work.memory
       generic map (

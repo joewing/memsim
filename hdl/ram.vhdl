@@ -44,10 +44,10 @@ begin
          if rst = '1' then
             counter <= 0;
          elsif re = '1' then
-            counter <= LATENCY - 2;
+            counter <= LATENCY - 1;
             do_read <= '1';
          elsif we = '1' then
-            counter <= LATENCY - 2;
+            counter <= LATENCY - 1;
             do_write <= '1';
             value <= din;
          elsif counter > 0 then
