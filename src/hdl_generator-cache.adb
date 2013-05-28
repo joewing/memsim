@@ -42,8 +42,8 @@ package body HDL_Generator.Cache is
             PLine(gen, "      REPLACEMENT     => 0");
          when MRU    =>
             PLine(gen, "      REPLACEMENT     => 1");
-         when others =>
-            Assert(False, "unimplemented replacement policy");
+         when FIFO   =>
+            PLine(gen, "      REPLACEMENT     => 2");
       end case;
       PLine(gen, "   )");
       PLine(gen, "   port map (");

@@ -13,6 +13,7 @@ entity cache is
       REPLACEMENT       : in natural := 0
          -- 0: LRU
          -- 1: MRU
+         -- 2: FIFO
    );
    port (
       clk      : in std_logic;
@@ -180,6 +181,8 @@ begin
                is_oldest := unsigned(temp_age) < unsigned(ages(i));
             when 1      => -- MRU
                is_oldest := unsigned(temp_age) > unsigned(ages(i));
+            when 2      => -- FIFO
+               is_oldest := unsigned(temp_age) < unsigned(ages(i));
             when others =>
                report "invalid replacement policy" severity failure;
          end case;
@@ -416,22 +419,44 @@ begin
    process(oldest_age, ages, hit_way, is_hit, hit_age, oldest_way)
    begin
       for i in 0 to ASSOCIATIVITY - 1 loop
-         if is_hit = '1' then
-            if i = unsigned(hit_way) then
-               updated_ages(i) <= (others => '0');
-            elsif unsigned(ages(i)) <= unsigned(hit_age) then
+         if REPLACEMENT = 0 then -- LRU
+            if is_hit = '1' then
+               if i = unsigned(hit_way) then
+                  updated_ages(i) <= (others => '0');
+               elsif unsigned(ages(i)) <= unsigned(hit_age) then
+                  updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
+               else
+                  updated_ages(i) <= ages(i);
+               end if;
+            else
+               if i = unsigned(oldest_way) then
+                  updated_ages(i) <= (others => '0');
+               elsif unsigned(ages(i)) <= unsigned(oldest_age) then
+                  updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
+               else
+                  updated_ages(i) <= ages(i);
+               end if;
+            end if;
+         elsif REPLACEMENT = 1 then -- MRU
+            if is_hit = '1' then
+               if i = unsigned(hit_way) then
+                  updated_ages(i) <= (others => '0');
+               elsif unsigned(ages(i)) <= unsigned(hit_age) then
+                  updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
+               else
+                  updated_ages(i) <= ages(i);
+               end if;
+            else
+               updated_ages(i) <= ages(i);
+            end if;
+         elsif REPLACEMENT = 2 then -- FIFO
+            if is_hit = '0' then
                updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
             else
                updated_ages(i) <= ages(i);
             end if;
          else
-            if i = unsigned(oldest_way) then
-               updated_ages(i) <= (others => '0');
-            elsif unsigned(ages(i)) <= unsigned(oldest_age) then
-               updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
-            else
-               updated_ages(i) <= ages(i);
-            end if;
+            report "unimplemented policy" severity failure;
          end if;
       end loop;
    end process;
