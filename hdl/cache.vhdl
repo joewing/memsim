@@ -9,7 +9,10 @@ entity cache is
       WORD_WIDTH        : in natural := 32;
       LINE_SIZE_BITS    : in natural := 0;
       LINE_COUNT_BITS   : in natural := 8;
-      ASSOC_BITS        : in natural := 1
+      ASSOC_BITS        : in natural := 1;
+      REPLACEMENT       : in natural := 0
+         -- 0: LRU
+         -- 1: MRU
    );
    port (
       clk      : in std_logic;
@@ -154,7 +157,8 @@ begin
 
    -- Determine the oldest line and if we have a hit.
    process(tags, dirty, lines, ages, valid, current_index, current_tag)
-      variable temp_age : age_type;
+      variable temp_age    : age_type;
+      variable is_oldest   : boolean;
    begin
       oldest_addr    <= tags(0) & current_index & ZERO_OFFSET;
       oldest_way     <= (others => '0');
@@ -171,7 +175,15 @@ begin
          is_hit      <= '0';
       end if;
       for i in 1 to ASSOCIATIVITY - 1 loop
-         if unsigned(temp_age) < unsigned(ages(i)) or valid(i) /= '1' then
+         case REPLACEMENT is
+            when 0      => -- LRU
+               is_oldest := unsigned(temp_age) < unsigned(ages(i));
+            when 1      => -- MRU
+               is_oldest := unsigned(temp_age) > unsigned(ages(i));
+            when others =>
+               report "invalid replacement policy" severity failure;
+         end case;
+         if is_oldest or valid(i) /= '1' then
             oldest_addr    <= tags(i) & current_index & ZERO_OFFSET;
             oldest_way     <= std_logic_vector(to_unsigned(i, ASSOC_BITS + 1));
             oldest_dirty   <= dirty(i);

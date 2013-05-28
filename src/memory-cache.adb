@@ -492,4 +492,9 @@ package body Memory.Cache is
       return mem.associativity;
    end Get_Associativity;
 
+   function Get_Policy(mem : Cache_Type) return Policy_Type is
+   begin
+      return mem.policy;
+   end Get_Policy;
+
 end Memory.Cache;

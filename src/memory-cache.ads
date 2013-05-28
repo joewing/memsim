@@ -67,6 +67,8 @@ package Memory.Cache is
 
    function Get_Associativity(mem : Cache_Type) return Positive;
 
+   function Get_Policy(mem : Cache_Type) return Policy_Type;
+
 private
 
    type Cache_Data is record

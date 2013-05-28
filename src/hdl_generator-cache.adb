@@ -1,4 +1,5 @@
 
+with Ada.Assertions;    use Ada.Assertions;
 with Memory.Cache;      use Memory.Cache;
 with Memory.Container;  use Memory.Container;
 with Util;              use Util;
@@ -34,7 +35,16 @@ package body HDL_Generator.Cache is
             To_String(Log2(lsize - 1)) & ",");
       PLine(gen, "      LINE_COUNT_BITS => " &
             To_String(Log2(lcount / assoc - 1)) & ",");
-      PLine(gen, "      ASSOC_BITS      => " & To_String(Log2(assoc - 1)));
+      PLine(gen, "      ASSOC_BITS      => " &
+            To_String(Log2(assoc - 1)) & ",");
+      case Get_Policy(cp.all) is
+         when LRU    =>
+            PLine(gen, "      REPLACEMENT     => 0");
+         when MRU    =>
+            PLine(gen, "      REPLACEMENT     => 1");
+         when others =>
+            Assert(False, "unimplemented replacement policy");
+      end case;
       PLine(gen, "   )");
       PLine(gen, "   port map (");
       PLine(gen, "      clk      => clk,");
