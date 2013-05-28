@@ -52,7 +52,7 @@ architecture cache_arch of cache is
    constant OFFSET_BOTTOM  : natural := 0;
    constant OFFSET_TOP     : integer := OFFSET_BOTTOM + LINE_SIZE_BITS - 1;
    constant INDEX_BOTTOM   : natural := OFFSET_TOP + 1;
-   constant INDEX_TOP      : natural := INDEX_BOTTOM + INDEX_BITS - 1;
+   constant INDEX_TOP      : integer := INDEX_BOTTOM + INDEX_BITS - 1;
    constant TAG_BOTTOM     : natural := INDEX_TOP + 1;
    constant TAG_TOP        : natural := ADDR_WIDTH - 1;
 
@@ -355,11 +355,16 @@ begin
          valid_start := offset + VALID_OFFSET;
          if way = unsigned(write_way) then
             updated_row(tag_top downto tag_bottom) <= current_tag;
-            if write_line or dirty(way) = '1' then
-               updated_row(dirty_start) <= '1';
-            else
-               updated_row(dirty_start) <= '0';
-            end if;
+            case state is
+               when STATE_WRITE2 =>
+                  updated_row(dirty_start) <= '1';
+               when STATE_WRITEBACK_WRITE2 =>
+                  updated_row(dirty_start) <= '1';
+               when STATE_READ_MISS2 =>
+                  updated_row(dirty_start) <= '0';
+               when others =>
+                  updated_row(dirty_start) <= dirty(way);
+            end case;
             if load_mem or write_line or valid(way) = '1' then
                updated_row(valid_start) <= '1';
             else
@@ -396,7 +401,7 @@ begin
    end process;
 
    -- Update ages.
-   process(oldest_age, ages, hit_way)
+   process(oldest_age, ages, hit_way, is_hit)
    begin
       for i in 0 to ASSOCIATIVITY - 1 loop
          if is_hit = '1' then
