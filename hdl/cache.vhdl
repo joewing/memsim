@@ -401,7 +401,7 @@ begin
    end process;
 
    -- Update ages.
-   process(oldest_age, ages, hit_way, is_hit)
+   process(oldest_age, ages, hit_way, is_hit, hit_age)
    begin
       for i in 0 to ASSOCIATIVITY - 1 loop
          if is_hit = '1' then
