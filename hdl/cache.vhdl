@@ -401,7 +401,7 @@ begin
    end process;
 
    -- Update ages.
-   process(oldest_age, ages, hit_way, is_hit, hit_age)
+   process(oldest_age, ages, hit_way, is_hit, hit_age, oldest_way)
    begin
       for i in 0 to ASSOCIATIVITY - 1 loop
          if is_hit = '1' then
@@ -539,13 +539,24 @@ begin
    -- Drive the ready bit.
    ready <= '1' when state = STATE_IDLE else '0';
 
-   current_offset <= "0" & addr(OFFSET_TOP downto OFFSET_BOTTOM);
-   current_index  <= addr(INDEX_TOP downto INDEX_BOTTOM);
-   current_tag    <= addr(TAG_TOP downto TAG_BOTTOM);
+   process(addr)
+   begin
+      if OFFSET_TOP >= 0 then
+         current_offset <= "0" & addr(OFFSET_TOP downto OFFSET_BOTTOM);
+      else
+         current_offset <= "0";
+      end if;
+      if INDEX_BITS > 0 then
+         current_index <= addr(INDEX_TOP downto INDEX_BOTTOM);
+      end if;
+      if TAG_BITS > 0 then
+         current_tag <= addr(TAG_TOP downto TAG_BOTTOM);
+      end if;
+   end process;
 
    process(clk)
    begin
-      if clk'event and clk = '1' then
+      if clk'event and clk = '1' and INDEX_BITS > 0 then
          rindex <= to_integer(unsigned(current_index));
       end if;
    end process;
