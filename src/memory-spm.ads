@@ -40,7 +40,10 @@ package Memory.SPM is
    overriding
    function Get_Cost(mem : SPM_Type) return Cost_Type;
 
-   function Get_Size(mem : SPM_Type) return Natural;
+   overriding
+   procedure Generate(mem  : in SPM_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
 
 private
 

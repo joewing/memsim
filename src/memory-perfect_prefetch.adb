@@ -1,4 +1,6 @@
 
+with Ada.Assertions; use Ada.Assertions;
+
 package body Memory.Perfect_Prefetch is
 
    function Create_Perfect_Prefetch(mem   : access Memory_Type'Class)
@@ -73,5 +75,12 @@ package body Memory.Perfect_Prefetch is
    begin
       return Get_Cost(Container_Type(mem));
    end Get_Cost;
+
+   procedure Generate(mem  : in Perfect_Prefetch_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+   begin
+      Assert(False, "Memory.Perfect_Prefetch.Generate not implemented");
+   end Generate;
 
 end Memory.Perfect_Prefetch;

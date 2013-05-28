@@ -1,4 +1,6 @@
 
+with Ada.Assertions; use Ada.Assertions;
+
 package body Memory.Prefetch is
 
    function Create_Prefetch(mem        : access Memory_Type'Class;
@@ -128,5 +130,12 @@ package body Memory.Prefetch is
    begin
       return Get_Cost(Container_Type(mem));
    end Get_Cost;
+
+   procedure Generate(mem  : in Prefetch_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+   begin
+      Assert(False, "Memory.Prefetch.Generate not implemented");
+   end Generate;
 
 end Memory.Prefetch;

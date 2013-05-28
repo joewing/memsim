@@ -1,5 +1,6 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Characters.Latin_1;
 
 package body Memory is
 
@@ -87,5 +88,58 @@ package body Memory is
       mem.id := next_id;
       next_id := next_id + 1;
    end Adjust;
+
+   procedure Line(dest  : in out Unbounded_String;
+                  str   : in String := "") is
+   begin
+      Append(dest, str);
+      Append(dest, Ada.Characters.Latin_1.LF);
+   end Line;
+
+   procedure Signal(sigs   : in out Unbounded_String;
+                    name   : in String;
+                    width  : in String) is
+      rstr : constant String := width & " downto 0";
+   begin
+      Line(sigs, "   signal " & name & " : std_logic_vector(" & rstr & ");");
+   end Signal;
+
+   procedure Signal(sigs   : in out Unbounded_String;
+                    name   : in String) is
+   begin
+      Line(sigs, "   signal " & name & " : std_logic;");
+   end Signal;
+
+   procedure Declare_Signals(sigs      : in out Unbounded_String;
+                             name      : in String;
+                             word_bits : in Positive) is
+   begin
+      Signal(sigs, name & "_addr", "ADDR_WIDTH - 1");
+      Signal(sigs, name & "_din", To_String(word_bits - 1));
+      Signal(sigs, name & "_dout", To_String(word_bits - 1));
+      Signal(sigs, name & "_re");
+      Signal(sigs, name & "_we");
+      Signal(sigs, name & "_ready");
+   end Declare_Signals;
+
+   function To_String(a : Address_Type) return String is
+      str : constant String := Address_Type'Image(a);
+   begin
+      if str(str'First) = ' ' then
+         return str(str'First + 1 .. str'Last);
+      else
+         return str;
+      end if;
+   end To_String;
+
+   function To_String(t : Time_Type) return String is
+      str : constant String := Time_Type'Image(t);
+   begin
+      if str(str'First) = ' ' then
+         return str(str'First + 1 .. str'Last);
+      else
+         return str;
+      end if;
+   end To_String;
 
 end Memory;

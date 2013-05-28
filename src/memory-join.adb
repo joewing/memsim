@@ -75,6 +75,15 @@ package body Memory.Join is
       return Get_Word_Size(mem.split.all);
    end Get_Word_Size;
 
+   procedure Generate(mem  : in Join_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+      name        : constant String := "m" & To_String(Get_ID(mem));
+      word_bits   : constant Natural := 8 * Get_Word_Size(mem);
+   begin
+      Declare_Signals(sigs, name, word_bits);
+   end Generate;
+
    procedure Adjust(mem : in out Join_Type) is
    begin
       mem.split := null;

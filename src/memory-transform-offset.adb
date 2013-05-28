@@ -94,4 +94,29 @@ package body Memory.Transform.Offset is
       return Get_Cost(Container_Type(mem));
    end Get_Cost;
 
+   procedure Generate(mem  : in Offset_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+      word_bits   : constant Natural := 8 * Get_Word_Size(mem);
+      other       : constant Memory_Pointer  := Get_Memory(mem);
+      name        : constant String := "m" & To_String(Get_ID(mem));
+      oname       : constant String := "m" & To_String(Get_ID(mem));
+      offset      : constant Address_Type := mem.offset;
+   begin
+      Generate(other.all, sigs, code);
+      Declare_Signals(sigs, name, word_bits);
+      if (offset and 2 ** 63) /= 0 then
+         Line(code, "   " & oname & "_addr <= std_logic_vector(unsigned(" &
+              name & "_addr) - " & To_String(-offset) & ");");
+      else
+         Line(code, "   " & oname & "_addr <= std_logic_vector(unsigned(" &
+              name & "_addr) + " & To_String(offset) & ");");
+      end if;
+      Line(code, "   " & oname & "_din <= " & name & "_din;");
+      Line(code, "   " & name & "_dout <= " & oname & "_dout;");
+      Line(code, "   " & oname & "_re <= " & name & "_re;");
+      Line(code, "   " & oname & "_we <= " & name & "_we;");
+      Line(code, "   " & name & "_ready <= " & oname & "_ready;");
+   end Generate;
+
 end Memory.Transform.Offset;

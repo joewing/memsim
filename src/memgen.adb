@@ -4,14 +4,7 @@ with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Memory;                  use Memory;
 with Parser;                  use Parser;
-
 with HDL_Generator;           use HDL_Generator;
-with HDL_Generator.SPM;
-with HDL_Generator.RAM;
-with HDL_Generator.Offset;
-with HDL_Generator.Split;
-with HDL_Generator.Join;
-with HDL_Generator.Cache;
 
 procedure MemGen is
 
@@ -39,6 +32,9 @@ begin
          if arg = "-width" and i + 1 <= Argument_Count then
             i := i + 1;
             addr_width := Positive'Value(Argument(i));
+         elsif arg = "-name" and i + 1 <= Argument_Count then
+            i := i + 1;
+            name := To_Unbounded_String(Argument(i));
          elsif mem_index < 0 then
             mem_index := i;
          else
@@ -58,13 +54,6 @@ begin
       Put_Line("error: could not open memory: " & Argument(1));
       return;
    end if;
-
-   RAM.Register;
-   SPM.Register;
-   Offset.Register;
-   Split.Register;
-   Join.Register;
-   Cache.Register;
 
    Put_Line(Generate(mem, To_String(name), addr_width));
 

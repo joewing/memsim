@@ -37,9 +37,10 @@ package Memory.RAM is
    overriding
    function Get_Word_Size(mem : RAM_Type) return Positive;
 
-   function Get_Word_Count(mem : RAM_Type) return Natural;
-
-   function Get_Latency(mem : RAM_Type) return Time_Type;
+   overriding
+   procedure Generate(mem  : in RAM_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
 
 private
 

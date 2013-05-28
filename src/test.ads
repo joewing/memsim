@@ -1,6 +1,7 @@
 
 with GNAT.Source_Info;
 
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Memory.Container; use Memory.Container;
 use Memory;
 
@@ -36,6 +37,11 @@ private
    overriding
    procedure Idle(mem      : in out Monitor_Type;
                   cycles   : in Time_Type);
+
+   overriding
+   procedure Generate(mem  : in Monitor_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
 
    procedure Check(cond    : in Boolean;
                    source  : in String := GNAT.Source_Info.File;

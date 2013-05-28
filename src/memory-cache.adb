@@ -450,6 +450,56 @@ package body Memory.Cache is
 
    end Get_Cost;
 
+   procedure Generate(mem  : in Cache_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+      other    : constant Memory_Pointer := Get_Memory(mem);
+      word_bits: constant Natural   := 8 * Get_Word_Size(mem);
+      name     : constant String    := "m" & To_String(Get_ID(mem));
+      oname    : constant String    := "m" & To_String(Get_ID(other.all));
+      lsize    : constant Positive  := 8 * mem.line_size / word_bits;
+      lcount   : constant Positive  := mem.line_count;
+      assoc    : constant Natural   := mem.associativity;
+   begin
+      Generate(other.all, sigs, code);
+      Declare_Signals(sigs, name, word_bits);
+      Line(code, name & "_inst : entity work.cache");
+      Line(code, "   generic map (");
+      Line(code, "      ADDR_WIDTH      => ADDR_WIDTH,");
+      Line(code, "      WORD_WIDTH      => " & To_String(word_bits) & ",");
+      Line(code, "      LINE_SIZE_BITS  => " &
+            To_String(Log2(lsize - 1)) & ",");
+      Line(code, "      LINE_COUNT_BITS => " &
+            To_String(Log2(lcount / assoc - 1)) & ",");
+      Line(code, "      ASSOC_BITS      => " &
+            To_String(Log2(assoc - 1)) & ",");
+      case mem.policy is
+         when LRU    =>
+            Line(code, "      REPLACEMENT     => 0");
+         when MRU    =>
+            Line(code, "      REPLACEMENT     => 1");
+         when FIFO   =>
+            Line(code, "      REPLACEMENT     => 2");
+      end case;
+      Line(code, "   )");
+      Line(code, "   port map (");
+      Line(code, "      clk      => clk,");
+      Line(code, "      rst      => rst,");
+      Line(code, "      addr     => " & name & "_addr,");
+      Line(code, "      din      => " & name & "_din,");
+      Line(code, "      dout     => " & name & "_dout,");
+      Line(code, "      re       => " & name & "_re,");
+      Line(code, "      we       => " & name & "_we,");
+      Line(code, "      ready    => " & name & "_ready,");
+      Line(code, "      maddr    => " & oname & "_addr,");
+      Line(code, "      min      => " & oname & "_dout,");
+      Line(code, "      mout     => " & oname & "_din,");
+      Line(code, "      mre      => " & oname & "_re,");
+      Line(code, "      mwe      => " & oname & "_we,");
+      Line(code, "      mready   => " & oname & "_ready");
+      Line(code, "   );");
+   end Generate;
+
    procedure Adjust(mem : in out Cache_Type) is
       ptr : Cache_Data_Pointer;
    begin

@@ -1,4 +1,6 @@
 
+with Ada.Assertions; use Ada.Assertions;
+
 package body Memory.Flash is
 
    function Create_Flash(word_size     : Positive  := 8;
@@ -77,5 +79,12 @@ package body Memory.Flash is
    begin
       return mem.word_size;
    end Get_Word_Size;
+
+   procedure Generate(mem  : in Flash_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+   begin
+      Assert(False, "Memory.Flash.Generate not implemented");
+   end Generate;
 
 end Memory.Flash;

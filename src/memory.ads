@@ -4,6 +4,8 @@ with Ada.Finalization; use Ada.Finalization;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Unchecked_Deallocation;
 
+with Util;
+
 package Memory is
 
    package RNG is new Ada.Numerics.Discrete_Random(Natural);
@@ -58,6 +60,10 @@ package Memory is
 
    function Get_Word_Size(mem : Memory_Type) return Positive is abstract;
 
+   procedure Generate(mem  : in Memory_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is null;
+
    procedure Destroy(mem : in out Memory_Pointer);
 
    function Get_Time(mem : access Memory_Type'Class) return Time_Type;
@@ -83,5 +89,18 @@ private
 
    procedure Advance(mem      : in out Memory_Type'Class;
                      cycles   : in Time_Type);
+
+   procedure Declare_Signals(sigs      : in out Unbounded_String;
+                             name      : in String;
+                             word_bits : in Positive);
+
+   procedure Line(dest  : in out Unbounded_String;
+                  str   : in String := "");
+
+   function To_String(a : Address_Type) return String;
+
+   function To_String(t : Time_Type) return String;
+
+   function To_String(i : Integer) return String renames Util.To_String;
 
 end Memory;

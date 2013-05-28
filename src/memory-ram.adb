@@ -73,14 +73,32 @@ package body Memory.RAM is
       return mem.word_size;
    end Get_Word_Size;
 
-   function Get_Word_Count(mem : RAM_Type) return Natural is
+   procedure Generate(mem  : in RAM_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+      name        : constant String := "m" & To_String(Get_ID(mem));
+      words       : constant Natural := Get_Word_Size(mem);
+      word_bits   : constant Natural := words * 8;
+      latency     : constant Time_Type := mem.latency;
    begin
-      return mem.word_count;
-   end Get_Word_Count;
-
-   function Get_Latency(mem : RAM_Type) return Time_Type is
-   begin
-      return mem.latency;
-   end Get_Latency;
+      Declare_Signals(sigs, name, word_bits);
+      Line(code, name & "_inst : entity work.ram");
+      Line(code, "   generic map (");
+      Line(code, "      ADDR_WIDTH      => ADDR_WIDTH,");
+      Line(code, "      WORD_WIDTH      => " & To_String(word_bits) & ",");
+      Line(code, "      SIZE            => " & To_String(words) & ",");
+      Line(code, "      LATENCY         => " & To_String(latency));
+      Line(code, "   )");
+      Line(code, "   port map (");
+      Line(code, "      clk      => clk,");
+      Line(code, "      rst      => rst,");
+      Line(code, "      addr     => " & name & "_addr,");
+      Line(code, "      din      => " & name & "_din,");
+      Line(code, "      dout     => " & name & "_dout,");
+      Line(code, "      re       => " & name & "_re,");
+      Line(code, "      we       => " & name & "_we,");
+      Line(code, "      ready    => " & name & "_ready");
+      Line(code, "   );");
+   end Generate;
 
 end Memory.RAM;

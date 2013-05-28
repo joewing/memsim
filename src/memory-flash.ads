@@ -39,6 +39,11 @@ package Memory.Flash is
    overriding
    function Get_Word_Size(mem : Flash_Type) return Positive;
 
+   overriding
+   procedure Generate(mem  : in Flash_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
+
 private
 
    type Flash_Type is new Memory_Type with record

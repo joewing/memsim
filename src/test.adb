@@ -43,6 +43,14 @@ package body Test is
       mem.cycles := mem.cycles + cycles;
    end Idle;
 
+   procedure Generate(mem  : in Monitor_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+      other : constant Memory_Pointer := Get_Memory(mem);
+   begin
+      Generate(other.all, sigs, code);
+   end Generate;
+
    procedure Run_Tests is
    begin
 

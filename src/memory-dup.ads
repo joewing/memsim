@@ -48,6 +48,11 @@ package Memory.Dup is
    function Get_Word_Size(mem : Dup_Type) return Positive;
 
    overriding
+   procedure Generate(mem  : in Dup_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
+
+   overriding
    procedure Adjust(mem : in out Dup_Type);
 
    overriding

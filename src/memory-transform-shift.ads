@@ -37,6 +37,11 @@ package Memory.Transform.Shift is
    overriding
    function Get_Cost(mem : Shift_Type) return Cost_Type;
 
+   overriding
+   procedure Generate(mem  : in Shift_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
+
 private
 
    type Shift_Type is new Transform_Type with record

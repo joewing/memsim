@@ -130,9 +130,39 @@ package body Memory.SPM is
       return result;
    end Get_Cost;
 
-   function Get_Size(mem : SPM_Type) return Natural is
+   procedure Generate(mem  : in SPM_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+      other       : constant Memory_Pointer  := Get_Memory(mem);
+      word_bits   : constant Natural   := 8 * Get_Word_Size(mem);
+      name        : constant String    := "m" & To_String(Get_ID(mem));
+      oname       : constant String    := "m" & To_String(Get_ID(other.all));
+      size        : constant Natural   := (8 * mem.size) / word_bits;
    begin
-      return mem.size;
-   end Get_Size;
+      Generate(other.all, sigs, code);
+      Declare_Signals(sigs, name, word_bits);
+      Line(code, name & "_inst : entity work.spm");
+      Line(code, "   generic map (");
+      Line(code, "      ADDR_WIDTH => ADDR_WIDTH,");
+      Line(code, "      WORD_WIDTH => " & To_String(word_bits) & ",");
+      Line(code, "      SIZE       => " & To_String(size));
+      Line(code, "   )");
+      Line(code, "   port map (");
+      Line(code, "      clk      => clk,");
+      Line(code, "      rst      => rst,");
+      Line(code, "      addr     => " & name & "_addr,");
+      Line(code, "      din      => " & name & "_din,");
+      Line(code, "      dout     => " & name & "_dout,");
+      Line(code, "      re       => " & name & "_re,");
+      Line(code, "      we       => " & name & "_we,");
+      Line(code, "      ready    => " & name & "_ready,");
+      Line(code, "      maddr    => " & oname & "_addr,");
+      Line(code, "      min      => " & oname & "_dout,");
+      Line(code, "      mout     => " & oname & "_din,");
+      Line(code, "      mre      => " & oname & "_re,");
+      Line(code, "      mwe      => " & oname & "_we,");
+      Line(code, "      mready   => " & oname & "_ready");
+      Line(code, "   );");
+   end Generate;
 
 end Memory.SPM;

@@ -1,4 +1,6 @@
 
+with Ada.Assertions; use Ada.Assertions;
+
 package body Memory.Transform.Shift is
 
    function Create_Shift(mem        : access Memory_Type'Class;
@@ -117,5 +119,12 @@ package body Memory.Transform.Shift is
    begin
       return Get_Cost(Container_Type(mem));
    end Get_Cost;
+
+   procedure Generate(mem  : in Shift_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+   begin
+      Assert(False, "Memory.Transform.Shift.Generate not implemented");
+   end Generate;
 
 end Memory.Transform.Shift;

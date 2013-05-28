@@ -1,5 +1,6 @@
 
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Assertions; use Ada.Assertions;
+with Ada.Text_IO;    use Ada.Text_IO;
 
 package body Memory.Dup is
 
@@ -125,6 +126,13 @@ package body Memory.Dup is
       end loop;
       return result;
    end Get_Word_Size;
+
+   procedure Generate(mem  : in Dup_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+   begin
+      Assert(False, "Memory.Dup.Generate not implemented");
+   end Generate;
 
    procedure Adjust(mem : in out Dup_Type) is
       ptr : Memory_Pointer;

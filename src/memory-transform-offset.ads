@@ -31,6 +31,11 @@ package Memory.Transform.Offset is
    overriding
    function Get_Cost(mem : Offset_Type) return Cost_Type;
 
+   overriding
+   procedure Generate(mem  : in Offset_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
+
 private
 
    type Offset_Type is new Transform_Type with record

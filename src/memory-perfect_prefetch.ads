@@ -36,6 +36,11 @@ package Memory.Perfect_Prefetch is
    overriding
    function Get_Cost(mem : Perfect_Prefetch_Type) return Cost_Type;
 
+   overriding
+   procedure Generate(mem  : in Perfect_Prefetch_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
+
 private
 
    type Perfect_Prefetch_Type is new Container_Type with record

@@ -56,6 +56,11 @@ package Memory.Cache is
    function Get_Cost(mem : Cache_Type) return Cost_Type;
 
    overriding
+   procedure Generate(mem  : in Cache_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
+
+   overriding
    procedure Adjust(mem : in out Cache_Type);
 
    overriding

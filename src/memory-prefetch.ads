@@ -51,6 +51,11 @@ package Memory.Prefetch is
    overriding
    function Get_Cost(mem : Prefetch_Type) return Cost_Type;
 
+   overriding
+   procedure Generate(mem  : in Prefetch_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
+
 private
 
    type Prefetch_Type is new Container_Type with record
