@@ -100,7 +100,7 @@ package body Memory.Transform.Offset is
       word_bits   : constant Natural := 8 * Get_Word_Size(mem);
       other       : constant Memory_Pointer  := Get_Memory(mem);
       name        : constant String := "m" & To_String(Get_ID(mem));
-      oname       : constant String := "m" & To_String(Get_ID(mem));
+      oname       : constant String := "m" & To_String(Get_ID(other.all));
       offset      : constant Address_Type := mem.offset;
    begin
       Generate(other.all, sigs, code);
