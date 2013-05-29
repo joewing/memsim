@@ -77,8 +77,8 @@ package body Memory.RAM is
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is
       name        : constant String := "m" & To_String(Get_ID(mem));
-      words       : constant Natural := Get_Word_Size(mem);
-      word_bits   : constant Natural := words * 8;
+      words       : constant Natural := mem.word_count;
+      word_bits   : constant Natural := 8 * Get_Word_Size(mem);
       latency     : constant Time_Type := mem.latency;
    begin
       Declare_Signals(sigs, name, word_bits);
