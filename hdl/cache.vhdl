@@ -451,7 +451,11 @@ begin
             end if;
          elsif REPLACEMENT = 2 then -- FIFO
             if is_hit = '0' then
-               updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
+               if unsigned(oldest_way) = i then
+                  updated_ages(i) <= (others => '0');
+               else
+                  updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
+               end if;
             else
                updated_ages(i) <= ages(i);
             end if;

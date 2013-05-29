@@ -57,10 +57,10 @@ architecture trace_arch of trace is
 
    procedure cycle(signal clk : out std_logic) is
    begin
+      wait for 10 ns;
       clk <= '1';
       wait for 10 ns;
       clk <= '0';
-      wait for 10 ns;
    end cycle;
 
    procedure wait_ready(signal clk : out std_logic;
