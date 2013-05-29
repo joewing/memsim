@@ -77,10 +77,12 @@ architecture trace_arch of trace is
       variable updated : boolean := false;
    begin
       ena <= '1';
-      wait_ready(clk, rdy);
-      cycle(clk);
+      wait for 10 ns;
+      clk <= '1';
+      wait for 10 ns;
       ena <= '0';
-      cycle(clk);
+      clk <= '0';
+      wait_ready(clk, rdy);
    end update;
 
    procedure run_action(signal clk     : out std_logic;
@@ -131,8 +133,7 @@ architecture trace_arch of trace is
             run_action(clk, r_act, addr, size, maddr, re, we, rdy);
             run_action(clk, w_act, addr, size, maddr, re, we, rdy);
          when 'I' =>
-            wait_ready(clk, rdy);
-            for i in 2 to size loop
+            for i in 1 to size loop
                cycle(clk);
             end loop;
          when '?' => null;
