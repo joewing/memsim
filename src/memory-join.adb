@@ -1,15 +1,13 @@
 
 with Ada.Assertions; use Ada.Assertions;
 
-with Memory.Container; use Memory.Container;
-
 package body Memory.Join is
 
-   function Create_Join(split : Split_Pointer;
-                        index : Natural)  return Join_Pointer is
+   function Create_Join(parent   : access Wrapper_Type'Class;
+                        index    : Natural) return Join_Pointer is
       result : constant Join_Pointer := new Join_Type;
    begin
-      result.split   := split;
+      result.parent  := parent;
       result.index   := index;
       return result;
    end Create_Join;
@@ -23,35 +21,15 @@ package body Memory.Join is
    procedure Read(mem      : in out Join_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      base     : constant Memory_Pointer := Get_Memory(mem.split.all);
-      cycles   : Time_Type;
    begin
-      Assert(mem.split /= null, "Memory.Join.Read: split is null");
-      Assert(base /= null, "Memory.Join.Read: base is null");
-      cycles := Get_Time(base.all);
-      if mem.index = 0 then
-         Read(base.all, address, size);
-      else
-         Read(base.all, address + Get_Offset(mem.split.all), size);
-      end if;
-      Advance(mem, Get_Time(base.all) - cycles);
+      Forward_Read(mem.parent.all, mem.index, address, size);
    end Read;
 
    procedure Write(mem     : in out Join_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      base     : constant Memory_Pointer := Get_Memory(mem.split.all);
-      cycles   : Time_Type;
    begin
-      Assert(mem.split /= null, "Memory.Join.Write: split is null");
-      Assert(base /= null, "Memory.Join.Write: base is null");
-      cycles := Get_Time(base.all);
-      if mem.index = 0 then
-         Write(base.all, address, size);
-      else
-         Write(base.all, address + Get_Offset(mem.split.all), size);
-      end if;
-      Advance(mem, Get_Time(base.all) - cycles);
+      Forward_Write(mem.parent.all, mem.index, address, size);
    end Write;
 
    function Get_Writes(mem : Join_Type) return Long_Integer is
@@ -72,7 +50,7 @@ package body Memory.Join is
 
    function Get_Word_Size(mem : Join_Type) return Positive is
    begin
-      return Get_Word_Size(mem.split.all);
+      return Get_Word_Size(mem.parent.all);
    end Get_Word_Size;
 
    procedure Generate(mem  : in Join_Type;
@@ -86,13 +64,13 @@ package body Memory.Join is
 
    procedure Adjust(mem : in out Join_Type) is
    begin
-      mem.split := null;
+      mem.parent := null;
    end Adjust;
 
-   procedure Set_Split(mem    : in out Join_Type;
-                       split  : in Split_Pointer) is
+   procedure Set_Parent(mem      : in out Join_Type;
+                        parent   : access Wrapper_Type'Class) is
    begin
-      mem.split := split;
-   end Set_Split;
+      mem.parent := parent;
+   end Set_Parent;
 
 end Memory.Join;

@@ -24,23 +24,7 @@ package body Memory.Split is
 
    function Clone(mem : Split_Type) return Memory_Pointer is
       result   : constant Split_Pointer := new Split_Type'(mem);
-      ptr      : Memory_Pointer;
-      cp       : Container_Pointer;
-      jp       : Join_Pointer;
    begin
-      for i in result.banks'Range loop
-         ptr := Memory_Pointer(result.banks(i).mem);
-         loop
-            if ptr.all in Join_Type'Class then
-               jp := Join_Pointer(ptr);
-               Set_Split(jp.all, result);
-               exit;
-            else
-               cp := Container_Pointer(ptr);
-               ptr := Get_Memory(cp.all);
-            end if;
-         end loop;
-      end loop;
       return Memory_Pointer(result);
    end Clone;
 
@@ -57,14 +41,14 @@ package body Memory.Split is
       Assert(Get_Cost(mem) <= max_cost, "Invalid Permute in Memory.Split");
    end Permute;
 
-   function Get_Bank(mem   : Split_Pointer;
+   function Get_Bank(mem   : Split_Type;
                      index : Natural) return Memory_Pointer is
    begin
       Assert(index < 2);
       return Memory_Pointer(mem.banks(index).mem);
    end Get_Bank;
 
-   procedure Set_Bank(mem     : in Split_Pointer;
+   procedure Set_Bank(mem     : in out Split_Type;
                       index   : in Natural;
                       other   : access Memory_Type'Class) is
    begin
@@ -333,10 +317,26 @@ package body Memory.Split is
    end Generate;
 
    procedure Adjust(mem : in out Split_Type) is
+      ptr   : Memory_Pointer;
+      cp    : Container_Pointer;
+      jp    : Join_Pointer;
    begin
       Adjust(Container_Type(mem));
       for i in mem.banks'Range loop
          mem.banks(i).mem := Clone(mem.banks(i).mem.all);
+      end loop;
+      for i in mem.banks'Range loop
+         ptr := Memory_Pointer(mem.banks(i).mem);
+         loop
+            if ptr.all in Join_Type'Class then
+               jp := Join_Pointer(ptr);
+               Set_Parent(jp.all, mem'Unrestricted_Access);
+               exit;
+            else
+               cp := Container_Pointer(ptr);
+               ptr := Get_Memory(cp.all);
+            end if;
+         end loop;
       end loop;
    end Adjust;
 
@@ -348,5 +348,40 @@ package body Memory.Split is
       end loop;
    end Finalize;
 
-end Memory.Split;
+   procedure Forward_Read(mem       : in out Split_Type;
+                          source    : in Natural;
+                          address   : in Address_Type;
+                          size      : in Positive) is
+      out_addr : Address_Type := address;
+   begin
+      if source = 1 then
+         out_addr := address + mem.offset;
+      end if;
+      Read(Container_Type(mem), out_addr, size);
+   end Forward_Read;
 
+   procedure Forward_Write(mem      : in out Split_Type;
+                           source   : in Natural;
+                           address  : in Address_Type;
+                           size     : in Positive) is
+      out_addr : Address_Type := address;
+   begin
+      if source = 1 then
+         out_addr := address + mem.offset;
+      end if;
+      Write(Container_Type(mem), out_addr, size);
+   end Forward_Write;
+
+   procedure Forward_Idle(mem       : in out Split_Type;
+                          source    : in Natural;
+                          cycles    : in Time_Type) is
+   begin
+      Idle(Container_Type(mem), cycles);
+   end Forward_Idle;
+
+   function Forward_Get_Time(mem : Split_Type) return Time_Type is
+   begin
+      return Get_Time(Container_Type(mem));
+   end Forward_Get_Time;
+
+end Memory.Split;

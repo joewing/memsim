@@ -5,8 +5,7 @@ package Memory.Transform.Offset is
 
    type Offset_Pointer is access all Offset_Type'Class;
 
-   function Create_Offset(mem    : access Memory_Type'Class;
-                          offset : Integer) return Offset_Pointer;
+   function Create_Offset return Offset_Pointer;
 
    function Random_Offset(next      : access Memory_Type'Class;
                           generator : RNG.Generator;
@@ -29,9 +28,6 @@ package Memory.Transform.Offset is
    function To_String(mem : Offset_Type) return Unbounded_String;
 
    overriding
-   function Get_Cost(mem : Offset_Type) return Cost_Type;
-
-   overriding
    procedure Generate(mem  : in Offset_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);
@@ -44,7 +40,8 @@ private
 
    overriding
    function Apply(mem      : Offset_Type;
-                  address  : Address_Type) return Address_Type;
+                  address  : Address_Type;
+                  dir      : Boolean) return Address_Type;
 
 
 end Memory.Transform.Offset;

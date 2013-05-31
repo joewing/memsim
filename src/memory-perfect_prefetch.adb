@@ -35,7 +35,7 @@ package body Memory.Perfect_Prefetch is
       end if;
 
       Start(mem);
-      Forward_Read(mem, address, size);
+      Do_Read(mem, address, size);
       Commit(mem, mem.pending);
 
    end Read;

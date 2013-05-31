@@ -77,7 +77,7 @@ package body Memory.Prefetch is
       begin
          next_address := address * mem.multiplier + mem.stride;
          Start(mem);
-         Forward_Read(mem, next_address, 1);
+         Do_Read(mem, next_address, 1);
          Commit(mem, mem.pending);
       end;
 

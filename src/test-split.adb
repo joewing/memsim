@@ -17,8 +17,8 @@ package body Test.Split is
 
       Set_Offset(split.all, 256);
       Set_Memory(split.all, ram);
-      Set_Bank(split, 0, mon1);
-      Set_Bank(split, 1, mon2);
+      Set_Bank(split.all, 0, mon1);
+      Set_Bank(split.all, 1, mon2);
       Set_Memory(mon1.all, join1);
       Set_Memory(mon2.all, join2);
 

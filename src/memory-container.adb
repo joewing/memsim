@@ -76,33 +76,33 @@ package body Memory.Container is
       end if;
    end Commit;
 
-   procedure Forward_Read(mem       : in out Container_Type'Class;
-                          address   : in Address_Type;
-                          size      : in Positive) is
+   procedure Do_Read(mem      : in out Container_Type'Class;
+                     address  : in Address_Type;
+                     size     : in Positive) is
    begin
       if mem.mem /= null then
          Read(mem.mem.all, address, size);
       end if;
-   end Forward_Read;
+   end Do_Read;
 
-   procedure Forward_Write(mem      : in out Container_Type'Class;
-                           address  : in Address_Type;
-                           size     : in Positive) is
+   procedure Do_Write(mem     : in out Container_Type'Class;
+                      address : in Address_Type;
+                      size    : in Positive) is
    begin
       if mem.mem /= null then
          Write(mem.mem.all, address, size);
       end if;
-   end Forward_Write;
+   end Do_Write;
 
-   procedure Forward_Idle(mem    : in out Container_Type'Class;
-                          cycles : in Time_Type) is
+   procedure Do_Idle(mem      : in out Container_Type'Class;
+                     cycles   : in Time_Type) is
    begin
       if mem.mem /= null then
          Idle(mem.mem.all, cycles);
       else
          Advance(mem, cycles);
       end if;
-   end Forward_Idle;
+   end Do_Idle;
 
    procedure Show_Access_Stats(mem : in out Container_Type) is
    begin

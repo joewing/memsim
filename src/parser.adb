@@ -16,6 +16,9 @@ package body Parser is
    procedure Parse_Join(parser   : in out Parser_Type;
                         result   : out Memory_Pointer) is separate;
 
+   procedure Parse_Offset(parser : in out Parser_Type;
+                          result : out Memory_Pointer) is separate;
+
    procedure Parse_Perfect_Prefetch(parser   : in out Parser_Type;
                                     result   : out Memory_Pointer) is separate;
 
@@ -25,8 +28,11 @@ package body Parser is
    procedure Parse_RAM(parser : in out Parser_Type;
                        result : out Memory_Pointer) is separate;
 
-   procedure Parse_Split(parser   : in out Parser_Type;
-                         result   : out Memory_Pointer) is separate;
+   procedure Parse_Shift(parser  : in out Parser_Type;
+                         result  : out Memory_Pointer) is separate;
+
+   procedure Parse_Split(parser  : in out Parser_Type;
+                         result  : out Memory_Pointer) is separate;
 
    procedure Parse_SPM(parser : in out Parser_Type;
                        result : out Memory_Pointer) is separate;
@@ -40,9 +46,6 @@ package body Parser is
    procedure Parse_Trace(parser  : in out Parser_Type;
                          result  : out Memory_Pointer) is separate;
 
-   procedure Parse_Transform(parser : in out Parser_Type;
-                             result : out Memory_Pointer) is separate;
-
    type Memory_Parser_Type is record
       name     : Unbounded_String;
       parser   : access procedure(parser  : in out Parser_Type;
@@ -55,15 +58,16 @@ package body Parser is
       (To_Unbounded_String("split"),            Parse_Split'Access),
       (To_Unbounded_String("join"),             Parse_Join'Access),
       (To_Unbounded_String("cache"),            Parse_Cache'Access),
+      (To_Unbounded_String("offset"),           Parse_Offset'Access),
       (To_Unbounded_String("perfect_prefetch"), Parse_Perfect_Prefetch'Access),
       (To_Unbounded_String("prefetch"),         Parse_Prefetch'Access),
       (To_Unbounded_String("flash"),            Parse_Flash'Access),
       (To_Unbounded_String("ram"),              Parse_RAM'Access),
+      (To_Unbounded_String("shift"),            Parse_Shift'Access),
       (To_Unbounded_String("stats"),            Parse_Stats'Access),
       (To_Unbounded_String("super"),            Parse_Super'Access),
       (To_Unbounded_String("spm"),              Parse_SPM'Access),
       (To_Unbounded_String("dup"),              Parse_Dup'Access),
-      (To_Unbounded_String("transform"),        Parse_Transform'Access),
       (To_Unbounded_String("trace"),            Parse_Trace'Access)
    );
 
@@ -141,5 +145,39 @@ package body Parser is
       end if;
       Next(parser.lexer);
    end Match;
+
+   procedure Push_Wrapper(parser    : in out Parser_Type;
+                          wrapper   : in Wrapper_Pointer;
+                          count     : in Positive := 1) is
+      last : constant Natural := Natural(count) - 1;
+   begin
+      parser.wrappers.Append(Wrapper_Node'(wrapper, 0, last));
+   end Push_Wrapper;
+
+   procedure Pop_Wrapper(parser  : in out Parser_Type;
+                         wrapper : out Wrapper_Pointer;
+                         index   : out Natural) is
+   begin
+      if parser.wrappers.Is_Empty then
+         Raise_Error(parser, "unexpected join");
+      end if;
+      declare
+         node  : Wrapper_Node := parser.wrappers.Last_Element;
+      begin
+         wrapper        := node.wrapper;
+         index          := node.current;
+         node.current   := node.current + 1;
+         if node.current = node.last then
+            Delete_Wrapper(parser);
+         else
+            parser.wrappers.Replace_Element(parser.wrappers.Last, node);
+         end if;
+      end;
+   end Pop_Wrapper;
+
+   procedure Delete_Wrapper(parser : in out Parser_Type) is
+   begin
+      parser.wrappers.Delete_Last;
+   end Delete_Wrapper;
 
 end Parser;

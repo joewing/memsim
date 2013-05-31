@@ -3,7 +3,7 @@ with Ada.Containers.Vectors;
 use Ada.Containers;
 
 with Memory;         use Memory;
-with Memory.Split;   use Memory.Split;
+with Memory.Wrapper; use Memory.Wrapper;
 with Lexer;          use Lexer;
 
 package Parser is
@@ -12,18 +12,19 @@ package Parser is
 
 private
 
-   type Split_Node is record
-      split : Split_Pointer;
-      count : Natural := 0;
+   type Wrapper_Node is record
+      wrapper  : Wrapper_Pointer;
+      current  : Natural := 0;
+      last     : Natural := 0;
    end record;
 
-   package Split_Vectors is new Vectors(Natural, Split_Node);
+   package Wrapper_Vectors is new Vectors(Natural, Wrapper_Node);
 
    Parse_Error : exception;
 
    type Parser_Type is record
       lexer    : Lexer_Type;
-      splits   : Split_Vectors.Vector;
+      wrappers : Wrapper_Vectors.Vector;
    end record;
 
    procedure Raise_Error(parser  : in Parser_Type;
@@ -40,5 +41,15 @@ private
 
    procedure Parse_Memory(parser : in out Parser_Type;
                           result : out Memory_Pointer);
+
+   procedure Push_Wrapper(parser  : in out Parser_Type;
+                          wrapper : in Wrapper_Pointer;
+                          count   : in Positive := 1);
+
+   procedure Pop_Wrapper(parser  : in out Parser_Type;
+                         wrapper : out Wrapper_Pointer;
+                         index   : out Natural);
+
+   procedure Delete_Wrapper(parser : in out Parser_Type);
 
 end Parser;

@@ -1,9 +1,10 @@
 
-with Memory.Container; use Memory.Container;
+with Memory.Container;  use Memory.Container;
+with Memory.Wrapper;    use Memory.Wrapper;
 
 package Memory.Split is
 
-   type Split_Type is new Container.Container_Type with private;
+   type Split_Type is new Container_Type and Wrapper_Type with private;
 
    type Split_Pointer is access all Split_Type'Class;
 
@@ -22,10 +23,10 @@ package Memory.Split is
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type);
 
-   function Get_Bank(mem    : Split_Pointer;
+   function Get_Bank(mem    : Split_Type;
                      index  : Natural) return Memory_Pointer;
 
-   procedure Set_Bank(mem   : in Split_Pointer;
+   procedure Set_Bank(mem   : in out Split_Type;
                       index : in Natural;
                       other : access Memory_Type'Class);
 
@@ -74,6 +75,26 @@ package Memory.Split is
    overriding
    procedure Finalize(mem : in out Split_Type);
 
+   overriding
+   procedure Forward_Read(mem       : in out Split_Type;
+                          source    : in Natural;
+                          address   : in Address_Type;
+                          size      : in Positive);
+
+   overriding
+   procedure Forward_Write(mem      : in out Split_Type;
+                           source   : in Natural;
+                           address  : in Address_Type;
+                           size     : in Positive);
+
+   overriding
+   procedure Forward_Idle(mem    : in out Split_Type;
+                          source : in Natural;
+                          cycles : in Time_Type);
+
+   overriding
+   function Forward_Get_Time(mem : Split_Type) return Time_Type;
+
 private
 
    type Split_Data is record
@@ -82,7 +103,7 @@ private
 
    type Split_Data_Array is array(0 .. 1) of Split_Data;
 
-   type Split_Type is new Container.Container_Type with record
+   type Split_Type is new Container_Type and Wrapper_Type with record
       banks    : Split_Data_Array;
       offset   : Address_Type;
    end record;

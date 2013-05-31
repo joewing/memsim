@@ -8,9 +8,12 @@ package body Test.Shift is
 
       ram   : constant RAM_Pointer  := Create_RAM(latency   => 100,
                                                   word_size => 8);
-      shift : Shift_Pointer         := Create_Shift(ram, 1, 2);
+      shift : Shift_Pointer         := Create_Shift;
 
    begin
+
+      Set_Memory(shift.all, ram);
+      Set_Shift(shift.all, 1);
 
       Check(Get_Time(shift.all) = 0);
       Check(Get_Writes(shift.all) = 0);
@@ -36,9 +39,12 @@ package body Test.Shift is
 
       ram   : constant RAM_Pointer  := Create_RAM(latency   => 100,
                                                   word_size => 8);
-      shift : Shift_Pointer         := Create_Shift(ram, 1, -1);
+      shift : Shift_Pointer         := Create_Shift;
 
    begin
+
+      Set_Memory(shift.all, ram);
+      Set_Shift(shift.all, -1);
 
       Check(Get_Time(shift.all) = 0);
       Check(Get_Writes(shift.all) = 0);
@@ -63,9 +69,12 @@ package body Test.Shift is
 
       ram   : constant RAM_Pointer  := Create_RAM(latency   => 100,
                                                   word_size => 8);
-      shift : Shift_Pointer         := Create_Shift(ram, 4, 1);
+      shift : Shift_Pointer         := Create_Shift;
 
    begin
+
+      Set_Memory(shift.all, ram);
+      Set_Shift(shift.all, 4);
 
       Check(Get_Time(shift.all) = 0);
       Check(Get_Writes(shift.all) = 0);

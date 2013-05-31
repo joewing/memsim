@@ -8,9 +8,12 @@ package body Test.Offset is
 
       ram      : constant RAM_Pointer  := Create_RAM(latency   => 100,
                                                      word_size => 8);
-      offset   : Offset_Pointer := Create_Offset(ram, 3);
+      offset   : Offset_Pointer := Create_Offset;
 
    begin
+
+      Set_Memory(offset.all, ram);
+      Set_Offset(offset.all, 3);
 
       Check(Get_Time(ram.all) = 0);
       Check(Get_Writes(ram.all) = 0);

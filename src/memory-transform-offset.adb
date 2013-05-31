@@ -1,30 +1,18 @@
 
 package body Memory.Transform.Offset is
 
-   function Create_Offset(mem    : access Memory_Type'Class;
-                          offset : Integer) return Offset_Pointer is
+   function Create_Offset return Offset_Pointer is
       result : constant Offset_Pointer := new Offset_Type;
    begin
-      Set_Memory(result.all, mem);
-      if offset < 0 then
-         result.offset := 0 - Address_Type(-offset);
-      else
-         result.offset := Address_Type(offset);
-      end if;
       return result;
    end Create_Offset;
 
    function Random_Offset(next      : access Memory_Type'Class;
                           generator : RNG.Generator;
                           max_cost  : Cost_Type) return Memory_Pointer is
-      result   : Offset_Pointer := new Offset_Type;
+      result : constant Offset_Pointer := new Offset_Type;
    begin
       Set_Memory(result.all, next);
-      if Get_Cost(result.all) > max_cost then
-         Set_Memory(result.all, null);
-         Destroy(Memory_Pointer(result));
-         return Memory_Pointer(next);
-      end if;
       if (RNG.Random(generator) mod 2) = 0 then
          result.offset := 0 - Address_Type(1);
       else
@@ -62,16 +50,21 @@ package body Memory.Transform.Offset is
    end Permute;
 
    function Apply(mem      : Offset_Type;
-                  address  : Address_Type) return Address_Type is
+                  address  : Address_Type;
+                  dir      : Boolean) return Address_Type is
    begin
-      return address + mem.offset;
+      if dir then
+         return address + mem.offset;
+      else
+         return address - mem.offset;
+      end if;
    end Apply;
 
    function To_String(mem : Offset_Type) return Unbounded_String is
       result : Unbounded_String;
    begin
-      Append(result, "(transform ");
-      Append(result, "(offset");
+      Append(result, "(shift ");
+      Append(result, "(value");
       if 0 - mem.offset < mem.offset then
          declare
             temp : constant String := Address_Type'Image(0 - mem.offset);
@@ -82,17 +75,15 @@ package body Memory.Transform.Offset is
          Append(result, Address_Type'Image(mem.offset));
       end if;
       Append(result, ")");
+      Append(result, "(bank ");
+      Append(result, To_String(To_String(mem.bank.all)));
+      Append(result, ")");
       Append(result, "(memory ");
       Append(result, To_String(Container_Type(mem)));
       Append(result, ")");
       Append(result, ")");
       return result;
    end To_String;
-
-   function Get_Cost(mem : Offset_Type) return Cost_Type is
-   begin
-      return Get_Cost(Container_Type(mem));
-   end Get_Cost;
 
    procedure Generate(mem  : in Offset_Type;
                       sigs : in out Unbounded_String;

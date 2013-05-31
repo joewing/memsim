@@ -32,16 +32,16 @@ package Memory.Container is
    procedure Commit(mem    : in out Container_Type'Class;
                     cycles : out Time_Type);
 
-   procedure Forward_Read(mem       : in out Container_Type'Class;
-                          address   : in Address_Type;
-                          size      : in Positive);
+   procedure Do_Read(mem      : in out Container_Type'Class;
+                     address  : in Address_Type;
+                     size     : in Positive);
 
-   procedure Forward_Write(mem      : in out Container_Type'Class;
-                           address  : in Address_Type;
-                           size     : in Positive);
+   procedure Do_Write(mem     : in out Container_Type'Class;
+                      address : in Address_Type;
+                      size    : in Positive);
 
-   procedure Forward_Idle(mem       : in out Container_Type'Class;
-                          cycles    : in Time_Type);
+   procedure Do_Idle(mem      : in out Container_Type'Class;
+                     cycles   : in Time_Type);
 
    overriding
    procedure Show_Access_Stats(mem : in out Container_Type);

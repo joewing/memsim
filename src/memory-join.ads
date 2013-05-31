@@ -1,5 +1,5 @@
 
-with Memory.Split; use Memory.Split;
+with Memory.Wrapper; use Memory.Wrapper;
 
 package Memory.Join is
 
@@ -7,8 +7,8 @@ package Memory.Join is
 
    type Join_Pointer is access all Join_Type'Class;
 
-   function Create_Join(split : Split_Pointer;
-                        index : Natural) return Join_Pointer;
+   function Create_Join(parent   : access Wrapper_Type'Class;
+                        index    : Natural) return Join_Pointer;
 
    overriding
    function Clone(mem : Join_Type) return Memory_Pointer;
@@ -43,15 +43,14 @@ package Memory.Join is
    overriding
    procedure Adjust(mem : in out Join_Type);
 
-   -- This should be used only in Memory.Split.Clone.
-   procedure Set_Split(mem    : in out Join_Type;
-                       split  : in Split_Pointer);
+   procedure Set_Parent(mem      : in out Join_Type;
+                        parent   : access Wrapper_Type'Class);
 
 private
 
    type Join_Type is new Memory_Type with record
-      index : Natural         := 0;
-      split : Split_Pointer   := null;
+      parent   : access Wrapper_Type'Class   := null;
+      index    : Natural                     := 0;
    end record;
 
 end Memory.Join;

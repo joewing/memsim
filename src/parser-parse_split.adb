@@ -11,7 +11,7 @@ procedure Parse_Split(parser  : in out Parser_Type;
    bank1    : Memory_Pointer  := null;
    offset   : Address_Type    := 0;
 begin
-   parser.splits.Append(Split_Node'(split, 0));
+   Push_Wrapper(parser, Wrapper_Pointer(split), 2);
    while Get_Type(parser) = Open loop
       Match(parser, Open);
       declare
@@ -62,14 +62,14 @@ begin
    elsif mem = null then
       Raise_Error(parser, "memory not specified in split");
    end if;
-   Set_Bank(split, 0, bank0);
-   Set_Bank(split, 1, bank1);
+   Set_Bank(split.all, 0, bank0);
+   Set_Bank(split.all, 1, bank1);
    Set_Memory(split.all, mem);
    Set_Offset(split.all, offset);
    result := Memory_Pointer(split);
 exception
    when Data_Error | Constraint_Error =>
       Destroy(Memory_Pointer(split));
-      parser.splits.Delete_Last;
+      Delete_Wrapper(parser);
       Raise_Error(parser, "invalid value in split");
 end Parse_Split;

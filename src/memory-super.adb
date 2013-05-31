@@ -4,6 +4,7 @@ with Ada.Assertions;          use Ada.Assertions;
 with Ada.Numerics.Generic_Elementary_Functions;
 with Memory.Cache;            use Memory.Cache;
 with Memory.SPM;              use Memory.SPM;
+with Memory.Transform;        use Memory.Transform;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
 with Memory.Prefetch;         use Memory.Prefetch;
@@ -16,8 +17,7 @@ package body Memory.Super is
 
    function Create_Memory(mem       : Super_Type;
                           next      : access Memory_Type'Class;
-                          cost      : Cost_Type;
-                          in_split  : Boolean)
+                          cost      : Cost_Type)
                           return Memory_Pointer;
 
    function Create_Split(mem        : Super_Type;
@@ -25,41 +25,31 @@ package body Memory.Super is
                          cost       : Cost_Type)
                          return Memory_Pointer;
 
+   function Create_Transform(mem    : Super_Type;
+                             next   : access Memory_Type'Class;
+                             cost   : Cost_Type)
+                             return Memory_Pointer;
+
    function Create_Memory(mem       : Super_Type;
                           next      : access Memory_Type'Class;
-                          cost      : Cost_Type;
-                          in_split  : Boolean)
+                          cost      : Cost_Type)
                           return Memory_Pointer is
       tcost    : constant Cost_Type := cost + Get_Cost(next.all);
       result   : Memory_Pointer := null;
    begin
-      if in_split then
-         case RNG.Random(mem.generator.all) mod 4 is
-            when 0      =>
-               result := Random_Prefetch(next, mem.generator.all, tcost);
-            when 1      =>
-               result := Random_SPM(next, mem.generator.all, tcost);
-            when 2      =>
-               result := Random_Cache(next, mem.generator.all, tcost);
-            when others =>
-               result := Create_Split(mem, next, cost);
-         end case;
-      else
-         case RNG.Random(mem.generator.all) mod 6 is
-            when 0      =>
-               result := Random_Shift(next, mem.generator.all, tcost);
-            when 1      =>
-               result := Random_Offset(next, mem.generator.all, tcost);
-            when 2      =>
-               result := Random_Prefetch(next, mem.generator.all, tcost);
-            when 3      =>
-               result := Random_SPM(next, mem.generator.all, tcost);
-            when 4      =>
-               result := Random_Cache(next, mem.generator.all, tcost);
-            when others =>
-               result := Create_Split(mem, next, cost);
-         end case;
-      end if;
+      case RNG.Random(mem.generator.all) mod 5 is
+         when 0      =>
+            result := Create_Transform(mem, next, cost);
+         when 1      =>
+            result := Random_Prefetch(next, mem.generator.all, tcost);
+         when 2      =>
+            result := Random_SPM(next, mem.generator.all, tcost);
+         when 3      =>
+            result := Random_Cache(next, mem.generator.all, tcost);
+         when others =>
+            result := Create_Split(mem, next, cost);
+      end case;
+      Assert(result /= null, "Memory.Super.Create_Memory returning null");
       return result;
    end Create_Memory;
 
@@ -67,27 +57,47 @@ package body Memory.Super is
                          next       : access Memory_Type'Class;
                          cost       : Cost_Type)
                          return Memory_Pointer is
-      result   : constant Split_Pointer
-               := Split_Pointer(Random_Split(next, mem.generator.all, cost));
-      j0    : constant Join_Pointer := Create_Join(result, 0);
-      c0    : constant Cost_Type := (cost + 1) / 2;
-      bank0 : constant Memory_Pointer := Create_Memory(mem, j0, c0, True);
-      j1    : constant Join_Pointer := Create_Join(result, 1);
-      c1    : constant Cost_Type := cost / 2;
-      bank1 : constant Memory_Pointer := Create_Memory(mem, j1, c1, True);
+      result   : Split_Pointer;
+      join0    : Join_Pointer;
+      cost0    : Cost_Type;
+      bank0    : Memory_Pointer;
+      join1    : Join_Pointer;
+      cost1    : Cost_Type;
+      bank1    : Memory_Pointer;
    begin
-      if bank0 /= null and then bank0.all in Container_Type'Class then
-         Set_Bank(result, 0, bank0);
-      else
-         Set_Bank(result, 0, j0);
-      end if;
-      if bank1 /= null and then bank1.all in Container_Type'Class then
-         Set_Bank(result, 1, bank1);
-      else
-         Set_Bank(result, 1, j1);
-      end if;
+      result   := Split_Pointer(Random_Split(next, mem.generator.all, cost));
+      join0    := Create_Join(result, 0);
+      cost0    := (cost + 1) / 2;
+      bank0    := Create_Memory(mem, join0, cost0);
+      join1    := Create_Join(result, 1);
+      cost1    := cost - cost0;
+      bank1    := Create_Memory(mem, join1, cost1);
+      Set_Bank(result.all, 0, bank0);
+      Set_Bank(result.all, 1, bank1);
       return Memory_Pointer(result);
    end Create_Split;
+
+   function Create_Transform(mem    : Super_Type;
+                             next   : access Memory_Type'Class;
+                             cost   : Cost_Type)
+                             return Memory_Pointer is
+      result   : Transform_Pointer;
+      join     : Join_Pointer;
+      bank     : Memory_Pointer;
+   begin
+      case RNG.Random(mem.generator.all) mod 2 is
+         when 0 =>
+            result := Transform_Pointer(Random_Offset(next, mem.generator.all,
+                                        cost));
+         when others =>
+            result := Transform_Pointer(Random_Shift(next, mem.generator.all,
+                                        cost));
+      end case;
+      join := Create_Join(result, 0);
+      bank := Create_Memory(mem, join, cost);
+      Set_Bank(result.all, bank);
+      return Memory_Pointer(result);
+   end Create_Transform;
 
    function Clone(mem : Super_Type) return Memory_Pointer is
       result : constant Super_Pointer := new Super_Type'(mem);
@@ -101,14 +111,24 @@ package body Memory.Super is
          if ptr.all in Split_Type'Class then
             declare
                sp : constant Split_Pointer   := Split_Pointer(ptr);
-               a  : constant Memory_Pointer  := Get_Bank(sp, 0);
+               a  : constant Memory_Pointer  := Get_Bank(sp.all, 0);
                ac : constant Natural         := Count_Memories(a);
-               b  : constant Memory_Pointer  := Get_Bank(sp, 1);
+               b  : constant Memory_Pointer  := Get_Bank(sp.all, 1);
                bc : constant Natural         := Count_Memories(b);
                n  : constant Memory_Pointer  := Get_Memory(sp.all);
                nc : constant Natural         := Count_Memories(n);
             begin
                return 1 + ac + bc + nc;
+            end;
+         elsif ptr.all in Transform_Type'Class then
+            declare
+               tp : constant Transform_Pointer  := Transform_Pointer(ptr);
+               bp : constant Memory_Pointer     := Get_Bank(tp.all);
+               bc : constant Natural            := Count_Memories(bp);
+               np : constant Memory_Pointer     := Get_Memory(tp.all);
+               nc : constant Natural            := Count_Memories(np);
+            begin
+               return 1 + bc + nc;
             end;
          elsif ptr.all in Container_Type'Class then
             declare
@@ -171,8 +191,8 @@ package body Memory.Super is
          if ptr.all in Split_Type'Class then
             declare
                sp : constant Split_Pointer      := Split_Pointer(ptr);
-               a  : constant Memory_Pointer     := Get_Bank(sp, 0);
-               b  : constant Memory_Pointer     := Get_Bank(sp, 1);
+               a  : constant Memory_Pointer     := Get_Bank(sp.all, 0);
+               b  : constant Memory_Pointer     := Get_Bank(sp.all, 1);
                n  : constant Memory_Pointer     := Get_Memory(sp.all);
                r  : Container_Pointer;
             begin
@@ -187,6 +207,20 @@ package body Memory.Super is
                end if;
                temp := temp - Count_Memories(b);
                return Get_Memory(n, temp);
+            end;
+         elsif ptr.all in Transform_Type'Class then
+            declare
+               tp    : constant Transform_Pointer  := Transform_Pointer(ptr);
+               bank  : constant Memory_Pointer     := Get_Bank(tp.all);
+               next  : constant Memory_Pointer     := Get_Memory(tp.all);
+               r     : Container_Pointer;
+            begin
+               r := Get_Memory(bank, temp);
+               if r /= null then
+                  return r;
+               end if;
+               temp := temp - Count_Memories(bank);
+               return Get_Memory(next, temp);
             end;
          elsif ptr.all in Container_Type'Class then
             declare
@@ -226,9 +260,9 @@ package body Memory.Super is
       elsif ptr.all in Split_Type'Class then
          declare
             sp : constant Split_Pointer   := Split_Pointer(ptr);
-            a  : Memory_Pointer           := Get_Bank(sp, 0);
+            a  : Memory_Pointer           := Get_Bank(sp.all, 0);
             ac : constant Natural         := Count_Memories(a);
-            b  : Memory_Pointer           := Get_Bank(sp, 1);
+            b  : Memory_Pointer           := Get_Bank(sp.all, 1);
             bc : constant Natural         := Count_Memories(b);
             n  : Memory_Pointer           := Get_Memory(sp.all);
          begin
@@ -237,13 +271,13 @@ package body Memory.Super is
 
                -- The memory to remove is in the first bank.
                Remove_Memory(a, index - 1);
-               Set_Bank(sp, 0, a);
+               Set_Bank(sp.all, 0, a);
 
             elsif 1 + ac + bc > index then
 
                -- The memory to remove is in the second bank.
                Remove_Memory(b, index - ac - 1);
-               Set_Bank(sp, 1, b);
+               Set_Bank(sp.all, 1, b);
 
             else
 
@@ -253,7 +287,34 @@ package body Memory.Super is
 
             end if;
          end;
+
+      elsif ptr.all in Transform_Type'Class then
+
+         declare
+            tp    : constant Transform_Pointer  := Transform_Pointer(ptr);
+            bank  : Memory_Pointer              := Get_Bank(tp.all);
+            count : constant Natural            := Count_Memories(bank);
+            next  : Memory_Pointer              := Get_Memory(tp.all);
+         begin
+
+            if 1 + count > index then
+
+               -- Remove from the bank.
+               Remove_Memory(bank, index - 1);
+               Set_Bank(tp.all, bank);
+
+            else
+
+               -- The memory to remove follows this memory.
+               Remove_Memory(next, index - count - 1);
+               Set_Memory(tp.all, next);
+
+            end if;
+
+         end;
+
       elsif ptr.all in Container_Type'Class then
+
          declare
             cp : constant Container_Pointer  := Container_Pointer(ptr);
             n  : Memory_Pointer              := Get_Memory(cp.all);
@@ -261,62 +322,85 @@ package body Memory.Super is
             Remove_Memory(n, index - 1);
             Set_Memory(cp.all, n);
          end;
+
       end if;
    end Remove_Memory;
 
    procedure Insert_Memory(mem      : in Super_Type;
                            ptr      : in out Memory_Pointer;
                            index    : in Natural;
-                           cost     : in Cost_Type;
-                           in_split : in Boolean) is
+                           cost     : in Cost_Type) is
    begin
 
       if index = 0 then
 
          -- Insert other before ptr.
-         ptr := Create_Memory(mem, ptr, cost, in_split);
+         ptr := Create_Memory(mem, ptr, cost);
 
       elsif ptr.all in Split_Type'Class then
 
          declare
             sp : constant Split_Pointer   := Split_Pointer(ptr);
-            a  : Memory_Pointer           := Get_Bank(sp, 0);
+            a  : Memory_Pointer           := Get_Bank(sp.all, 0);
             ac : constant Natural         := Count_Memories(a);
-            b  : Memory_Pointer           := Get_Bank(sp, 1);
+            b  : Memory_Pointer           := Get_Bank(sp.all, 1);
             bc : constant Natural         := Count_Memories(b);
             n  : Memory_Pointer           := Get_Memory(sp.all);
          begin
-
             if 1 + ac > index then
 
                -- Insert to the first bank.
-               Insert_Memory(mem, a, index - 1, cost, True);
-               Set_Bank(sp, 0, a);
+               Insert_Memory(mem, a, index - 1, cost);
+               Set_Bank(sp.all, 0, a);
 
             elsif 1 + ac + bc > index then
 
                -- Insert to the second bank.
-               Insert_Memory(mem, b, index - ac - 1, cost, True);
-               Set_Bank(sp, 1, b);
+               Insert_Memory(mem, b, index - ac - 1, cost);
+               Set_Bank(sp.all, 1, b);
 
             else
 
                -- Insert after the split.
-               Insert_Memory(mem, n, index - ac - bc - 1, cost, in_split);
+               Insert_Memory(mem, n, index - ac - bc - 1, cost);
                Set_Memory(sp.all, n);
 
             end if;
+         end;
 
+      elsif ptr.all in Transform_Type'Class then
+
+         declare
+            tp    : constant Transform_Pointer  := Transform_Pointer(ptr);
+            bank  : Memory_Pointer              := Get_Bank(tp.all);
+            count : constant Natural            := Count_Memories(bank);
+            next  : Memory_Pointer              := Get_Memory(tp.all);
+         begin
+            if 1 + count > index then
+
+               -- Insert to the bank.
+               Insert_Memory(mem, bank, index - 1, cost);
+               Set_Bank(tp.all, bank);
+
+            else
+
+               -- Insert after the transform.
+               Insert_Memory(mem, next, index - count - 1, cost);
+               Set_Memory(tp.all, next);
+
+            end if;
          end;
 
       elsif ptr.all in Container_Type'Class then
+
          declare
             cp : constant Container_Pointer  := Container_Pointer(ptr);
             n  : Memory_Pointer              := Get_Memory(cp.all);
          begin
-            Insert_Memory(mem, n, index - 1, cost, in_split);
+            Insert_Memory(mem, n, index - 1, cost);
             Set_Memory(cp.all, n);
          end;
+
       end if;
 
    end Insert_Memory;
@@ -326,14 +410,14 @@ package body Memory.Super is
       if ptr.all in Split_Type'Class then
          declare
             sp : Split_Pointer   := Split_Pointer(ptr);
-            b0 : Memory_Pointer  := Get_Bank(sp, 0);
-            b1 : Memory_Pointer  := Get_Bank(sp, 1);
+            b0 : Memory_Pointer  := Get_Bank(sp.all, 0);
+            b1 : Memory_Pointer  := Get_Bank(sp.all, 1);
             n  : Memory_Pointer  := Get_Memory(sp.all);
          begin
             b0 := Simplify_Memory(b0);
-            Set_Bank(sp, 0, b0);
+            Set_Bank(sp.all, 0, b0);
             b1 := Simplify_Memory(b1);
-            Set_Bank(sp, 1, b1);
+            Set_Bank(sp.all, 1, b1);
             n := Simplify_Memory(n);
             if b0.all in Join_Type'Class and b1.all in Join_Type'Class then
                Set_Memory(sp.all, null);
@@ -344,45 +428,22 @@ package body Memory.Super is
                return ptr;
             end if;
          end;
-      elsif ptr.all in Offset_Type'Class then
+      elsif ptr.all in Transform_Type'Class then
          declare
-            op : Offset_Pointer  := Offset_Pointer(ptr);
-            n  : Memory_Pointer  := Get_Memory(op.all);
+            tp    : Transform_Pointer  := Transform_Pointer(ptr);
+            bank  : Memory_Pointer     := Get_Bank(tp.all);
+            next  : Memory_Pointer     := Get_Memory(tp.all);
          begin
-            n := Simplify_Memory(n);
-            if n.all in Offset_Type'Class then
-               declare
-                  nop : Offset_Pointer := Offset_Pointer(n);
-               begin
-                  Set_Offset(op.all, Get_Offset(op.all) + Get_Offset(nop.all));
-                  n := Get_Memory(nop.all);
-                  n := Simplify_Memory(n);
-                  Set_Memory(nop.all, null);
-                  Destroy(Memory_Pointer(nop));
-               end;
-            end if;
-            if Get_Offset(op.all) = 0 then
-               Set_Memory(op.all, null);
-               Destroy(Memory_Pointer(op));
-               return n;
+            bank := Simplify_Memory(bank);
+            Set_Bank(tp.all, bank);
+            next := Simplify_Memory(next);
+            if bank.all in Join_Type'Class then
+               Set_Memory(tp.all, null);
+               Destroy(Memory_Pointer(tp));
+               return next;
             else
-               Set_Memory(op.all, n);
-               return Memory_Pointer(op);
-            end if;
-         end;
-      elsif ptr.all in Shift_Type'Class then
-         declare
-            sp : Shift_Pointer   := Shift_Pointer(ptr);
-            n  : Memory_Pointer  := Get_Memory(sp.all);
-         begin
-            n := Simplify_Memory(n);
-            if Get_Shift(sp.all) = 0 then
-               Set_Memory(sp.all, null);
-               Destroy(Memory_Pointer(sp));
-               return n;
-            else
-               Set_Memory(sp.all, n);
-               return Memory_Pointer(sp);
+               Set_Memory(tp.all, next);
+               return ptr;
             end if;
          end;
       elsif ptr.all in Container_Type'Class then
@@ -413,17 +474,17 @@ package body Memory.Super is
       case RNG.Random(mem.generator.all) mod 16 is
          when 0      =>    -- Insert a component.
             pos := RNG.Random(mem.generator.all) mod (len + 1);
-            Insert_Memory(mem, mem.current, pos, left, False);
+            Insert_Memory(mem, mem.current, pos, left);
          when 1 .. 3 =>    -- Remove a component.
             if len = 0 then
-               Insert_Memory(mem, mem.current, 0, left, False);
+               Insert_Memory(mem, mem.current, 0, left);
             else
                pos := RNG.Random(mem.generator.all) mod len;
                Remove_Memory(mem.current, pos);
             end if;
          when others =>    -- Modify a component.
             if len = 0 then
-               Insert_Memory(mem, mem.current, 0, left, False);
+               Insert_Memory(mem, mem.current, 0, left);
             else
                pos := RNG.Random(mem.generator.all) mod len;
                temp := Get_Memory(mem.current, pos);
@@ -447,7 +508,7 @@ package body Memory.Super is
    begin
       result.max_cost   := max_cost;
       result.initial    := initial;
-      result.last       := Clone(mem.all);
+      result.last       := Memory_Pointer(mem);
       result.current    := Clone(mem.all);
       RNG.Reset(result.generator.all, seed);
       Set_Memory(result.all, result.current);
