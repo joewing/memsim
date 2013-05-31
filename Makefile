@@ -1,5 +1,5 @@
 
-FLAGS=-O0 -g -D obj -Isrc -gnatwaF -gnaty3aAbdhikmnpr -we
+FLAGS=-O2 -D obj -Isrc -gnatwaF -gnaty3aAbdhikmnpr -we
 
 all: memsim fixtrace memgen
 
