@@ -1,42 +1,37 @@
 
-with Memory.RAM;              use Memory.RAM;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
+with Memory.Join;             use Memory.Join;
 
 package body Test.Offset is
 
    procedure Run_Tests is
 
-      ram      : constant RAM_Pointer  := Create_RAM(latency   => 100,
-                                                     word_size => 8);
-      offset   : Offset_Pointer := Create_Offset;
+      mem      : constant Monitor_Pointer := new Monitor_Type;
+      bank     : constant Monitor_Pointer := new Monitor_Type;
+      offset   : Offset_Pointer  := Create_Offset;
+      join     : Join_Pointer    := Create_Join(offset, 0);
 
    begin
 
-      Set_Memory(offset.all, ram);
+      Set_Memory(bank.all, join);
+      Set_Memory(offset.all, mem);
+      Set_Bank(offset.all, bank);
       Set_Offset(offset.all, 3);
 
-      Check(Get_Time(ram.all) = 0);
-      Check(Get_Writes(ram.all) = 0);
+      Check(Get_Time(mem.all) = 0);
+      Check(Get_Time(offset.all) = 0);
+      Check(Get_Writes(offset.all) = 0);
       Check(Get_Cost(offset.all) = 0);
 
       Read(offset.all, 0, 8);
-      Check(Get_Time(ram.all) = 200);
-      Check(Get_Writes(ram.all) = 0);
 
       Read(offset.all, 5, 8);
-      Check(Get_Time(ram.all) = 300);
-      Check(Get_Writes(ram.all) = 0);
 
       Write(offset.all, 5, 4);
-      Check(Get_Time(ram.all) = 400);
-      Check(Get_Writes(ram.all) = 1);
 
       Write(offset.all, 2, 8);
-      Check(Get_Time(ram.all) = 600);
-      Check(Get_Writes(ram.all) = 2);
 
       Read(offset.all, Address_Type(0) - 6, 8);
-      Check(Get_Time(ram.all) = 800);
 
       Destroy(Memory_Pointer(offset));
 

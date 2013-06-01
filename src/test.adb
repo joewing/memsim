@@ -1,6 +1,7 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 
+with Memory.RAM; use Memory.RAM;
 with Test.RAM;
 with Test.Cache;
 with Test.SPM;
@@ -50,6 +51,14 @@ package body Test is
    begin
       Generate(other.all, sigs, code);
    end Generate;
+
+   procedure Initialize(mem : in out Monitor_Type) is
+      ram : constant RAM_Pointer := Create_RAM(latency   => 1,
+                                               word_size => 8);
+   begin
+      Initialize(Container_Type(mem));
+      Set_Memory(mem, ram);
+   end Initialize;
 
    procedure Run_Tests is
    begin

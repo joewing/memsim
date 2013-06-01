@@ -43,6 +43,9 @@ private
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);
 
+   overriding
+   procedure Initialize(mem : in out Monitor_Type);
+
    procedure Check(cond    : in Boolean;
                    source  : in String := GNAT.Source_Info.File;
                    line    : in Natural := GNAT.Source_Info.Line);

@@ -1,5 +1,6 @@
 
 with Ada.Assertions; use Ada.Assertions;
+with Util;           use Util;
 
 package body Memory.Transform.Shift is
 
@@ -26,9 +27,12 @@ package body Memory.Transform.Shift is
 
    procedure Set_Shift(mem    : in out Shift_Type;
                        shift  : in Integer) is
+      abits    : constant Integer := Address_Type'Size;  -- FIXME
+      wsize    : constant Integer := Get_Word_Size(mem);
+      wbits    : constant Integer := Log2(wsize);
    begin
       if shift < 0 then
-         mem.shift := (Address_Type'Size - shift) mod Address_Type'Size;
+         mem.shift := (abits - wbits + shift + 1) mod Address_Type'Size;
       else
          mem.shift := shift mod Address_Type'Size;
       end if;
@@ -64,17 +68,18 @@ package body Memory.Transform.Shift is
       caddr    : constant Address_Type := address mod wsize;
       saddr    : constant Address_Type := address / wsize;
       rmult    : constant Address_Type := Address_Type(2) ** shift;
-      lmult    : constant Address_Type := Address_Type(2) ** (abits - shift);
+      lmult    : constant Address_Type
+                  := Address_Type(2) ** (abits - shift) / wsize;
    begin
       if dir then
          if lmult /= 0 then
-            return (((saddr * rmult) or (saddr / lmult)) * wsize) or caddr;
+            return ((saddr * rmult) or (saddr / lmult)) * wsize or caddr;
          else
             return address;
          end if;
       else
          if rmult /= 0 then
-            return (((saddr * lmult) or (saddr / rmult)) * wsize) or caddr;
+            return ((saddr * lmult) or (saddr / rmult)) * wsize or caddr;
          else
             return address;
          end if;
