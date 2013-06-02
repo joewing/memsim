@@ -17,9 +17,12 @@ private
       reads       : Natural      := 0;
       writes      : Natural      := 0;
       cycles      : Time_Type    := 0;
+      latency     : Time_Type    := 0;
    end record;
 
    type Monitor_Pointer is access all Monitor_Type;
+
+   function Create_Monitor(latency : Time_Type := 0) return Monitor_Pointer;
 
    overriding
    function Clone(mem : Monitor_Type) return Memory_Pointer;

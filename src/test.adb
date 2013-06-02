@@ -12,6 +12,13 @@ with Test.Prefetch;
 
 package body Test is
 
+   function Create_Monitor(latency : Time_Type := 0) return Monitor_Pointer is
+      result : Monitor_Pointer := new Monitor_Type;
+   begin
+      result.latency := latency;
+      return result;
+   end Create_Monitor;
+
    function Clone(mem : Monitor_Type) return Memory_Pointer is
    begin
       return null;
@@ -25,6 +32,8 @@ package body Test is
       mem.last_addr  := address;
       mem.last_size  := size;
       mem.reads      := mem.reads + 1;
+      Advance(mem, mem.latency);
+      mem.cycles     := mem.cycles + mem.latency;
    end Read;
 
    procedure Write(mem     : in out Monitor_Type;
@@ -35,6 +44,8 @@ package body Test is
       mem.last_addr  := address;
       mem.last_size  := size;
       mem.writes     := mem.writes + 1;
+      Advance(mem, mem.latency);
+      mem.cycles     := mem.cycles + mem.latency;
    end Write;
 
    procedure Idle(mem      : in out Monitor_Type;

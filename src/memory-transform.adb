@@ -68,15 +68,19 @@ package body Memory.Transform is
    procedure Read(mem      : in out Transform_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
+      start : constant Time_Type := Get_Time(mem.bank.all);
    begin
       Process(mem, address, Address_Type(size), True, True);
+      Advance(mem, Get_Time(mem.bank.all) - start);
    end Read;
 
    procedure Write(mem     : in out Transform_Type;
                    address : in Address_Type;
                    size    : in Positive) is
+      start : constant Time_Type := Get_Time(mem.bank.all);
    begin
       Process(mem, address, Address_Type(size), True, False);
+      Advance(mem, Get_Time(mem.bank.all) - start);
    end Write;
 
    procedure Forward_Read(mem       : in out Transform_Type;

@@ -74,6 +74,9 @@ package Memory is
 
    function Get_ID(mem : Memory_Type'Class) return Natural;
 
+   procedure Advance(mem      : in out Memory_Type'Class;
+                     cycles   : in Time_Type);
+
 private
 
    type Memory_Type is abstract new Controlled with record
@@ -86,9 +89,6 @@ private
 
    overriding
    procedure Adjust(mem : in out Memory_Type);
-
-   procedure Advance(mem      : in out Memory_Type'Class;
-                     cycles   : in Time_Type);
 
    procedure Declare_Signals(sigs      : in out Unbounded_String;
                              name      : in String;
