@@ -10,13 +10,16 @@ package body Memory.Transform.Offset is
    function Random_Offset(next      : access Memory_Type'Class;
                           generator : RNG.Generator;
                           max_cost  : Cost_Type) return Memory_Pointer is
-      result : constant Offset_Pointer := new Offset_Type;
+      result   : constant Offset_Pointer := new Offset_Type;
+      wsize    : constant Natural := Get_Word_Size(next.all);
+      base     : Address_Type;
    begin
       Set_Memory(result.all, next);
+      base := Address_Type(2) ** (RNG.Random(generator) mod 32);
       if (RNG.Random(generator) mod 2) = 0 then
-         result.offset := 0 - Address_Type(1);
+         result.offset := 0 - Address_Type(wsize) * base;
       else
-         result.offset := 1;
+         result.offset := Address_Type(wsize) * base;
       end if;
       return Memory_Pointer(result);
    end Random_Offset;
@@ -41,11 +44,12 @@ package body Memory.Transform.Offset is
    procedure Permute(mem         : in out Offset_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
+      wsize : constant Natural := Get_Word_Size(mem);
    begin
       if (RNG.Random(generator) mod 2) = 0 then
-         mem.offset := mem.offset + 1;
+         mem.offset := mem.offset + Address_Type(wsize);
       else
-         mem.offset := mem.offset - 1;
+         mem.offset := mem.offset - Address_Type(wsize);
       end if;
    end Permute;
 
@@ -63,7 +67,7 @@ package body Memory.Transform.Offset is
    function To_String(mem : Offset_Type) return Unbounded_String is
       result : Unbounded_String;
    begin
-      Append(result, "(shift ");
+      Append(result, "(offset ");
       Append(result, "(value");
       if 0 - mem.offset < mem.offset then
          declare
