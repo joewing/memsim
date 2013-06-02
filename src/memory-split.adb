@@ -18,7 +18,8 @@ package body Memory.Split is
       wsize    : constant Natural := Get_Word_Size(next.all);
    begin
       Set_Memory(result.all, next);
-      result.offset := Address_Type(wsize * (RNG.Random(generator) mod 256));
+      result.offset := Address_Type(2 ** (RNG.Random(generator) mod 16));
+      result.offset := result.offset * Address_Type(wsize);
       return Memory_Pointer(result);
    end Random_Split;
 
@@ -34,9 +35,9 @@ package body Memory.Split is
       wsize : constant Address_Type := Address_Type(Get_Word_Size(mem));
    begin
       if mem.offset > wsize and then (RNG.Random(generator) mod 2) = 0 then
-         mem.offset := mem.offset / 2;
+         mem.offset := mem.offset - wsize;
       else
-         mem.offset := mem.offset * 2;
+         mem.offset := mem.offset + wsize;
       end if;
       Assert(Get_Cost(mem) <= max_cost, "Invalid Permute in Memory.Split");
    end Permute;
