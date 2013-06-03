@@ -65,6 +65,12 @@ package body Memory.Transform is
       mem.bank := bank;
    end Set_Bank;
 
+   procedure Reset(mem : in out Transform_Type) is
+   begin
+      Reset(Container_Type(mem));
+      Reset(mem.bank.all);
+   end Reset;
+
    procedure Read(mem      : in out Transform_Type;
                   address  : in Address_Type;
                   size     : in Positive) is

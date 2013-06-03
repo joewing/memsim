@@ -15,6 +15,9 @@ package Memory.Transform is
                       bank : access Memory_Type'Class);
 
    overriding
+   procedure Reset(mem : in out Transform_Type);
+
+   overriding
    procedure Read(mem      : in out Transform_Type;
                   address  : in Address_Type;
                   size     : in Positive);
