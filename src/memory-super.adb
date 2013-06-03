@@ -5,6 +5,7 @@ with Ada.Numerics.Generic_Elementary_Functions;
 with Memory.Cache;            use Memory.Cache;
 with Memory.SPM;              use Memory.SPM;
 with Memory.Transform;        use Memory.Transform;
+with Memory.Transform.Flip;   use Memory.Transform.Flip;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
 with Memory.Prefetch;         use Memory.Prefetch;
@@ -85,13 +86,16 @@ package body Memory.Super is
       join     : Join_Pointer;
       bank     : Memory_Pointer;
    begin
-      case RNG.Random(mem.generator.all) mod 2 is
+      case RNG.Random(mem.generator.all) mod 3 is
          when 0 =>
+            result := Transform_Pointer(Random_Flip(next, mem.generator.all,
+                                                    cost));
+         when 1 =>
             result := Transform_Pointer(Random_Offset(next, mem.generator.all,
-                                        cost));
+                                                      cost));
          when others =>
             result := Transform_Pointer(Random_Shift(next, mem.generator.all,
-                                        cost));
+                                                     cost));
       end case;
       join := Create_Join(result, 0);
       bank := Create_Memory(mem, join, cost);

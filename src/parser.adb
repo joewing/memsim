@@ -13,6 +13,9 @@ package body Parser is
    procedure Parse_Flash(parser  : in out Parser_Type;
                          result  : out Memory_Pointer) is separate;
 
+   procedure Parse_Flip(parser   : in out Parser_Type;
+                        result   : out Memory_Pointer) is separate;
+
    procedure Parse_Join(parser   : in out Parser_Type;
                         result   : out Memory_Pointer) is separate;
 
@@ -55,19 +58,20 @@ package body Parser is
    type Memory_Parser_Array is array(Positive range <>) of Memory_Parser_Type;
 
    parser_map : constant Memory_Parser_Array := (
-      (To_Unbounded_String("split"),            Parse_Split'Access),
-      (To_Unbounded_String("join"),             Parse_Join'Access),
       (To_Unbounded_String("cache"),            Parse_Cache'Access),
+      (To_Unbounded_String("dup"),              Parse_Dup'Access),
+      (To_Unbounded_String("flash"),            Parse_Flash'Access),
+      (To_Unbounded_String("flip"),             Parse_Flip'Access),
+      (To_Unbounded_String("join"),             Parse_Join'Access),
       (To_Unbounded_String("offset"),           Parse_Offset'Access),
       (To_Unbounded_String("perfect_prefetch"), Parse_Perfect_Prefetch'Access),
       (To_Unbounded_String("prefetch"),         Parse_Prefetch'Access),
-      (To_Unbounded_String("flash"),            Parse_Flash'Access),
       (To_Unbounded_String("ram"),              Parse_RAM'Access),
       (To_Unbounded_String("shift"),            Parse_Shift'Access),
+      (To_Unbounded_String("split"),            Parse_Split'Access),
+      (To_Unbounded_String("spm"),              Parse_SPM'Access),
       (To_Unbounded_String("stats"),            Parse_Stats'Access),
       (To_Unbounded_String("super"),            Parse_Super'Access),
-      (To_Unbounded_String("spm"),              Parse_SPM'Access),
-      (To_Unbounded_String("dup"),              Parse_Dup'Access),
       (To_Unbounded_String("trace"),            Parse_Trace'Access)
    );
 

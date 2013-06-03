@@ -1,102 +1,61 @@
 
 with Memory.Join; use Memory.Join;
 
-package body Memory.Transform.Offset is
+package body Memory.Transform.Flip is
 
-   function Create_Offset return Offset_Pointer is
-      result : constant Offset_Pointer := new Offset_Type;
+   function Create_Flip return Flip_Pointer is
+      result : constant Flip_Pointer := new Flip_Type;
    begin
       return result;
-   end Create_Offset;
+   end Create_Flip;
 
-   function Random_Offset(next      : access Memory_Type'Class;
-                          generator : RNG.Generator;
-                          max_cost  : Cost_Type) return Memory_Pointer is
-      result   : constant Offset_Pointer := new Offset_Type;
-      wsize    : constant Natural := Get_Word_Size(next.all);
-      base     : Address_Type;
+   function Random_Flip(next        : access Memory_Type'Class;
+                        generator   : RNG.Generator;
+                        max_cost    : Cost_Type) return Memory_Pointer is
+      result : constant Flip_Pointer := new Flip_Type;
    begin
       Set_Memory(result.all, next);
-
-      if (RNG.Random(generator) mod 2) = 0 then
-         -- Byte offset.
-         base := Address_Type(RNG.Random(generator) mod wsize);
-      else
-         -- Word offset.
-         base := Address_Type(2) ** (RNG.Random(generator) mod 32);
-      end if;
-
-      if (RNG.Random(generator) mod 2) = 0 then
-         -- Negative offset.
-         result.offset := 0 - Address_Type(wsize) * base;
-      else
-         -- Positive offset.
-         result.offset := Address_Type(wsize) * base;
-      end if;
-
       return Memory_Pointer(result);
-   end Random_Offset;
+   end Random_Flip;
 
-   function Get_Offset(mem : Offset_Type) return Address_Type is
-   begin
-      return mem.offset;
-   end Get_Offset;
-
-   procedure Set_Offset(mem      : in out Offset_Type;
-                        offset   : in Address_Type) is
-   begin
-      mem.offset := offset;
-   end Set_Offset;
-
-   function Clone(mem : Offset_Type) return Memory_Pointer is
-      result : constant Offset_Pointer := new Offset_Type'(mem);
+   function Clone(mem : Flip_Type) return Memory_Pointer is
+      result : constant Flip_Pointer := new Flip_Type'(mem);
    begin
       return Memory_Pointer(result);
    end Clone;
 
-   procedure Permute(mem         : in out Offset_Type;
+   procedure Permute(mem         : in out Flip_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
-      wsize : constant Natural := Get_Word_Size(mem);
    begin
-      case RNG.Random(generator) mod 4 is
-         when 0      => -- Add word offset
-            mem.offset := mem.offset + Address_Type(wsize);
-         when 1      => -- Subtract word offset.
-            mem.offset := mem.offset - Address_Type(wsize);
-         when 2      => -- Add byte offset
-            mem.offset := mem.offset + 1;
-         when others => -- Subtract byte offset
-            mem.offset := mem.offset - 1;
-      end case;
+      null;
    end Permute;
 
-   function Apply(mem      : Offset_Type;
+   function Apply(mem      : Flip_Type;
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type is
+      addr_bits   : constant Natural := Address_Type'Size; -- FIXME
+      word_bits   : constant Natural := Get_Word_Size(mem);
+      src_mask    : Address_Type;
+      dest_mask   : Address_Type;
+      result      : Address_Type := 0;
    begin
-      if dir then
-         return address + mem.offset;
-      else
-         return address - mem.offset;
-      end if;
+      src_mask    := Address_Type(2) ** (addr_bits - 1);
+      dest_mask   := Address_Type(2) ** word_bits;
+      for i in word_bits .. addr_bits - 1 loop
+         if (address and src_mask) /= 0 then
+            result := result or dest_mask;
+         end if;
+         src_mask  := src_mask  / 2;
+         dest_mask := dest_mask * 2;
+      end loop;
+      return result;
    end Apply;
 
-   function To_String(mem : Offset_Type) return Unbounded_String is
+   function To_String(mem : Flip_Type) return Unbounded_String is
       result : Unbounded_String;
    begin
-      Append(result, "(offset ");
-      Append(result, "(value");
-      if 0 - mem.offset < mem.offset then
-         declare
-            temp : constant String := Address_Type'Image(0 - mem.offset);
-         begin
-            Append(result, " -" & temp(temp'First + 1 .. temp'Last));
-         end;
-      else
-         Append(result, Address_Type'Image(mem.offset));
-      end if;
-      Append(result, ")");
+      Append(result, "(flip ");
       Append(result, "(bank ");
       Append(result, To_String(To_String(mem.bank.all)));
       Append(result, ")");
@@ -107,7 +66,7 @@ package body Memory.Transform.Offset is
       return result;
    end To_String;
 
-   procedure Generate(mem  : in Offset_Type;
+   procedure Generate(mem  : in Flip_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is
       word_bits   : constant Natural := 8 * Get_Word_Size(mem);
@@ -118,7 +77,6 @@ package body Memory.Transform.Offset is
       bname       : constant String := "m" & To_String(Get_ID(bank.all));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
       jname       : constant String := "m" & To_String(Get_ID(join.all));
-      offset      : constant Address_Type := mem.offset;
    begin
 
       Generate(other.all, sigs, code);
@@ -126,15 +84,10 @@ package body Memory.Transform.Offset is
       Declare_Signals(sigs, name, word_bits);
 
       -- Transform into the bank.
-      Line(code, name & "_inst : entity work.offset");
+      Line(code, name & "_inst : entity work.flip");
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
-      Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
-      if (offset and 2 ** 63) /= 0 then
-         Line(code, "      OFFSET         => -" & To_String(-offset));
-      else
-         Line(code, "      OFFSET         => " & To_String(offset));
-      end if;
+      Line(code, "      WORD_WIDTH     => " & To_String(word_bits));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");
@@ -156,15 +109,10 @@ package body Memory.Transform.Offset is
       Line(code, "   );");
 
       -- Transform out of the bank.
-      Line(code, jname & "_inst : entity work.offset");
+      Line(code, jname & "_inst : entity work.flip");
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
-      Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
-      if (offset and 2 ** 63) /= 0 then
-         Line(code, "      OFFSET         => " & To_String(-offset));
-      else
-         Line(code, "      OFFSET         => -" & To_String(offset));
-      end if;
+      Line(code, "      WORD_WIDTH     => " & To_String(word_bits));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");
@@ -187,4 +135,4 @@ package body Memory.Transform.Offset is
 
    end Generate;
 
-end Memory.Transform.Offset;
+end Memory.Transform.Flip;
