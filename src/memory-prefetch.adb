@@ -117,18 +117,18 @@ package body Memory.Prefetch is
       result : Unbounded_String;
    begin
       Append(result, "(prefetch ");
-      Append(result, "(stride");
+      Append(result, "(stride ");
       if (mem.stride and 2 ** 63) /= 0 then
-         Append(result, "-" & Address_Type'Image(-mem.stride));
+         Append(result, "-" & To_String(-mem.stride));
       else
-         Append(result, Address_Type'Image(mem.stride));
+         Append(result, To_String(mem.stride));
       end if;
       Append(result, ")");
-      Append(result, "(multiplier");
+      Append(result, "(multiplier ");
       if (mem.multiplier and 2 ** 63) /= 0 then
-         Append(result, "-" & Address_Type'Image(mem.multiplier));
+         Append(result, "-" & To_String(-mem.multiplier));
       else
-         Append(result, Address_Type'Image(mem.multiplier));
+         Append(result, To_String(mem.multiplier));
       end if;
       Append(result, ")");
       Append(result, "(memory ");
