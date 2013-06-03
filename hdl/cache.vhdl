@@ -86,6 +86,7 @@ architecture cache_arch of cache is
    subtype way_type is std_logic_vector(ASSOC_BITS downto 0);
    subtype offset_type is std_logic_vector(LINE_SIZE_BITS - 1 downto 0);
    subtype transfer_type is std_logic_vector(LINE_SIZE_BITS downto 0);
+   subtype mask_type is std_logic_vector(WORD_WIDTH / 8 - 1 downto 0);
 
    type line_array_type is array(0 to ASSOCIATIVITY - 1) of line_type;
    type tag_array_type is array(0 to ASSOCIATIVITY - 1) of tag_type;
@@ -93,9 +94,8 @@ architecture cache_arch of cache is
    type row_array_type is array(0 to ROW_COUNT - 1) of row_type;
    type word_array_type is array(0 to LINE_SIZE - 1) of word_type;
 
-   constant ZERO_OFFSET    : offset_type := (others => '0');
-   constant FULL_MASK      : std_logic_vector((WORD_WIDTH / 8) - 1 downto 0)
-                              := (others => '1');
+   constant ZERO_OFFSET    : offset_type  := (others => '0');
+   constant FULL_MASK      : mask_type    := (others => '1');
 
    signal data          : row_array_type := (others => (others => '0'));
    signal row           : row_type := (others => '0');
@@ -278,7 +278,7 @@ begin
             next_state <= STATE_WRITEBACK_WRITE2;
          when STATE_WRITEBACK_WRITE2 =>
             if transfer_done = '1' and mready = '1' then
-               if LINE_SIZE > 1 then
+               if LINE_SIZE > 1 or mask /= FULL_MASK then
                   next_state           <= STATE_WRITE_FILL1;
                   next_transfer_count  <= (others => '0');
                else
@@ -315,8 +315,7 @@ begin
       inc2 := std_logic_vector(unsigned(transfer_count) + 2);
       case state is
          when STATE_WRITE_FILL1 | STATE_WRITE_FILL2 =>
-            if unsigned(inc1) = unsigned(current_offset) and mask = FULL_MASK
-            then
+            if inc1 = current_offset and mask = FULL_MASK then
                upd := inc2;
             else
                upd := inc1;
@@ -335,7 +334,7 @@ begin
    -- Update the current row.
    process(hit_way, oldest_way, state, next_state, current_tag, valid,
            dirty, tags, updated_ages, ages, min, din, current_offset,
-           transfer_count, row, is_hit)
+           transfer_count, row, is_hit, mask)
       variable offset      : natural;
       variable line_top    : natural;
       variable line_bottom : natural;
@@ -414,7 +413,8 @@ begin
             if unsigned(write_way) = way then
                if unsigned(transfer_count) = i and load_mem then
                   updated_row(word_top downto word_bottom) <= min;
-               elsif unsigned(current_offset) = i and write_line then
+               end if;
+               if unsigned(current_offset) = i and write_line then
                   for b in 0 to (WORD_WIDTH / 8) - 1 loop
                      byte_bottom := word_bottom + b * 8;
                      byte_top    := byte_bottom + 7;
