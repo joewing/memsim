@@ -381,6 +381,8 @@ begin
                   updated_row(dirty_start) <= '1';
                when STATE_WRITEBACK_WRITE2 =>
                   updated_row(dirty_start) <= '1';
+               when STATE_WRITE_FILL2 =>
+                  updated_row(dirty_start) <= '1';
                when STATE_READ_MISS2 =>
                   updated_row(dirty_start) <= '0';
                when others =>
