@@ -1,6 +1,6 @@
 
 FILES= ram.vhdl spm.vhdl cache.vhdl split.vhdl combine.vhdl mem.vhdl \
-       offset.vhdl tb.vhdl trace.vhdl
+       offset.vhdl shift.vhdl tb.vhdl trace.vhdl
 
 all: run-tb
 
