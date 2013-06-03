@@ -29,6 +29,7 @@ package body HDL_Generator is
       Line(code, "   dout <= " & mname & "_dout;");
       Line(code, "   " & mname & "_re <= re;");
       Line(code, "   " & mname & "_we <= we;");
+      Line(code, "   " & mname & "_mask <= mask;");
       Line(code, "   ready <= " & mname & "_ready;");
 
       Line(r, "library ieee;");
@@ -53,6 +54,8 @@ package body HDL_Generator is
               "WORD_WIDTH - 1 downto 0);");
       Line(r, "      re      : in  std_logic;");
       Line(r, "      we      : in  std_logic;");
+      Line(r, "      mask    : in  std_logic_vector(" &
+              "(WORD_WIDTH / 8) - 1 downto 0);");
       Line(r, "      ready   : out std_logic");
       Line(r, "   );");
       Line(r, "end " & name & ";");

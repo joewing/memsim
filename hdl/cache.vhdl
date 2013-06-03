@@ -16,20 +16,22 @@ entity cache is
          -- 2: FIFO
    );
    port (
-      clk      : in std_logic;
-      rst      : in std_logic;
-      addr     : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-      din      : in std_logic_vector(WORD_WIDTH - 1 downto 0);
+      clk      : in  std_logic;
+      rst      : in  std_logic;
+      addr     : in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
+      din      : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
       dout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
-      re       : in std_logic;
-      we       : in std_logic;
+      re       : in  std_logic;
+      we       : in  std_logic;
+      mask     : in  std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       ready    : out std_logic;
       maddr    : out std_logic_vector(ADDR_WIDTH - 1 downto 0);
       mout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
-      min      : in std_logic_vector(WORD_WIDTH - 1 downto 0);
+      min      : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
       mre      : out std_logic;
       mwe      : out std_logic;
-      mready   : in std_logic
+      mmask    : out std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
+      mready   : in  std_logic
    );
 end cache;
 
@@ -345,6 +347,8 @@ begin
       variable write_way   : way_type;
       variable load_mem    : boolean;
       variable write_line  : boolean;
+      variable byte_top    : natural;
+      variable byte_bottom : natural;
    begin
       if is_hit = '1' then
          write_way := hit_way;
@@ -408,7 +412,14 @@ begin
                if unsigned(transfer_count) = i and load_mem then
                   updated_row(word_top downto word_bottom) <= min;
                elsif unsigned(current_offset) = i and write_line then
-                  updated_row(word_top downto word_bottom) <= din;
+                  for b in 0 to (WORD_WIDTH / 8) - 1 loop
+                     byte_bottom := word_bottom + b * 8;
+                     byte_top    := byte_bottom + 7;
+                     if mask(b) = '1' then
+                        updated_row(byte_top downto byte_bottom) <=
+                           din(b * 8 + 7 downto b * 8);
+                     end if;
+                  end loop;
                end if;
             end if;
          end loop;
@@ -505,8 +516,9 @@ begin
          when others                   => null;
       end case;
    end process;
-   mre <= mre_temp;
-   mwe <= mwe_temp;
+   mre   <= mre_temp;
+   mwe   <= mwe_temp;
+   mmask <= (others => '1');
 
    -- Drive memory address.
    process(next_transfer_count, oldest_addr, addr, next_state)

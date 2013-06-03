@@ -74,46 +74,15 @@ package body Benchmark is
    procedure Read(benchmark   : in Benchmark_Type'Class;
                   address     : in Address_Type;
                   size        : in Positive) is
-      wsize    : constant Natural := Get_Word_Size(benchmark.mem.all);
-      offset   : constant Natural := Natural(address mod Address_Type(wsize));
-      start    : constant Address_Type := address / Address_Type(wsize);
-      count    : constant Positive := (size + wsize + offset - 1) / wsize;
    begin
-      for i in Address_Type range Address_Type(1) .. Address_Type(count) loop
-         Read(benchmark.mem.all, (start + i - 1) * Address_Type(wsize), wsize);
-      end loop;
+      Read(benchmark.mem.all, address, size);
    end Read;
 
    procedure Write(benchmark  : in Benchmark_Type'Class;
                    address    : in Address_Type;
                    size       : in Positive) is
-      wsize    : constant Natural := Get_Word_Size(benchmark.mem.all);
-      offset   : constant Natural := Natural(address mod Address_Type(wsize));
-      start    : constant Address_Type := address / Address_Type(wsize);
-      count    : constant Positive := (size + wsize + offset - 1) / wsize;
    begin
-
-      -- If the write doesn't start at a word boundary, we need to
-      -- read the first word.
-      if offset /= 0 then
-         Read(benchmark.mem.all, start * Address_Type(wsize), wsize);
-      elsif offset + size < wsize then
-         Read(benchmark.mem.all, start * Address_Type(wsize), wsize);
-      end if;
-
-      -- If the write doesn't end at a word boundary, we must read
-      -- the last word.
-      if offset + size > wsize and ((offset + size) mod wsize) /= 0 then
-         Read(benchmark.mem.all,
-              (start + Address_Type(count - 1)) * Address_Type(wsize), wsize);
-      end if;
-
-      -- Perform the write(s).
-      for i in Address_Type range Address_Type(1) .. Address_Type(count) loop
-         Write(benchmark.mem.all,
-               (start + i - 1) * Address_Type(wsize), wsize);
-      end loop;
-
+      Write(benchmark.mem.all, address, size);
    end Write;
 
    procedure Idle(benchmark   : in Benchmark_Type'Class;

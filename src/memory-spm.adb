@@ -155,12 +155,14 @@ package body Memory.SPM is
       Line(code, "      dout     => " & name & "_dout,");
       Line(code, "      re       => " & name & "_re,");
       Line(code, "      we       => " & name & "_we,");
+      Line(code, "      mask     => " & name & "_mask,");
       Line(code, "      ready    => " & name & "_ready,");
       Line(code, "      maddr    => " & oname & "_addr,");
       Line(code, "      min      => " & oname & "_dout,");
       Line(code, "      mout     => " & oname & "_din,");
       Line(code, "      mre      => " & oname & "_re,");
       Line(code, "      mwe      => " & oname & "_we,");
+      Line(code, "      mmask    => " & oname & "_mask,");
       Line(code, "      mready   => " & oname & "_ready");
       Line(code, "   );");
    end Generate;

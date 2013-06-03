@@ -97,6 +97,7 @@ package body Memory.RAM is
       Line(code, "      dout     => " & name & "_dout,");
       Line(code, "      re       => " & name & "_re,");
       Line(code, "      we       => " & name & "_we,");
+      Line(code, "      mask     => " & name & "_mask,");
       Line(code, "      ready    => " & name & "_ready");
       Line(code, "   );");
    end Generate;

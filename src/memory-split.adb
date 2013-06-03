@@ -268,18 +268,21 @@ package body Memory.Split is
       Line(code, "      dout0    => " & out0name & "_dout,");
       Line(code, "      re0      => " & out0name & "_re,");
       Line(code, "      we0      => " & out0name & "_we,");
+      Line(code, "      mask0    => " & out0name & "_mask,");
       Line(code, "      ready0   => " & out0name & "_ready,");
       Line(code, "      addr1    => " & out1name & "_addr,");
       Line(code, "      din1     => " & out1name & "_din,");
       Line(code, "      dout1    => " & out1name & "_dout,");
       Line(code, "      re1      => " & out1name & "_re,");
       Line(code, "      we1      => " & out1name & "_we,");
+      Line(code, "      mask1    => " & out1name & "_mask,");
       Line(code, "      ready1   => " & out1name & "_ready,");
       Line(code, "      maddr    => " & oname & "_addr,");
       Line(code, "      mout     => " & oname & "_din,");
       Line(code, "      min      => " & oname & "_dout,");
       Line(code, "      mre      => " & oname & "_re,");
       Line(code, "      mwe      => " & oname & "_we,");
+      Line(code, "      mmask    => " & oname & "_mask,");
       Line(code, "      mready   => " & oname & "_ready");
       Line(code, "   );");
 
@@ -300,18 +303,21 @@ package body Memory.Split is
       Line(code, "      dout     => " & name & "_dout,");
       Line(code, "      re       => " & name & "_re,");
       Line(code, "      we       => " & name & "_we,");
+      Line(code, "      mask     => " & name & "_mask,");
       Line(code, "      ready    => " & name & "_ready,");
       Line(code, "      maddr0   => " & b0name & "_addr,");
       Line(code, "      mout0    => " & b0name & "_din,");
       Line(code, "      min0     => " & b0name & "_dout,");
       Line(code, "      mre0     => " & b0name & "_re,");
       Line(code, "      mwe0     => " & b0name & "_we,");
+      Line(code, "      mmask0   => " & b0name & "_mask,");
       Line(code, "      mready0  => " & b0name & "_ready,");
       Line(code, "      maddr1   => " & b1name & "_addr,");
       Line(code, "      mout1    => " & b1name & "_din,");
       Line(code, "      min1     => " & b1name & "_dout,");
       Line(code, "      mre1     => " & b1name & "_re,");
       Line(code, "      mwe1     => " & b1name & "_we,");
+      Line(code, "      mmask1   => " & b1name & "_mask,");
       Line(code, "      mready1  => " & b1name & "_ready");
       Line(code, "   );");
 

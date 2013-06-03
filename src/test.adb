@@ -13,7 +13,7 @@ with Test.Prefetch;
 package body Test is
 
    function Create_Monitor(latency : Time_Type := 0) return Monitor_Pointer is
-      result : Monitor_Pointer := new Monitor_Type;
+      result : constant Monitor_Pointer := new Monitor_Type;
    begin
       result.latency := latency;
       return result;

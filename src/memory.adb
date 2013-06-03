@@ -119,6 +119,7 @@ package body Memory is
       Signal(sigs, name & "_dout", To_String(word_bits - 1));
       Signal(sigs, name & "_re");
       Signal(sigs, name & "_we");
+      Signal(sigs, name & "_mask", To_String(word_bits / 8 - 1));
       Signal(sigs, name & "_ready");
    end Declare_Signals;
 

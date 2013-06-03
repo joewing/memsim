@@ -11,13 +11,14 @@ entity ram is
       LATENCY     : in natural := 10
    );
    port (
-      clk      : in std_logic;
-      rst      : in std_logic;
-      addr     : in std_logic_vector(ADDR_WIDTH - 1 downto 0);
-      din      : in std_logic_vector(WORD_WIDTH - 1 downto 0);
+      clk      : in  std_logic;
+      rst      : in  std_logic;
+      addr     : in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
+      din      : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
       dout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
-      re       : in std_logic;
-      we       : in std_logic;
+      re       : in  std_logic;
+      we       : in  std_logic;
+      mask     : in  std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       ready    : out std_logic
    );
 end ram;
@@ -57,7 +58,10 @@ begin
             if do_read = '1' then
                value <= data(nat_addr);
             elsif do_write = '1' then
-               data(nat_addr) <= din;
+               for b in 0 to (WORD_WIDTH / 8) - 1 loop
+                  data(nat_addr)(b * 8 + 7 downto b * 8) <=
+                     din(b * 8 + 7 downto b * 8);
+               end loop;
             end if;
          else
             value <= (others => '0');

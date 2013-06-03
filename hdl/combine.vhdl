@@ -18,18 +18,21 @@ entity combine is
       dout0    : out std_logic_vector(WORD_WIDTH - 1 downto 0);
       re0      : in  std_logic;
       we0      : in  std_logic;
+      mask0    : in  std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       ready0   : out std_logic;
       addr1    : in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
       din1     : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
       dout1    : out std_logic_vector(WORD_WIDTH - 1 downto 0);
       re1      : in  std_logic;
       we1      : in  std_logic;
+      mask1    : in  std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       ready1   : out std_logic;
       maddr    : out std_logic_vector(ADDR_WIDTH - 1 downto 0);
       mout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
       min      : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
       mre      : out std_logic;
       mwe      : out std_logic;
+      mmask    : out std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       mready   : in  std_logic
    );
 end combine;
@@ -48,6 +51,7 @@ begin
    dout1    <= min;
    mre      <= '1' when re0 = '1' or re1 = '1' else '0';
    mwe      <= '1' when we0 = '1' or we1 = '1' else '0';
+   mmask    <= mask0 when bank0 = '1' else mask1;
    ready0   <= mready;
    ready1   <= mready;
 

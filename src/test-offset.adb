@@ -8,8 +8,8 @@ package body Test.Offset is
 
       mem      : constant Monitor_Pointer := new Monitor_Type;
       bank     : constant Monitor_Pointer := new Monitor_Type;
-      offset   : Offset_Pointer  := Create_Offset;
-      join     : Join_Pointer    := Create_Join(offset, 0);
+      offset   : Offset_Pointer           := Create_Offset;
+      join     : constant Join_Pointer    := Create_Join(offset, 0);
 
    begin
 

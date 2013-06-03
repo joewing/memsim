@@ -20,6 +20,7 @@ architecture tb_arch of tb is
    signal mem_dout   : std_logic_vector(WORD_WIDTH - 1 downto 0);
    signal mem_re     : std_logic;
    signal mem_we     : std_logic;
+   signal mem_mask   : std_logic_vector((ADDR_WIDTH / 8) - 1 downto 0);
    signal mem_ready  : std_logic;
 
    procedure cycle(signal clk : out std_logic) is
@@ -65,6 +66,7 @@ begin
          dout     => mem_dout,
          re       => mem_re,
          we       => mem_we,
+         mask     => mem_mask,
          ready    => mem_ready
       );
 
@@ -75,6 +77,7 @@ begin
       mem_addr <= (others => '0');
       mem_we   <= '0';
       mem_re   <= '0';
+      mem_mask <= (others => '1');
       mem_din  <= (others => '0');
       rst <= '1';
       cycle(clk);
@@ -159,7 +162,28 @@ begin
       assert mem_dout = x"0000000000000321"
          report "read failed" severity failure;
 
+      -- Test a partial write.
+      mem_addr <= x"00000000_00000001";
+      mem_din  <= x"AAAAAAAA_00000000";
+      mem_mask <= "11110000";
+      update(clk, mem_we, mem_ready);
+
+      -- Test some reads.
+      mem_addr <= x"00000000_00000001";
+      update(clk, mem_re, mem_ready);
+      assert mem_dout = x"AAAAAAAA_55555555"
+         report "read failed" severity failure;
+      mem_addr <= x"00000000_00000101";
+      update(clk, mem_re, mem_ready);
+      assert mem_dout = x"0000000000000abc"
+         report "read failed" severity failure;
+      mem_addr <= x"00000000_00000100";
+      update(clk, mem_re, mem_ready);
+      assert mem_dout = x"0000000000000321"
+         report "read failed" severity failure;
+
       -- Test some reads/writes.
+      mem_mask <= (others => '1');
       for j in 2 to 10 loop
          for i in 1 to j loop
             mem_addr <= std_logic_vector(to_unsigned(i, ADDR_WIDTH));

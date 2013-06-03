@@ -17,18 +17,21 @@ entity split is
       dout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
       re       : in  std_logic;
       we       : in  std_logic;
+      mask     : in  std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       ready    : out std_logic;
       maddr0   : out std_logic_vector(ADDR_WIDTH - 1 downto 0);
       min0     : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
       mout0    : out std_logic_vector(WORD_WIDTH - 1 downto 0);
       mre0     : out std_logic;
       mwe0     : out std_logic;
+      mmask0   : out std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       mready0  : in  std_logic;
       maddr1   : out std_logic_vector(ADDR_WIDTH - 1 downto 0);
       mout1    : out std_logic_vector(WORD_WIDTH - 1 downto 0);
       min1     : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
       mre1     : out std_logic;
       mwe1     : out std_logic;
+      mmask1   : out std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       mready1  : in  std_logic
    );
 end split;
@@ -50,6 +53,8 @@ begin
    mre1     <= '1' when bank0 = '0' and re = '1' else '0';
    mwe0     <= '1' when bank0 = '1' and we = '1' else '0';
    mwe1     <= '1' when bank0 = '0' and we = '1' else '0';
+   mmask0   <= mask;
+   mmask1   <= mask;
    ready    <= '1' when mready0 = '1' and mready1 = '1' else '0';
 
 end split_arch;

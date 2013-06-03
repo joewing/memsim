@@ -93,45 +93,79 @@ architecture trace_arch of trace is
                                                               downto 0);
                         signal re      : out std_logic;
                         signal we      : out std_logic;
+                        signal mask    : out std_logic_vector(ADDR_BITS / 8 - 1
+                                                              downto 0);
                         signal rdy     : in  std_logic) is
       variable r_act       : character := 'R';
       variable w_act       : character := 'W';
-      variable offset      : integer;
-      variable count       : integer;
+      variable offset_a    : integer;
+      variable offset_b    : integer;
       variable word_addr   : unsigned(ADDR_BITS - 1 downto 0);
+      variable end_addr    : unsigned(ADDR_BITS - 1 downto 0);
    begin
-      offset      := to_integer(addr) mod WORD_BYTES;
-      count       := (size + offset + WORD_BYTES - 1) / WORD_BYTES;
+      offset_a    := to_integer(addr) mod WORD_BYTES;
+      offset_b    := (to_integer(addr) + size - 1) mod WORD_BYTES;
       word_addr   := shift_right(addr, WORD_SHIFT);
+      end_addr    := shift_right(addr + to_unsigned(size - 1, ADDR_BITS),
+                                 WORD_SHIFT);
       case act is
          when 'R' =>
-            for i in 1 to count loop
-               maddr <= std_logic_vector(word_addr);
+            mask  <= (others => '0');
+            maddr <= std_logic_vector(word_addr);
+            if word_addr = end_addr then
+               for b in offset_a to offset_b loop
+                  mask(b) <= '1';
+               end loop;
+               update(clk, re, rdy);
+            else
+               for b in offset_a to WORD_BYTES - 1 loop
+                  mask(b) <= '1';
+               end loop;
                update(clk, re, rdy);
                word_addr := word_addr + to_unsigned(1, ADDR_BITS);
-            end loop;
+               while word_addr /= end_addr loop
+                  mask <= (others => '1');
+                  maddr <= std_logic_vector(word_addr);
+                  update(clk, re, rdy);
+                  word_addr := word_addr + to_unsigned(1, ADDR_BITS);
+               end loop;
+               mask <= (others => '0');
+               for b in 0 to offset_b - 1 loop
+                  mask(b) <= '1';
+               end loop;
+               maddr <= std_logic_vector(word_addr);
+               update(clk, re, rdy);
+            end if;
          when 'W' =>
-            if offset /= 0 then
-               maddr <= std_logic_vector(word_addr);
-               update(clk, re, rdy);
-            elsif offset + size < WORD_BYTES then
-               maddr <= std_logic_vector(word_addr);
-               update(clk, re, rdy);
-            end if;
-            if offset + size > WORD_BYTES and
-               ((offset + size) mod WORD_BYTES) /= 0 then
-               maddr <= std_logic_vector(word_addr +
-                                         to_unsigned(count - 1, ADDR_BITS));
-               update(clk, re, rdy);
-            end if;
-            for i in 1 to count loop
+            mask  <= (others => '0');
+            maddr <= std_logic_vector(word_addr);
+            if word_addr = end_addr then
+               for b in offset_a to offset_b loop
+                  mask(b) <= '1';
+               end loop;
+               update(clk, we, rdy);
+            else
+               for b in offset_a to WORD_BYTES - 1 loop
+                  mask(b) <= '1';
+               end loop;
+               update(clk, we, rdy);
+               word_addr := word_addr + to_unsigned(1, ADDR_BITS);
+               while word_addr /= end_addr loop
+                  mask <= (others => '1');
+                  maddr <= std_logic_vector(word_addr);
+                  update(clk, we, rdy);
+                  word_addr := word_addr + to_unsigned(1, ADDR_BITS);
+               end loop;
+               mask <= (others => '0');
+               for b in 0 to offset_b - 1 loop
+                  mask(b) <= '1';
+               end loop;
                maddr <= std_logic_vector(word_addr);
                update(clk, we, rdy);
-               word_addr := word_addr + to_unsigned(WORD_BYTES, 1);
-            end loop;
+            end if;
          when 'M' =>
-            run_action(clk, r_act, addr, size, maddr, re, we, rdy);
-            run_action(clk, w_act, addr, size, maddr, re, we, rdy);
+            run_action(clk, r_act, addr, size, maddr, re, we, mask, rdy);
+            run_action(clk, w_act, addr, size, maddr, re, we, mask, rdy);
          when 'I' =>
             for i in 1 to size loop
                cycle(clk);
@@ -149,6 +183,7 @@ architecture trace_arch of trace is
    signal mem_dout      : std_logic_vector(WORD_BITS - 1 downto 0);
    signal mem_re        : std_logic;
    signal mem_we        : std_logic;
+   signal mem_mask      : std_logic_vector((WORD_BITS / 8) - 1 downto 0);
    signal mem_ready     : std_logic;
    signal cycle_count   : natural := 0;
    signal do_read       : std_logic;
@@ -209,8 +244,8 @@ begin
                when STATE_SIZE =>
                   value := parse_number(ch);
                   if value < 0 then
-                     run_action(clk, action, address, size,
-                                mem_addr, do_read, do_write, mem_ready);
+                     run_action(clk, action, address, size, mem_addr,
+                                do_read, do_write, mem_mask, mem_ready);
                      state := STATE_ACTION;
                      action := '?';
                   else
@@ -221,8 +256,8 @@ begin
          end loop;
       end loop;
 
-      run_action(clk, action, address, size,
-                 mem_addr, do_read, do_write, mem_ready);
+      run_action(clk, action, address, size, mem_addr,
+                 do_read, do_write, mem_mask, mem_ready);
 
       report "cycles: " & natural'image(cycle_count);
       wait;
@@ -250,14 +285,15 @@ begin
          WORD_WIDTH => WORD_BITS
       )
       port map (
-         clk     => clk,
-         rst     => rst,
-         addr    => mem_addr,
-         din     => mem_din,
-         dout    => mem_dout,
-         re      => mem_re,
-         we      => mem_we,
-         ready   => mem_ready
+         clk      => clk,
+         rst      => rst,
+         addr     => mem_addr,
+         din      => mem_din,
+         dout     => mem_dout,
+         re       => mem_re,
+         we       => mem_we,
+         mask     => mem_mask,
+         ready    => mem_ready
       );
 
 end trace_arch;

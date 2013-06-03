@@ -15,12 +15,23 @@ package body Memory.Transform.Offset is
       base     : Address_Type;
    begin
       Set_Memory(result.all, next);
-      base := Address_Type(2) ** (RNG.Random(generator) mod 32);
+
       if (RNG.Random(generator) mod 2) = 0 then
+         -- Byte offset.
+         base := Address_Type(RNG.Random(generator) mod wsize);
+      else
+         -- Word offset.
+         base := Address_Type(2) ** (RNG.Random(generator) mod 32);
+      end if;
+
+      if (RNG.Random(generator) mod 2) = 0 then
+         -- Negative offset.
          result.offset := 0 - Address_Type(wsize) * base;
       else
+         -- Positive offset.
          result.offset := Address_Type(wsize) * base;
       end if;
+
       return Memory_Pointer(result);
    end Random_Offset;
 
@@ -46,11 +57,16 @@ package body Memory.Transform.Offset is
                      max_cost    : in Cost_Type) is
       wsize : constant Natural := Get_Word_Size(mem);
    begin
-      if (RNG.Random(generator) mod 2) = 0 then
-         mem.offset := mem.offset + Address_Type(wsize);
-      else
-         mem.offset := mem.offset - Address_Type(wsize);
-      end if;
+      case RNG.Random(generator) mod 4 is
+         when 0      => -- Add word offset
+            mem.offset := mem.offset + Address_Type(wsize);
+         when 1      => -- Subtract word offset.
+            mem.offset := mem.offset - Address_Type(wsize);
+         when 2      => -- Add byte offset
+            mem.offset := mem.offset + 1;
+         when others => -- Subtract byte offset
+            mem.offset := mem.offset - 1;
+      end case;
    end Permute;
 
    function Apply(mem      : Offset_Type;
@@ -100,18 +116,34 @@ package body Memory.Transform.Offset is
    begin
       Generate(other.all, sigs, code);
       Declare_Signals(sigs, name, word_bits);
+      Line(code, name & "_inst : entity work.offset");
+      Line(code, "   generic map (");
+      Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
+      Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
       if (offset and 2 ** 63) /= 0 then
-         Line(code, "   " & oname & "_addr <= std_logic_vector(unsigned(" &
-              name & "_addr) - " & To_String(-offset) & ");");
+         Line(code, "      OFFSET         => -" & To_String(-offset));
       else
-         Line(code, "   " & oname & "_addr <= std_logic_vector(unsigned(" &
-              name & "_addr) + " & To_String(offset) & ");");
+         Line(code, "      OFFSET         => " & To_String(offset));
       end if;
-      Line(code, "   " & oname & "_din <= " & name & "_din;");
-      Line(code, "   " & name & "_dout <= " & oname & "_dout;");
-      Line(code, "   " & oname & "_re <= " & name & "_re;");
-      Line(code, "   " & oname & "_we <= " & name & "_we;");
-      Line(code, "   " & name & "_ready <= " & oname & "_ready;");
+      Line(code, "   )");
+      Line(code, "   port map (");
+      Line(code, "      clk      => clk,");
+      Line(code, "      rst      => rst,");
+      Line(code, "      addr     => " & name & "_addr,");
+      Line(code, "      din      => " & name & "_din,");
+      Line(code, "      dout     => " & name & "_dout,");
+      Line(code, "      re       => " & name & "_re,");
+      Line(code, "      we       => " & name & "_we,");
+      Line(code, "      mask     => " & name & "_mask,");
+      Line(code, "      ready    => " & name & "_ready,");
+      Line(code, "      maddr    => " & oname & "_addr,");
+      Line(code, "      min      => " & oname & "_dout,");
+      Line(code, "      mout     => " & oname & "_din,");
+      Line(code, "      mre      => " & oname & "_re,");
+      Line(code, "      mwe      => " & oname & "_we,");
+      Line(code, "      mmask    => " & oname & "_mask,");
+      Line(code, "      mready   => " & oname & "_ready");
+      Line(code, "   );");
    end Generate;
 
 end Memory.Transform.Offset;
