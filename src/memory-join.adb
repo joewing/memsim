@@ -1,5 +1,6 @@
 
-with Ada.Assertions; use Ada.Assertions;
+with Ada.Assertions;    use Ada.Assertions;
+with Memory.Container;  use Memory.Container;
 
 package body Memory.Join is
 
@@ -72,5 +73,18 @@ package body Memory.Join is
    begin
       mem.parent := parent;
    end Set_Parent;
+
+   function Find_Join(mem : Memory_Pointer) return Join_Pointer is
+   begin
+      if mem.all in Join_Type'Class then
+         return Join_Pointer(mem);
+      else
+         declare
+            cp : constant Container_Pointer := Container_Pointer(mem);
+         begin
+            return Find_Join(Get_Memory(cp.all));
+         end;
+      end if;
+   end Find_Join;
 
 end Memory.Join;

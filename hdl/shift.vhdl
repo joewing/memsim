@@ -7,7 +7,7 @@ entity shift is
    generic (
       ADDR_WIDTH     : in natural := 32;
       WORD_WIDTH     : in natural := 32;
-      SHIFT          : in natural := 0
+      SHIFT          : in integer := 0
    );
    port (
       clk      : in  std_logic;
@@ -32,7 +32,13 @@ end shift;
 architecture shift_arch of shift is
 begin
 
-   maddr <= std_logic_vector(rotate_left(unsigned(addr), SHIFT));
+   shift_positive : if SHIFT >= 0 generate
+      maddr <= std_logic_vector(rotate_left(unsigned(addr), SHIFT));
+   end generate;
+   shift_negative : if SHIFT < 0 generate
+      maddr <= std_logic_vector(rotate_right(unsigned(addr), -SHIFT));
+   end generate;
+
    mout  <= din;
    dout  <= min;
    mre   <= re;

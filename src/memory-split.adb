@@ -210,19 +210,6 @@ package body Memory.Split is
       return result;
    end Get_Writes;
 
-   function Find_Join(mem : Memory_Pointer) return Join_Pointer is
-   begin
-      if mem.all in Join_Type'Class then
-         return Join_Pointer(mem);
-      else
-         declare
-            cp : constant Container_Pointer := Container_Pointer(mem);
-         begin
-            return Find_Join(Get_Memory(cp.all));
-         end;
-      end if;
-   end Find_Join;
-
    procedure Generate(mem  : in Split_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is

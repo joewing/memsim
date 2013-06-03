@@ -1,4 +1,6 @@
 
+with Memory.Join; use Memory.Join;
+
 package body Memory.Transform.Offset is
 
    function Create_Offset return Offset_Pointer is
@@ -109,13 +111,20 @@ package body Memory.Transform.Offset is
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is
       word_bits   : constant Natural := 8 * Get_Word_Size(mem);
+      bank        : constant Memory_Pointer  := Get_Bank(mem);
+      join        : constant Join_Pointer    := Find_Join(bank);
       other       : constant Memory_Pointer  := Get_Memory(mem);
       name        : constant String := "m" & To_String(Get_ID(mem));
+      bname       : constant String := "m" & To_String(Get_ID(bank.all));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
+      jname       : constant String := "m" & To_String(Get_ID(join.all));
       offset      : constant Address_Type := mem.offset;
    begin
       Generate(other.all, sigs, code);
+      Generate(bank.all, sigs, code);
       Declare_Signals(sigs, name, word_bits);
+
+      -- Transform into the bank.
       Line(code, name & "_inst : entity work.offset");
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
@@ -136,6 +145,36 @@ package body Memory.Transform.Offset is
       Line(code, "      we       => " & name & "_we,");
       Line(code, "      mask     => " & name & "_mask,");
       Line(code, "      ready    => " & name & "_ready,");
+      Line(code, "      maddr    => " & bname & "_addr,");
+      Line(code, "      min      => " & bname & "_dout,");
+      Line(code, "      mout     => " & bname & "_din,");
+      Line(code, "      mre      => " & bname & "_re,");
+      Line(code, "      mwe      => " & bname & "_we,");
+      Line(code, "      mmask    => " & bname & "_mask,");
+      Line(code, "      mready   => " & bname & "_ready");
+      Line(code, "   );");
+
+      -- Transform out of the bank.
+      Line(code, jname & "_inst : entity work.offset");
+      Line(code, "   generic map (");
+      Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
+      Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
+      if (offset and 2 ** 63) /= 0 then
+         Line(code, "      OFFSET         => " & To_String(-offset));
+      else
+         Line(code, "      OFFSET         => -" & To_String(offset));
+      end if;
+      Line(code, "   )");
+      Line(code, "   port map (");
+      Line(code, "      clk      => clk,");
+      Line(code, "      rst      => rst,");
+      Line(code, "      addr     => " & jname & "_addr,");
+      Line(code, "      din      => " & jname & "_din,");
+      Line(code, "      dout     => " & jname & "_dout,");
+      Line(code, "      re       => " & jname & "_re,");
+      Line(code, "      we       => " & jname & "_we,");
+      Line(code, "      mask     => " & jname & "_mask,");
+      Line(code, "      ready    => " & jname & "_ready,");
       Line(code, "      maddr    => " & oname & "_addr,");
       Line(code, "      min      => " & oname & "_dout,");
       Line(code, "      mout     => " & oname & "_din,");
@@ -144,6 +183,7 @@ package body Memory.Transform.Offset is
       Line(code, "      mmask    => " & oname & "_mask,");
       Line(code, "      mready   => " & oname & "_ready");
       Line(code, "   );");
+
    end Generate;
 
 end Memory.Transform.Offset;

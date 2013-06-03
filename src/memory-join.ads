@@ -46,6 +46,8 @@ package Memory.Join is
    procedure Set_Parent(mem      : in out Join_Type;
                         parent   : access Wrapper_Type'Class);
 
+   function Find_Join(mem : Memory_Pointer) return Join_Pointer;
+
 private
 
    type Join_Type is new Memory_Type with record
