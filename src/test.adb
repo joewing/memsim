@@ -4,6 +4,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Memory.RAM; use Memory.RAM;
 with Test.RAM;
 with Test.Cache;
+with Test.Flip;
 with Test.SPM;
 with Test.Offset;
 with Test.Shift;
@@ -80,6 +81,7 @@ package body Test is
       RAM.Run_Tests;
       Cache.Run_Tests;
       SPM.Run_Tests;
+      Flip.Run_Tests;
       Offset.Run_Tests;
       Shift.Run_Tests;
       Split.Run_Tests;

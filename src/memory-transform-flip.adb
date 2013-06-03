@@ -1,5 +1,6 @@
 
 with Memory.Join; use Memory.Join;
+with Util;        use Util;
 
 package body Memory.Transform.Flip is
 
@@ -35,14 +36,14 @@ package body Memory.Transform.Flip is
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type is
       addr_bits   : constant Natural := Address_Type'Size; -- FIXME
-      word_bits   : constant Natural := Get_Word_Size(mem);
+      word_bytes  : constant Natural := Get_Word_Size(mem);
       src_mask    : Address_Type;
       dest_mask   : Address_Type;
-      result      : Address_Type := 0;
+      result      : Address_Type := address mod Address_Type(word_bytes);
    begin
       src_mask    := Address_Type(2) ** (addr_bits - 1);
-      dest_mask   := Address_Type(2) ** word_bits;
-      for i in word_bits .. addr_bits - 1 loop
+      dest_mask   := Address_Type(word_bytes);
+      for i in 0 .. addr_bits - Log2(word_bytes) loop
          if (address and src_mask) /= 0 then
             result := result or dest_mask;
          end if;
