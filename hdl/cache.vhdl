@@ -94,6 +94,8 @@ architecture cache_arch of cache is
    type word_array_type is array(0 to LINE_SIZE - 1) of word_type;
 
    constant ZERO_OFFSET    : offset_type := (others => '0');
+   constant FULL_MASK      : std_logic_vector((WORD_WIDTH / 8) - 1 downto 0)
+                              := (others => '1');
 
    signal data          : row_array_type := (others => (others => '0'));
    signal row           : row_type := (others => '0');
@@ -238,7 +240,7 @@ begin
             elsif oldest_dirty = '1' then
                next_state           <= STATE_WRITEBACK_WRITE1;
                next_transfer_count  <= (others => '0');
-            elsif LINE_SIZE > 1 then
+            elsif LINE_SIZE > 1 or mask /= FULL_MASK then
                next_state           <= STATE_WRITE_FILL1;
                next_transfer_count  <= (others => '0');
             else
@@ -313,7 +315,8 @@ begin
       inc2 := std_logic_vector(unsigned(transfer_count) + 2);
       case state is
          when STATE_WRITE_FILL1 | STATE_WRITE_FILL2 =>
-            if unsigned(inc1) = unsigned(current_offset) then
+            if unsigned(inc1) = unsigned(current_offset) and mask = FULL_MASK
+            then
                upd := inc2;
             else
                upd := inc1;
