@@ -14,7 +14,6 @@ package body Test.Cache is
                                              associativity  => 1,
                                              latency        => 1,
                                              policy         => LRU,
-                                             exclusive      => False,
                                              write_back     => True);
 
    begin
@@ -60,7 +59,6 @@ package body Test.Cache is
                                              associativity  => 2,
                                              latency        => 1,
                                              policy         => LRU,
-                                             exclusive      => False,
                                              write_back     => True);
 
    begin
@@ -104,7 +102,6 @@ package body Test.Cache is
                                                       associativity  => 1,
                                                       latency        => 1,
                                                       policy         => LRU,
-                                                      exclusive      => False,
                                                       write_back     => True);
       cache2 : Cache_Pointer          := Create_Cache(mem            => cache1,
                                                       line_count     => 1,
@@ -112,7 +109,6 @@ package body Test.Cache is
                                                       associativity  => 1,
                                                       latency        => 1,
                                                       policy         => LRU,
-                                                      exclusive      => False,
                                                       write_back     => True);
    begin
 

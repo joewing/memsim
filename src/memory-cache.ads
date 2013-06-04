@@ -19,7 +19,6 @@ package Memory.Cache is
                          associativity : Positive := 1;
                          latency       : Time_Type := 1;
                          policy        : Policy_Type := LRU;
-                         exclusive     : Boolean := False;
                          write_back    : Boolean := True)
                          return Cache_Pointer;
 
@@ -93,7 +92,6 @@ private
       latency        : Time_Type := 1;
       data           : Cache_Vectors.Vector;
       policy         : Policy_Type := LRU;
-      exclusive      : Boolean := False;
       write_back     : Boolean := True;
       generator      : Generator_Pointer := new RNG.Generator;
    end record;

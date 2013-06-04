@@ -13,7 +13,6 @@ package body Memory.Cache is
                          associativity : Positive := 1;
                          latency       : Time_Type := 1;
                          policy        : Policy_Type := LRU;
-                         exclusive     : Boolean := False;
                          write_back    : Boolean := True)
                          return Cache_Pointer is
       result : constant Cache_Pointer := new Cache_Type;
@@ -24,7 +23,6 @@ package body Memory.Cache is
       result.associativity := associativity;
       result.latency       := latency;
       result.policy        := policy;
-      result.exclusive     := exclusive;
       result.write_back    := write_back;
       result.data.Set_Length(Count_Type(result.line_count));
       for i in 0 .. result.line_count - 1 loop
@@ -51,7 +49,6 @@ package body Memory.Cache is
       result.associativity := 1;
       result.latency       := 3;
       result.policy        := LRU;
-      result.exclusive     := False;
       result.write_back    := True;
 
       -- If even the minimum cache is too costly, return nulll.
@@ -117,13 +114,10 @@ package body Memory.Cache is
 
          -- Type.
          declare
-            exclusive   : constant Boolean := result.exclusive;
             write_back  : constant Boolean := result.write_back;
          begin
-            result.exclusive  := Random_Boolean(RNG.Random(generator));
             result.write_back := Random_Boolean(RNG.Random(generator));
             if Get_Cost(result.all) > max_cost then
-               result.exclusive := exclusive;
                result.write_back := write_back;
                exit;
             end if;
@@ -162,7 +156,6 @@ package body Memory.Cache is
       line_count     : constant Positive     := mem.line_count;
       associativity  : constant Positive     := mem.associativity;
       policy         : constant Policy_Type  := mem.policy;
-      exclusive      : constant Boolean      := mem.exclusive;
       write_back     : constant Boolean      := mem.write_back;
 
    begin
@@ -208,10 +201,8 @@ package body Memory.Cache is
                exit when Get_Cost(mem) <= max_cost;
                mem.policy := policy;
             when others => -- Change type
-               mem.exclusive  := Random_Boolean(RNG.Random(generator));
                mem.write_back := Random_Boolean(RNG.Random(generator));
                exit when Get_Cost(mem) <= max_cost;
-               mem.exclusive := exclusive;
                mem.write_back := write_back;
          end case;
          param := (param + 1) mod param_count;
@@ -245,7 +236,6 @@ package body Memory.Cache is
 
    begin
 
-      -- Advance the time.
       Advance(mem, mem.latency);
 
       -- Update the age of all items in this set.
@@ -290,16 +280,9 @@ package body Memory.Cache is
       end loop;
 
       -- If we got here, the item is not in the cache.
-      -- If this is a read on an exclusive cache, we just forward the
-      -- read the return without caching, otherwise we need to evict the
-      -- oldest entry.
-      if mem.exclusive and is_read then
+      if is_read or mem.write_back then
 
-         Read(Container_Type(mem), tag, mem.line_size);
-
-      else
-
-         -- Look up the line to replace and reset its age.
+         -- Look up the line to replace.
          data := mem.data.Element(to_replace);
 
          -- Evict the oldest entry.
@@ -318,6 +301,11 @@ package body Memory.Cache is
          if is_read or size /= mem.line_size then
             Read(Container_Type(mem), tag, mem.line_size);
          end if;
+
+      else
+
+         -- A write on a write-through cache, forward the write.
+         Write(Container_Type(mem), address, size);
 
       end if;
 
@@ -383,11 +371,6 @@ package body Memory.Cache is
             when FIFO   => Append(result, "fifo");
          end case;
          Append(result, ")");
-      end if;
-      if mem.exclusive then
-         Append(result, "(exclusive true)");
-      else
-         Append(result,  "(exclusive false)");
       end if;
       if mem.write_back then
          Append(result, "(write_back true)");
@@ -475,12 +458,17 @@ package body Memory.Cache is
             To_String(Log2(assoc - 1)) & ",");
       case mem.policy is
          when LRU    =>
-            Line(code, "      REPLACEMENT     => 0");
+            Line(code, "      REPLACEMENT     => 0,");
          when MRU    =>
-            Line(code, "      REPLACEMENT     => 1");
+            Line(code, "      REPLACEMENT     => 1,");
          when FIFO   =>
-            Line(code, "      REPLACEMENT     => 2");
+            Line(code, "      REPLACEMENT     => 2,");
       end case;
+      if mem.write_back then
+         Line(code, "      WRITE_POLICY    => 0");
+      else
+         Line(code, "      WRITE_POLICY    => 1");
+      end if;
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");

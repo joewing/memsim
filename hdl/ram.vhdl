@@ -59,8 +59,10 @@ begin
                value <= data(nat_addr);
             elsif do_write = '1' then
                for b in 0 to (WORD_WIDTH / 8) - 1 loop
-                  data(nat_addr)(b * 8 + 7 downto b * 8) <=
-                     din(b * 8 + 7 downto b * 8);
+                  if mask(b) = '1' then
+                     data(nat_addr)(b * 8 + 7 downto b * 8) <=
+                        din(b * 8 + 7 downto b * 8);
+                  end if;
                end loop;
             end if;
          else

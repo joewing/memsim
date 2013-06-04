@@ -24,7 +24,6 @@ procedure Parse_Cache(parser  : in out Parser_Type;
    associativity  : Positive := 1;
    latency        : Time_Type := 3;
    policy         : Cache.Policy_Type := Cache.LRU;
-   exclusive      : Boolean := False;
    write_back     : Boolean := True;
 
 begin
@@ -53,8 +52,6 @@ begin
                   associativity := Positive'Value(value);
                elsif name = "latency" then
                   latency := Time_Type'Value(value);
-               elsif name = "exclusive" then
-                  exclusive := Parse_Boolean(value);
                elsif name = "write_back" then
                   write_back := Parse_Boolean(value);
                elsif name = "policy" then
@@ -90,7 +87,6 @@ begin
                                                associativity,
                                                latency,
                                                policy,
-                                               exclusive,
                                                write_back));
 exception
    when Data_Error | Constraint_Error =>

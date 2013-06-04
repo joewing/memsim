@@ -10,10 +10,13 @@ entity cache is
       LINE_SIZE_BITS    : in natural := 0;
       LINE_COUNT_BITS   : in natural := 8;
       ASSOC_BITS        : in natural := 1;
-      REPLACEMENT       : in natural := 0
+      REPLACEMENT       : in natural := 0;
          -- 0: LRU
          -- 1: MRU
          -- 2: FIFO
+      WRITE_POLICY      : in natural := 0
+         -- 0: write-back,    write-allocate
+         -- 1: write-through, write-around
    );
    port (
       clk      : in  std_logic;
@@ -44,15 +47,36 @@ architecture cache_arch of cache is
    constant INDEX_BITS     : natural := LINE_COUNT_BITS;
    constant TAG_BITS       : natural := ADDR_WIDTH - INDEX_BITS
                                         - LINE_SIZE_BITS;
+
+   function get_dirty_bits return natural is
+   begin
+      case WRITE_POLICY is
+         when 0      =>
+            return ASSOCIATIVITY;
+         when others =>
+            return 0;
+      end case;
+   end get_dirty_bits;
+
    constant AGE_BITS       : natural := ASSOC_BITS;
    constant LINE_BITS      : natural := WORD_WIDTH * LINE_SIZE;
-   constant WAY_BITS       : natural := LINE_BITS + TAG_BITS + AGE_BITS + 2;
+
+   function get_way_bits return natural is
+   begin
+      case WRITE_POLICY is
+         when 0         => return LINE_BITS + TAG_BITS + AGE_BITS + 2;
+         when others    => return LINE_BITS + TAG_BITS + AGE_BITS + 1;
+      end case;
+   end get_way_bits;
+
+   constant WAY_BITS       : natural := get_way_bits;
    constant ROW_BITS       : natural := WAY_BITS * ASSOCIATIVITY;
+   constant DIRTY_BITS     : natural := get_dirty_bits;
    constant LINE_OFFSET    : natural := 0;
    constant TAG_OFFSET     : natural := LINE_OFFSET + LINE_BITS;
    constant AGE_OFFSET     : natural := TAG_OFFSET + TAG_BITS;
-   constant DIRTY_OFFSET   : natural := AGE_OFFSET + AGE_BITS;
-   constant VALID_OFFSET   : natural := DIRTY_OFFSET + 1;
+   constant VALID_OFFSET   : natural := AGE_OFFSET + AGE_BITS;
+   constant DIRTY_OFFSET   : natural := VALID_OFFSET + 1;
    constant MASK_BITS      : natural := ADDR_WIDTH - LINE_SIZE_BITS;
    constant TAG_SHIFT      : natural := ADDR_WIDTH - TAG_BITS;
    constant OFFSET_BOTTOM  : natural := 0;
@@ -113,7 +137,7 @@ architecture cache_arch of cache is
    signal lines   : line_array_type;
    signal tags    : tag_array_type;
    signal words   : word_array_type;
-   signal dirty   : std_logic_vector(ASSOCIATIVITY - 1 downto 0);
+   signal dirty   : std_logic_vector(DIRTY_BITS - 1 downto 0);
    signal valid   : std_logic_vector(ASSOCIATIVITY - 1 downto 0);
    signal ages    : age_array_type;
 
@@ -155,7 +179,9 @@ begin
          if AGE_BITS > 0 then
             ages(i) <= "0" & row(age_start + AGE_BITS - 1 downto age_start);
          end if;
-         dirty(i) <= row(offset + DIRTY_OFFSET);
+         if DIRTY_BITS > 0 then
+            dirty(i) <= row(offset + DIRTY_OFFSET);
+         end if;
          valid(i) <= row(offset + VALID_OFFSET);
       end loop;
    end process;
@@ -167,7 +193,9 @@ begin
    begin
       oldest_addr    <= tags(0) & current_index & ZERO_OFFSET;
       oldest_way     <= (others => '0');
-      oldest_dirty   <= dirty(0);
+      if DIRTY_BITS > 0 then
+         oldest_dirty   <= dirty(0);
+      end if;
       oldest_line    <= lines(0);
       oldest_age     <= ages(0);
       temp_age       := ages(0);
@@ -193,7 +221,9 @@ begin
          if is_oldest or valid(i) /= '1' then
             oldest_addr    <= tags(i) & current_index & ZERO_OFFSET;
             oldest_way     <= std_logic_vector(to_unsigned(i, ASSOC_BITS + 1));
-            oldest_dirty   <= dirty(i);
+            if DIRTY_BITS > 0 then
+               oldest_dirty   <= dirty(i);
+            end if;
             oldest_line    <= lines(i);
             oldest_age     <= ages(i);
             temp_age       := ages(i);
@@ -225,7 +255,7 @@ begin
          when STATE_READ2 =>
             if is_hit = '1' then
                next_state <= STATE_IDLE;
-            elsif oldest_dirty = '1' then
+            elsif DIRTY_BITS > 0 and oldest_dirty = '1' then
                next_state           <= STATE_WRITEBACK_READ1;
                next_transfer_count  <= (others => '0');
             else
@@ -235,16 +265,24 @@ begin
          when STATE_WRITE1 =>
             next_state <= STATE_WRITE2;
          when STATE_WRITE2 =>
-            if is_hit = '1' then
-               next_state <= STATE_IDLE;
-            elsif oldest_dirty = '1' then
-               next_state           <= STATE_WRITEBACK_WRITE1;
-               next_transfer_count  <= (others => '0');
-            elsif LINE_SIZE > 1 or mask /= FULL_MASK then
-               next_state           <= STATE_WRITE_FILL1;
-               next_transfer_count  <= (others => '0');
+            if WRITE_POLICY = 0 then
+               if is_hit = '1' then
+                  next_state <= STATE_IDLE;
+               elsif oldest_dirty = '1' then
+                  next_state           <= STATE_WRITEBACK_WRITE1;
+                  next_transfer_count  <= (others => '0');
+               elsif LINE_SIZE > 1 or mask /= FULL_MASK then
+                  next_state           <= STATE_WRITE_FILL1;
+                  next_transfer_count  <= (others => '0');
+               else
+                  next_state <= STATE_IDLE;
+               end if;
+            elsif WRITE_POLICY = 1 then
+               if mready = '1' then
+                  next_state <= STATE_IDLE;
+               end if;
             else
-               next_state <= STATE_IDLE;
+               report "invalid write policy" severity failure;
             end if;
          when STATE_READ_MISS1 =>
             next_state <= STATE_READ_MISS2;
@@ -361,9 +399,11 @@ begin
                or state = STATE_WRITEBACK_READ1
                or state = STATE_READ_MISS2
                or state = STATE_WRITE_FILL2;
-      write_line :=  state = STATE_WRITE2
+      write_line :=  (state = STATE_WRITE2 and WRITE_POLICY = 0)
+                  or (state = STATE_WRITE2 and is_hit = '1')
                   or state = STATE_WRITEBACK_WRITE2
                   or state = STATE_WRITE_FILL2;
+      updated_row <= row;
       for way in 0 to ASSOCIATIVITY - 1 loop
          offset      := way * WAY_BITS;
          line_bottom := offset + LINE_OFFSET;
@@ -375,43 +415,36 @@ begin
          dirty_start := offset + DIRTY_OFFSET;
          valid_start := offset + VALID_OFFSET;
          if way = unsigned(write_way) then
-            updated_row(tag_top downto tag_bottom) <= current_tag;
-            case state is
-               when STATE_WRITE2 =>
-                  updated_row(dirty_start) <= '1';
-               when STATE_WRITEBACK_WRITE2 =>
-                  updated_row(dirty_start) <= '1';
-               when STATE_WRITE_FILL2 =>
-                  updated_row(dirty_start) <= '1';
-               when STATE_READ_MISS2 =>
-                  updated_row(dirty_start) <= '0';
-               when others =>
-                  updated_row(dirty_start) <= dirty(way);
-            end case;
-            if load_mem or write_line or valid(way) = '1' then
-               updated_row(valid_start) <= '1';
-            else
-               updated_row(valid_start) <= '0';
+            if DIRTY_BITS > 0 then
+               case state is
+                  when STATE_WRITE2 =>
+                     updated_row(dirty_start) <= '1';
+                  when STATE_WRITEBACK_WRITE2 =>
+                     updated_row(dirty_start) <= '1';
+                  when STATE_WRITE_FILL2 =>
+                     updated_row(dirty_start) <= '1';
+                  when STATE_READ_MISS2 =>
+                     updated_row(dirty_start) <= '0';
+                  when others =>
+                     updated_row(dirty_start) <= dirty(way);
+               end case;
             end if;
-         else
-            updated_row(tag_top downto tag_bottom) <= tags(way);
-            updated_row(dirty_start) <= dirty(way);
-            updated_row(valid_start) <= valid(way);
+            if load_mem or write_line then
+               updated_row(tag_top downto tag_bottom) <= current_tag;
+            end if;
+            if load_mem or write_line then
+               updated_row(valid_start) <= '1';
+            end if;
          end if;
          if AGE_BITS > 0 then
             if next_state = STATE_IDLE then
                updated_row(age_top downto age_bottom)
                   <= updated_ages(way)(AGE_BITS - 1 downto 0);
-            else
-               updated_row(age_top downto age_bottom)
-                  <= ages(way)(AGE_BITS - 1 downto 0);
             end if;
          end if;
          for i in 0 to LINE_SIZE - 1 loop
             word_bottom := line_bottom + i * WORD_WIDTH;
             word_top    := word_bottom + WORD_WIDTH - 1;
-            updated_row(word_top downto word_bottom)
-               <= row(word_top downto word_bottom);
             if unsigned(write_way) = way then
                if unsigned(transfer_count) = i and load_mem then
                   updated_row(word_top downto word_bottom) <= min;
@@ -488,7 +521,8 @@ begin
       variable fill_ok     : boolean;
    begin
       if clk'event and clk = '1' then
-         write_hit := state = STATE_WRITE2 and next_state = STATE_IDLE;
+         write_hit := state = STATE_WRITE2 and next_state = STATE_IDLE and
+                      WRITE_POLICY = 0;
          write_ok  := (state = STATE_WRITEBACK_WRITE2 and transfer_done = '1')
                    or (state = STATE_WRITE_FILL2 and mready = '1');
          fill_ok   := state = STATE_READ_MISS2 and mready = '1';
@@ -514,6 +548,10 @@ begin
       mwe_temp <= '0';
       mre_temp <= '0';
       case next_state is
+         when STATE_WRITE1             =>
+            if WRITE_POLICY = 1 then
+               mwe_temp <= '1';
+            end if;
          when STATE_WRITEBACK_READ1    => mwe_temp <= '1';
          when STATE_WRITEBACK_WRITE1   => mwe_temp <= '1';
          when STATE_READ_MISS1         => mre_temp <= '1';
@@ -523,7 +561,7 @@ begin
    end process;
    mre   <= mre_temp;
    mwe   <= mwe_temp;
-   mmask <= (others => '1');
+   mmask <= (others => '1') when WRITE_POLICY = 0 else mask;
 
    -- Drive memory address.
    process(next_transfer_count, oldest_addr, addr, next_state)
@@ -569,12 +607,15 @@ begin
    end process;
 
    -- Drive memory data (mout).
-   drive_mout1 : if LINE_SIZE = 1 generate
+   drive_mout1 : if WRITE_POLICY = 0 and LINE_SIZE = 1 generate
       mout <= oldest_words(0);
    end generate;
-   drive_moutn : if LINE_SIZE > 1 generate
+   drive_moutn : if WRITE_POLICY = 0 and LINE_SIZE > 1 generate
       mout <= oldest_words(to_integer(unsigned(
                            next_transfer_count(LINE_SIZE_BITS - 1 downto 0))));
+   end generate;
+   drive_mout_wt : if WRITE_POLICY = 1 generate
+      mout <= din;
    end generate;
 
    -- Drive dout.
