@@ -55,10 +55,6 @@ begin
       Raise_Error(parser, "memory not specified in shift");
    end if;
    Set_Memory(trans.all, mem);
-
-   if bank = null then
-      Raise_Error(parser, "bank not specified in shift");
-   end if;
    Set_Bank(trans.all, bank);
 
    Set_Shift(trans.all, shift);

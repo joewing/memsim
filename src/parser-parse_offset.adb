@@ -55,10 +55,6 @@ begin
       Raise_Error(parser, "memory not specified in offset");
    end if;
    Set_Memory(trans.all, mem);
-
-   if bank = null then
-      Raise_Error(parser, "bank not specified in offset");
-   end if;
    Set_Bank(trans.all, bank);
 
    if offset < 0 then

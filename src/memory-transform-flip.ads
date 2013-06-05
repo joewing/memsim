@@ -23,9 +23,14 @@ package Memory.Transform.Flip is
    function To_String(mem : Flip_Type) return Unbounded_String;
 
    overriding
-   procedure Generate(mem  : in Flip_Type;
-                      sigs : in out Unbounded_String;
-                      code : in out Unbounded_String);
+   procedure Generate_Simple(mem    : in Flip_Type;
+                             sigs   : in out Unbounded_String;
+                             code   : in out Unbounded_String);
+
+   overriding
+   procedure Generate_Banked(mem    : in Flip_Type;
+                             sigs   : in out Unbounded_String;
+                             code   : in out Unbounded_String);
 
 private
 

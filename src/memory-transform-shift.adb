@@ -91,9 +91,11 @@ package body Memory.Transform.Shift is
    begin
       Append(result, "(shift ");
       Append(result, "(value" & Natural'Image(mem.shift) & ")");
-      Append(result, "(bank ");
-      Append(result, To_String(To_String(mem.bank.all)));
-      Append(result, ")");
+      if mem.bank /= null then
+         Append(result, "(bank ");
+         Append(result, To_String(To_String(mem.bank.all)));
+         Append(result, ")");
+      end if;
       Append(result, "(memory ");
       Append(result, To_String(Container_Type(mem)));
       Append(result, ")");
@@ -101,9 +103,46 @@ package body Memory.Transform.Shift is
       return result;
    end To_String;
 
-   procedure Generate(mem  : in Shift_Type;
-                      sigs : in out Unbounded_String;
-                      code : in out Unbounded_String) is
+   procedure Generate_Simple(mem  : in Shift_Type;
+                             sigs : in out Unbounded_String;
+                             code : in out Unbounded_String) is
+      word_bits   : constant Natural := 8 * Get_Word_Size(mem);
+      other       : constant Memory_Pointer  := Get_Memory(mem);
+      name        : constant String := "m" & To_String(Get_ID(mem));
+      oname       : constant String := "m" & To_String(Get_ID(other.all));
+      shift       : constant Integer := mem.shift;
+   begin
+      Generate(other.all, sigs, code);
+      Declare_Signals(sigs, name, word_bits);
+      Line(code, name & "_inst : entity work.shift");
+      Line(code, "   generic map (");
+      Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
+      Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
+      Line(code, "      SHIFT          => " & To_String(shift));
+      Line(code, "   )");
+      Line(code, "   port map (");
+      Line(code, "      clk      => clk,");
+      Line(code, "      rst      => rst,");
+      Line(code, "      addr     => " & name & "_addr,");
+      Line(code, "      din      => " & name & "_din,");
+      Line(code, "      dout     => " & name & "_dout,");
+      Line(code, "      re       => " & name & "_re,");
+      Line(code, "      we       => " & name & "_we,");
+      Line(code, "      mask     => " & name & "_mask,");
+      Line(code, "      ready    => " & name & "_ready,");
+      Line(code, "      maddr    => " & oname & "_addr,");
+      Line(code, "      min      => " & oname & "_dout,");
+      Line(code, "      mout     => " & oname & "_din,");
+      Line(code, "      mre      => " & oname & "_re,");
+      Line(code, "      mwe      => " & oname & "_we,");
+      Line(code, "      mmask    => " & oname & "_mask,");
+      Line(code, "      mready   => " & oname & "_ready");
+      Line(code, "   );");
+   end Generate_Simple;
+
+   procedure Generate_Banked(mem  : in Shift_Type;
+                             sigs : in out Unbounded_String;
+                             code : in out Unbounded_String) is
       word_bits   : constant Natural := 8 * Get_Word_Size(mem);
       bank        : constant Memory_Pointer  := Get_Bank(mem);
       join        : constant Join_Pointer    := Find_Join(bank);
@@ -171,6 +210,11 @@ package body Memory.Transform.Shift is
       Line(code, "      mready   => " & oname & "_ready");
       Line(code, "   );");
 
-   end Generate;
+   end Generate_Banked;
+
+   function Is_Empty(mem : Shift_Type) return Boolean is
+   begin
+      return Is_Empty(Transform_Type(mem)) or mem.shift = 0;
+   end Is_Empty;
 
 end Memory.Transform.Shift;

@@ -32,7 +32,7 @@ package body Memory.Transform is
          end loop;
 
          -- Perform the access.
-         if dir then
+         if dir and mem.bank /= null then
             if is_read then
                Read(mem.bank.all, trans, Natural(nsize));
             else
@@ -68,25 +68,37 @@ package body Memory.Transform is
    procedure Reset(mem : in out Transform_Type) is
    begin
       Reset(Container_Type(mem));
-      Reset(mem.bank.all);
+      if mem.bank /= null then
+         Reset(mem.bank.all);
+      end if;
    end Reset;
 
    procedure Read(mem      : in out Transform_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      start : constant Time_Type := Get_Time(mem.bank.all);
+      start : Time_Type;
    begin
-      Process(mem, address, Address_Type(size), True, True);
-      Advance(mem, Get_Time(mem.bank.all) - start);
+      if mem.bank /= null then
+         start := Get_Time(mem.bank.all);
+         Process(mem, address, Address_Type(size), True, True);
+         Advance(mem, Get_Time(mem.bank.all) - start);
+      else
+         Process(mem, address, Address_Type(size), True, True);
+      end if;
    end Read;
 
    procedure Write(mem     : in out Transform_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      start : constant Time_Type := Get_Time(mem.bank.all);
+      start : Time_Type;
    begin
-      Process(mem, address, Address_Type(size), True, False);
-      Advance(mem, Get_Time(mem.bank.all) - start);
+      if mem.bank /= null then
+         start := Get_Time(mem.bank.all);
+         Process(mem, address, Address_Type(size), True, False);
+         Advance(mem, Get_Time(mem.bank.all) - start);
+      else
+         Process(mem, address, Address_Type(size), True, False);
+      end if;
    end Write;
 
    procedure Forward_Read(mem       : in out Transform_Type;
@@ -120,9 +132,27 @@ package body Memory.Transform is
    function Get_Cost(mem : Transform_Type) return Cost_Type is
       result : Cost_Type := Get_Cost(Container_Type(mem));
    begin
-      result := result + Get_Cost(mem.bank.all);
+      if mem.bank /= null then
+         result := result + Get_Cost(mem.bank.all);
+      end if;
       return result;
    end Get_Cost;
+
+   function Is_Empty(mem : Transform_Type) return Boolean is
+   begin
+      return mem.bank /= null and then mem.bank.all in Join_Type'Class;
+   end Is_Empty;
+
+   procedure Generate(mem  : in Transform_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String) is
+   begin
+      if mem.bank /= null then
+         Generate_Banked(Transform_Type'Class(mem), sigs, code);
+      else
+         Generate_Simple(Transform_Type'Class(mem), sigs, code);
+      end if;
+   end Generate;
 
    procedure Adjust(mem : in out Transform_Type) is
       jp    : Join_Pointer;
@@ -130,18 +160,20 @@ package body Memory.Transform is
       ptr   : Memory_Pointer;
    begin
       Adjust(Container_Type(mem));
-      mem.bank := Clone(mem.bank.all);
-      ptr := Memory_Pointer(mem.bank);
-      loop
-         if ptr.all in Join_Type'Class then
-            jp := Join_Pointer(ptr);
-            Set_Parent(jp.all, mem'Unrestricted_Access);
-            exit;
-         else
-            cp := Container_Pointer(ptr);
-            ptr := Get_Memory(cp.all);
-         end if;
-      end loop;
+      if mem.bank /= null then
+         mem.bank := Clone(mem.bank.all);
+         ptr := Memory_Pointer(mem.bank);
+         loop
+            if ptr.all in Join_Type'Class then
+               jp := Join_Pointer(ptr);
+               Set_Parent(jp.all, mem'Unrestricted_Access);
+               exit;
+            else
+               cp := Container_Pointer(ptr);
+               ptr := Get_Memory(cp.all);
+            end if;
+         end loop;
+      end if;
    end Adjust;
 
    procedure Finalize(mem : in out Transform_Type) is

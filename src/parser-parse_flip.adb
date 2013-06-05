@@ -45,10 +45,6 @@ begin
       Raise_Error(parser, "memory not specified in flip");
    end if;
    Set_Memory(trans.all, mem);
-
-   if bank = null then
-      Raise_Error(parser, "bank not specified in flip");
-   end if;
    Set_Bank(trans.all, bank);
 
    result := Memory_Pointer(trans);

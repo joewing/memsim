@@ -28,9 +28,17 @@ package Memory.Transform.Shift is
    function To_String(mem : Shift_Type) return Unbounded_String;
 
    overriding
-   procedure Generate(mem  : in Shift_Type;
-                      sigs : in out Unbounded_String;
-                      code : in out Unbounded_String);
+   procedure Generate_Simple(mem  : in Shift_Type;
+                             sigs : in out Unbounded_String;
+                             code : in out Unbounded_String);
+
+   overriding
+   procedure Generate_Banked(mem  : in Shift_Type;
+                             sigs : in out Unbounded_String;
+                             code : in out Unbounded_String);
+
+   overriding
+   function Is_Empty(mem : Shift_Type) return Boolean;
 
 private
 

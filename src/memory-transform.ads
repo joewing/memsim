@@ -56,6 +56,21 @@ package Memory.Transform is
    function Forward_Get_Time(mem : Transform_Type) return Time_Type;
 
    overriding
+   procedure Generate(mem  : in Transform_Type;
+                      sigs : in out Unbounded_String;
+                      code : in out Unbounded_String);
+
+   procedure Generate_Simple(mem    : in Transform_Type;
+                             sigs   : in out Unbounded_String;
+                             code   : in out Unbounded_String) is abstract;
+
+   procedure Generate_Banked(mem    : in Transform_Type;
+                             sigs   : in out Unbounded_String;
+                             code   : in out Unbounded_String) is abstract;
+
+   function Is_Empty(mem : Transform_Type) return Boolean;
+
+   overriding
    procedure Adjust(mem : in out Transform_Type);
 
    overriding
