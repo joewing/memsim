@@ -489,8 +489,13 @@ package body Memory.Super is
       -- rather than adding or removing components.
       case RNG.Random(mem.generator.all) mod 16 is
          when 0      =>    -- Insert a component.
-            pos := RNG.Random(mem.generator.all) mod (len + 1);
-            Insert_Memory(mem, mem.current, pos, left, False);
+            if Cost_Type(len) >= mem.max_cost then
+               pos := RNG.Random(mem.generator.all) mod len;
+               Remove_Memory(mem.current, pos);
+            else
+               pos := RNG.Random(mem.generator.all) mod (len + 1);
+               Insert_Memory(mem, mem.current, pos, left, False);
+            end if;
          when 1 .. 3 =>    -- Remove a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
