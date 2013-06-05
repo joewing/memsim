@@ -13,22 +13,28 @@ package body Memory.Transform is
       trans    : Address_Type := Apply(Transform_Type'Class(mem), start, dir);
       total    : Address_Type := 0;
 
+      incr     : Address_Type;
       nsize    : Address_Type;
       last     : Address_Type;
       temp     : Address_Type;
 
    begin
 
+      incr := Address_Type(Get_Alignment(Transform_Type'Class(mem)));
+      while (address mod incr) /= 0 loop
+         incr := incr / 2;
+      end loop;
+
       while total < size loop
 
          -- Determine how big we can make the current access.
          last := trans;
-         nsize := 1;
+         nsize := Address_Type'Min(size - total, incr);
          while total + nsize < size loop
             temp := Apply(Transform_Type'Class(mem), start + nsize, dir);
-            exit when last + 1 /= temp;
+            exit when last + incr /= temp;
             last := temp;
-            nsize := nsize + 1;
+            nsize := Address_Type'Min(size - total, nsize + incr);
          end loop;
 
          -- Perform the access.
@@ -142,6 +148,11 @@ package body Memory.Transform is
    begin
       return mem.bank /= null and then mem.bank.all in Join_Type'Class;
    end Is_Empty;
+
+   function Get_Alignment(mem : Transform_Type) return Positive is
+   begin
+      return 1;
+   end Get_Alignment;
 
    procedure Generate(mem  : in Transform_Type;
                       sigs : in out Unbounded_String;

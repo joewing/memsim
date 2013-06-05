@@ -176,4 +176,9 @@ package body Memory.Transform.Flip is
 
    end Generate_Banked;
 
+   function Get_Alignment(mem : Flip_Type) return Positive is
+   begin
+      return Get_Word_Size(mem);
+   end Get_Alignment;
+
 end Memory.Transform.Flip;

@@ -83,4 +83,6 @@ private
       bank : access Memory_Type'Class := null;
    end record;
 
+   function Get_Alignment(mem : Transform_Type) return Positive;
+
 end Memory.Transform;

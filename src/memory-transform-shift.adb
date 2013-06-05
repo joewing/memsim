@@ -217,4 +217,9 @@ package body Memory.Transform.Shift is
       return Is_Empty(Transform_Type(mem)) or mem.shift = 0;
    end Is_Empty;
 
+   function Get_Alignment(mem : Shift_Type) return Positive is
+   begin
+      return Get_Word_Size(mem);
+   end Get_Alignment;
+
 end Memory.Transform.Shift;

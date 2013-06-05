@@ -51,5 +51,7 @@ private
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type;
 
+   overriding
+   function Get_Alignment(mem : Offset_Type) return Positive;
 
 end Memory.Transform.Offset;

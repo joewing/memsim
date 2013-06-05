@@ -239,4 +239,13 @@ package body Memory.Transform.Offset is
       return Is_Empty(Transform_Type(mem)) or mem.offset = 0;
    end Is_Empty;
 
+   function Get_Alignment(mem : Offset_Type) return Positive is
+      alignment   : Address_Type := 1;
+   begin
+      while (mem.offset mod alignment) = 0 and alignment < 2 ** 16 loop
+         alignment := alignment * 2;
+      end loop;
+      return Positive(alignment);
+   end Get_Alignment;
+
 end Memory.Transform.Offset;
