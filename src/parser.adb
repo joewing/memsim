@@ -153,7 +153,7 @@ package body Parser is
    procedure Push_Wrapper(parser    : in out Parser_Type;
                           wrapper   : in Wrapper_Pointer;
                           count     : in Positive := 1) is
-      last : constant Natural := Natural(count) - 1;
+      last : constant Natural := Natural(count);
    begin
       parser.wrappers.Append(Wrapper_Node'(wrapper, 0, last));
    end Push_Wrapper;
