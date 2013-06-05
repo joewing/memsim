@@ -16,7 +16,7 @@ package body Test.Prefetch is
                                                      latency         => 1,
                                                      policy          => LRU,
                                                      write_back      => True);
-      prefetch : Prefetch_Pointer := Create_Prefetch(cache, 8, 1);
+      prefetch : Prefetch_Pointer := Create_Prefetch(cache, 8);
 
    begin
 

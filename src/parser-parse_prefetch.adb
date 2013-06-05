@@ -6,7 +6,6 @@ procedure Parse_Prefetch(parser   : in out Parser_Type;
                          result  : out Memory_Pointer) is
    mem         : Memory_Pointer := null;
    stride      : Address_Type := 1;
-   multiplier  : Address_Type := 1;
 begin
    while Get_Type(parser) = Open loop
       Match(parser, Open);
@@ -26,8 +25,6 @@ begin
                Match(parser, Literal);
                if name = "stride" then
                   stride := Address_Type'Value(value);
-               elsif name = "multiplier" then
-                  multiplier := Address_Type'Value(value);
                else
                   Raise_Error(parser,
                               "invalid attribute in prefetch: " & name);
@@ -40,8 +37,7 @@ begin
    if mem = null then
       Raise_Error(parser, "memory not set in prefetch");
    end if;
-   result := Memory_Pointer(Prefetch.Create_Prefetch(mem, stride,
-                                                     multiplier));
+   result := Memory_Pointer(Prefetch.Create_Prefetch(mem, stride));
 exception
    when Data_Error | Constraint_Error =>
       Destroy(mem);

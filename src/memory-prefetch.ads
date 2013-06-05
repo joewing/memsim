@@ -8,8 +8,7 @@ package Memory.Prefetch is
    type Prefetch_Pointer is access all Prefetch_Type'Class;
 
    function Create_Prefetch(mem        : access Memory_Type'Class;
-                            stride     : Address_Type := 1;
-                            multiplier : Address_Type := 1)
+                            stride     : Address_Type := 1)
                             return Prefetch_Pointer;
 
    function Random_Prefetch(next       : access Memory_Type'Class;
@@ -61,7 +60,6 @@ private
    type Prefetch_Type is new Container_Type with record
       pending     : Time_Type := 0;
       stride      : Address_Type := 1;
-      multiplier  : Address_Type := 1;
    end record;
 
 end Memory.Prefetch;

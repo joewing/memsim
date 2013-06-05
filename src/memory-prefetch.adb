@@ -4,13 +4,11 @@ with Ada.Assertions; use Ada.Assertions;
 package body Memory.Prefetch is
 
    function Create_Prefetch(mem        : access Memory_Type'Class;
-                            stride     : Address_Type := 1;
-                            multiplier : Address_Type := 1)
+                            stride     : Address_Type := 1)
                             return Prefetch_Pointer is
       result : constant Prefetch_Pointer := new Prefetch_Type;
    begin
       result.stride     := stride;
-      result.multiplier := multiplier;
       Set_Memory(result.all, mem);
       return result;
    end Create_Prefetch;
@@ -19,7 +17,8 @@ package body Memory.Prefetch is
                             generator  : RNG.Generator;
                             max_cost   : Cost_Type)
                             return Memory_Pointer is
-      result : Prefetch_Pointer := new Prefetch_Type;
+      result   : Prefetch_Pointer := new Prefetch_Type;
+      wsize    : constant Positive := Get_Word_Size(next.all);
    begin
       Set_Memory(result.all, next);
       if Get_Cost(result.all) > max_cost then
@@ -27,8 +26,8 @@ package body Memory.Prefetch is
          Destroy(Memory_Pointer(result));
          return Memory_Pointer(next);
       end if;
-      result.stride     := Address_Type(RNG.Random(generator) mod 3) - 1;
-      result.multiplier := Address_Type(RNG.Random(generator) mod 3) - 1;
+      result.stride := Address_Type(RNG.Random(generator) mod 3) - 1;
+      result.stride := result.stride * Address_Type(wsize);
       return Memory_Pointer(result);
    end Random_Prefetch;
 
@@ -41,17 +40,13 @@ package body Memory.Prefetch is
    procedure Permute(mem         : in out Prefetch_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
+      wsize : constant Positive := Get_Word_Size(mem);
    begin
-      case RNG.Random(generator) mod 4 is
-         when 0      =>    -- Increment stride
-            mem.stride := mem.stride + 1;
-         when 1      =>    -- Decrement stride
-            mem.stride := mem.stride - 1;
-         when 2      =>    -- Increment multiplier
-            mem.multiplier := mem.multiplier + 1;
-         when others =>    -- Decrement multiplier
-            mem.multiplier := mem.multiplier - 1;
-      end case;
+      if (RNG.Random(generator) mod 2) = 0 then
+         mem.stride := mem.stride + Address_Type(wsize);
+      else
+         mem.stride := mem.stride - Address_Type(wsize);
+      end if;
    end Permute;
 
    procedure Reset(mem : in out Prefetch_Type) is
@@ -73,9 +68,8 @@ package body Memory.Prefetch is
 
       -- Prefetch the next address and save the time needed for the fetch.
       declare
-         next_address : Address_Type;
+         next_address : constant Address_Type := address + mem.stride;
       begin
-         next_address := address * mem.multiplier + mem.stride;
          Start(mem);
          Do_Read(mem, next_address, 1);
          Commit(mem, mem.pending);
@@ -122,13 +116,6 @@ package body Memory.Prefetch is
          Append(result, "-" & To_String(-mem.stride));
       else
          Append(result, To_String(mem.stride));
-      end if;
-      Append(result, ")");
-      Append(result, "(multiplier ");
-      if (mem.multiplier and 2 ** 63) /= 0 then
-         Append(result, "-" & To_String(-mem.multiplier));
-      else
-         Append(result, To_String(mem.multiplier));
       end if;
       Append(result, ")");
       Append(result, "(memory ");
