@@ -169,6 +169,7 @@ begin
       update(clk, mem_we, mem_ready);
 
       -- Test some reads.
+      mem_mask <= (others => '1');
       mem_addr <= x"00000000_00000001";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"AAAAAAAA_55555555"
@@ -183,7 +184,6 @@ begin
          report "read failed" severity failure;
 
       -- Test some reads/writes.
-      mem_mask <= (others => '1');
       for j in 2 to 10 loop
          for i in 1 to j loop
             mem_addr <= std_logic_vector(to_unsigned(i, ADDR_WIDTH));
