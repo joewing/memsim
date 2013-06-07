@@ -7,10 +7,10 @@ all: run-tb
 run-tb:
 	ghdl -a $(FILES)
 	ghdl -e tb
-	ghdl -r tb --stop-time=1ms
+	ghdl -r tb --ieee-asserts=disable --stop-time=1ms
 
 run-trace:
 	ghdl -a $(FILES)
 	ghdl -e trace
-	ghdl -r trace 
+	ghdl -r trace --ieee-asserts-disable
 
