@@ -36,7 +36,7 @@ architecture spm_arch of spm is
 
    signal data    : word_array_type;
    signal value   : word_type;
-   signal raddr   : unsigned(ADDR_WIDTH - 1 downto 0);
+   signal raddr   : natural;
    signal rin     : std_logic_vector(WORD_WIDTH - 1 downto 0);
    signal rre     : std_logic;
    signal rwe     : std_logic;
@@ -45,16 +45,16 @@ architecture spm_arch of spm is
 begin
 
    process(clk)
-      variable top      : natural;
-      variable bottom   : natural;
    begin
       if clk'event and clk = '1' then
          if rst = '0' then
             if rre = '1' then
-               value <= data(to_integer(raddr));
+               value <= data(raddr);
             elsif rwe = '1' then
-               -- FIXME: using the mask causes problems in ISE.
-               data(to_integer(raddr)) <= rin;
+               for b in 0 to (WORD_WIDTH / 8) - 1 loop
+                  data(raddr)(b * 8 + 7 downto b * 8)
+                     <= rin(b * 8 + 7 downto b * 8);
+               end loop;
             end if;
          end if;
       end if;
@@ -68,7 +68,7 @@ begin
             rwe <= '0';
          else
             if unsigned(addr) < SIZE then
-               raddr <= unsigned(addr);
+               raddr <= to_integer(unsigned(addr));
                rre   <= re;
                rwe   <= we;
                rin   <= din;
