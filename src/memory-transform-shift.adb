@@ -27,15 +27,8 @@ package body Memory.Transform.Shift is
 
    procedure Set_Shift(mem    : in out Shift_Type;
                        shift  : in Integer) is
-      abits    : constant Integer := Address_Type'Size;  -- FIXME
-      wsize    : constant Integer := Get_Word_Size(mem);
-      wbits    : constant Integer := Log2(wsize);
    begin
-      if shift < 0 then
-         mem.shift := (abits - wbits + shift + 1) mod Address_Type'Size;
-      else
-         mem.shift := shift mod Address_Type'Size;
-      end if;
+      mem.shift := shift;
    end Set_Shift;
 
    function Clone(mem : Shift_Type) return Memory_Pointer is
@@ -63,14 +56,20 @@ package body Memory.Transform.Shift is
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type is
       abits    : constant Integer      := Address_Type'Size;   -- FIXME
-      shift    : constant Integer      := mem.shift;
       wsize    : constant Address_Type := Address_Type(Get_Word_Size(mem));
+      wbits    : constant Natural      := Log2(Natural(wsize));
       caddr    : constant Address_Type := address mod wsize;
       saddr    : constant Address_Type := address / wsize;
-      rmult    : constant Address_Type := Address_Type(2) ** shift;
-      lmult    : constant Address_Type
-                  := Address_Type(2) ** (abits - shift) / wsize;
+      shift    : Integer := mem.shift;
+      rmult    : Address_Type;
+      lmult    : Address_Type;
    begin
+      if shift < 0 then
+         shift := (abits - wbits + shift + 1);
+      end if;
+      shift := shift mod (abits - wbits);
+      rmult := Address_Type(2) ** shift;
+      lmult := Address_Type(2) ** (abits - shift) / wsize;
       if dir then
          if lmult /= 0 then
             return ((saddr * rmult) or (saddr / lmult)) * wsize or caddr;

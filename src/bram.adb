@@ -3,7 +3,13 @@ with Util; use Util;
 
 package body BRAM is
 
-   BRAM_WIDTH  : constant := 36;
+   -- BRAM sizes:
+   --    Virtex 4:   36 x 512
+   --    Virtex 5:   72 x 512
+   --    Virtex 6:   72 x 512
+   --    Virtex 7:   72 x 512
+
+   BRAM_WIDTH  : constant := 72;
    BRAM_DEPTH  : constant := 512;
 
    function Get_Count(width : Natural;

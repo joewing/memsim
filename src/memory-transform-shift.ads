@@ -43,7 +43,7 @@ package Memory.Transform.Shift is
 private
 
    type Shift_Type is new Transform_Type with record
-      shift : Natural;
+      shift : Integer;
    end record;
 
    overriding

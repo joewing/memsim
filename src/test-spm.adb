@@ -14,7 +14,7 @@ package body Test.SPM is
 
       Check(Get_Time(spm.all) = 0);
       Check(Get_Writes(spm.all) = 0);
-      Check(Get_Cost(spm.all) = 2);
+      Check(Get_Cost(spm.all) = 1);
 
       Read(spm.all, 0, 1);
       Check(Get_Time(spm.all) = 1);
