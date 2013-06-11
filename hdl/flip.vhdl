@@ -3,11 +3,10 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity shift is
+entity flip is
    generic (
-      ADDR_WIDTH     : natural := 32;
-      WORD_WIDTH     : natural := 32;
-      SHIFT          : integer := 0
+      ADDR_WIDTH  : natural := 32;
+      WORD_WIDTH  : natural := 32
    );
    port (
       clk      : in  std_logic;
@@ -27,17 +26,17 @@ entity shift is
       mmask    : out std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       mready   : in  std_logic
    );
-end shift;
+end flip;
 
-architecture shift_arch of shift is
+architecture flip_arch of flip is
 begin
 
-   shift_positive : if SHIFT >= 0 generate
-      maddr <= std_logic_vector(rotate_left(unsigned(addr), SHIFT));
-   end generate;
-   shift_negative : if SHIFT < 0 generate
-      maddr <= std_logic_vector(rotate_right(unsigned(addr), -SHIFT));
-   end generate;
+   process(addr)
+   begin
+      for i in 0 to ADDR_WIDTH - 1 loop
+         maddr(i) <= addr(ADDR_WIDTH - i - 1);
+      end loop;
+   end process;
 
    mout  <= din;
    dout  <= min;
@@ -46,4 +45,4 @@ begin
    mmask <= mask;
    ready <= mready;
 
-end shift_arch;
+end flip_arch;
