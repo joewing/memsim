@@ -163,9 +163,6 @@ package body Memory.Super is
                   size     : in Positive) is
    begin
       mem.current_length := mem.current_length + 1;
-      if mem.current_length > mem.total_length then
-         mem.total_length := mem.current_length;
-      end if;
       Read(Container_Type(mem), address, size);
       if Get_Value(mem'Access) > mem.best_value then
          raise Prune_Error;
@@ -177,9 +174,6 @@ package body Memory.Super is
                    size    : in Positive) is
    begin
       mem.current_length := mem.current_length + 1;
-      if mem.current_length > mem.total_length then
-         mem.total_length := mem.current_length;
-      end if;
       Write(Container_Type(mem), address, size);
       if Get_Value(mem'Access) > mem.best_value then
          raise Prune_Error;
@@ -655,9 +649,17 @@ package body Memory.Super is
    begin
 
       -- Scale the result if necessary.
+      if mem.current_length > mem.total_length then
+         mem.total_length := mem.current_length;
+      end if;
       if mem.current_length /= mem.total_length then
-         value := Value_Type(Float(value) * Float(mem.total_length) /
-                             Float(mem.current_length));
+         Put_Line("Prune");
+         value := Value_Type(Long_Float(value) * Long_Float(mem.total_length) /
+                             Long_Float(mem.current_length));
+         if value < mem.best_value then
+            Put_Line("Prune overflow");
+            value := mem.best_value + 1;
+         end if;
       end if;
 
       -- Keep track of the best memory.
