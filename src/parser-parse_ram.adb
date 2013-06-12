@@ -6,6 +6,7 @@ procedure Parse_RAM(parser : in out Parser_Type;
                     result : out Memory_Pointer) is
 
    latency     : Time_Type := 1;
+   burst       : Time_Type := 0;
    word_size   : Positive  := 8;
    word_count  : Natural   := 65536;
 
@@ -22,6 +23,8 @@ begin
             Match(parser, Literal);
             if name = "latency" then
                latency := Time_Type'Value(value);
+            elsif name = "burst" then
+               burst := Time_Type'Value(value);
             elsif name = "word_size" then
                word_size := Positive'Value(value);
             elsif name = "word_count" then
@@ -33,7 +36,8 @@ begin
       end;
       Match(parser, Close);
    end loop;
-   result := Memory_Pointer(RAM.Create_RAM(latency, word_size, word_count));
+   result := Memory_Pointer(RAM.Create_RAM(latency, burst,
+                                           word_size, word_count));
 exception
    when Data_Error | Constraint_Error =>
       Raise_Error(parser, "invalid value in ram");

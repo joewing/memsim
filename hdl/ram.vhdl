@@ -5,10 +5,11 @@ use ieee.numeric_std.all;
 
 entity ram is
    generic (
-      ADDR_WIDTH  : in natural := 64;
-      WORD_WIDTH  : in natural := 64;
-      SIZE        : in natural := 65536;
-      LATENCY     : in natural := 10
+      ADDR_WIDTH  : natural := 64;
+      WORD_WIDTH  : natural := 64;
+      SIZE        : natural := 65536;
+      LATENCY     : natural := 10;
+      BURST       : natural := 0
    );
    port (
       clk      : in  std_logic;

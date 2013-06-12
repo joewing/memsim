@@ -6,6 +6,7 @@ package Memory.RAM is
    type RAM_Pointer is access all RAM_Type'Class;
 
    function Create_RAM(latency      : Time_Type := 1;
+                       burst        : Time_Type := 0;
                        word_size    : Positive  := 8;
                        word_count   : Natural   := 65536) return RAM_Pointer;
 
@@ -46,6 +47,7 @@ private
 
    type RAM_Type is new Memory_Type with record
       latency     : Time_Type    := 1;
+      burst       : Time_Type    := 0;
       word_size   : Positive     := 8;
       word_count  : Natural      := 65536;
       writes      : Long_Integer := 0;

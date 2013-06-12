@@ -2,11 +2,13 @@
 package body Memory.RAM is
 
    function Create_RAM(latency    : Time_Type := 1;
+                       burst      : Time_Type := 0;
                        word_size  : Positive  := 8;
                        word_count : Natural   := 65536) return RAM_Pointer is
       result : constant RAM_Pointer := new RAM_Type;
    begin
       result.latency    := latency;
+      result.burst      := burst;
       result.word_size  := word_size;
       result.word_count := word_count;
       return result;
@@ -29,10 +31,15 @@ package body Memory.RAM is
                   size     : in Positive) is
       word     : constant Address_Type := Address_Type(mem.word_size);
       offset   : constant Natural      := Natural(address mod word);
-      count    : constant Positive     := (size + mem.word_size + offset - 1) /
+      count    : constant Natural      := (size + mem.word_size + offset - 1) /
                                           mem.word_size;
    begin
-      Advance(mem, mem.latency * Time_Type(count));
+      if mem.burst = 0 then
+         Advance(mem, mem.latency * Time_Type(count));
+      else
+         Advance(mem, mem.latency);
+         Advance(mem, mem.burst * Time_Type(count - 1));
+      end if;
    end Read;
 
    procedure Write(mem     : in out RAM_Type;
@@ -40,10 +47,15 @@ package body Memory.RAM is
                    size    : in Positive) is
       word     : constant Address_Type := Address_Type(mem.word_size);
       offset   : constant Natural      := Natural(address mod word);
-      count    : constant Positive     := (size + mem.word_size + offset - 1) /
+      count    : constant Natural      := (size + mem.word_size + offset - 1) /
                                           mem.word_size;
    begin
-      Advance(mem, mem.latency * Time_Type(count));
+      if mem.burst = 0 then
+         Advance(mem, mem.latency * Time_Type(count));
+      else
+         Advance(mem, mem.latency);
+         Advance(mem, mem.burst * Time_Type(count - 1));
+      end if;
       mem.writes := mem.writes + 1;
    end Write;
 
@@ -52,6 +64,9 @@ package body Memory.RAM is
    begin
       Append(result, "(ram ");
       Append(result, "(latency" & Time_Type'Image(mem.latency) & ")");
+      if mem.burst /= 0 then
+         Append(result, "(burst" & Time_Type'Image(mem.burst) & ")");
+      end if;
       Append(result, "(word_size" & Positive'Image(mem.word_size) & ")");
       Append(result, "(word_count" & Natural'Image(mem.word_count) & ")");
       Append(result, ")");
@@ -80,6 +95,7 @@ package body Memory.RAM is
       words       : constant Natural := mem.word_count;
       word_bits   : constant Natural := 8 * Get_Word_Size(mem);
       latency     : constant Time_Type := mem.latency;
+      burst       : constant Time_Type := mem.burst;
    begin
       Declare_Signals(sigs, name, word_bits);
       Line(code, name & "_inst : entity work.ram");
@@ -87,7 +103,8 @@ package body Memory.RAM is
       Line(code, "      ADDR_WIDTH      => ADDR_WIDTH,");
       Line(code, "      WORD_WIDTH      => " & To_String(word_bits) & ",");
       Line(code, "      SIZE            => " & To_String(words) & ",");
-      Line(code, "      LATENCY         => " & To_String(latency));
+      Line(code, "      LATENCY         => " & To_String(latency) & ",");
+      Line(code, "      BURST           => " & To_String(burst));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");
