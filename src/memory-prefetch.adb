@@ -1,6 +1,4 @@
 
-with Ada.Assertions; use Ada.Assertions;
-
 package body Memory.Prefetch is
 
    function Create_Prefetch(mem        : access Memory_Type'Class;
@@ -133,8 +131,48 @@ package body Memory.Prefetch is
    procedure Generate(mem  : in Prefetch_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is
+      wsize       : constant Natural := Get_Word_Size(mem);
+      word_bits   : constant Natural := 8 * wsize;
+      other       : constant Memory_Pointer := Get_Memory(mem);
+      name        : constant String := "m" & To_String(Get_ID(mem));
+      oname       : constant String := "m" & To_String(Get_ID(other.all));
+      stride      : constant Address_Type := mem.stride;
    begin
-      Assert(False, "Memory.Prefetch.Generate not implemented");
+
+      Generate(other.all, sigs, code);
+      Declare_Signals(sigs, name, word_bits);
+
+      Line(code, name & "_inst : entity work.prefetch");
+      Line(code, "   generic map (");
+      Line(code, "      ADDR_WIDTH  => ADDR_WIDTH,");
+      Line(code, "      WORD_WIDTH  => " & To_String(word_bits) & ",");
+      if (stride and 2 ** 63) /= 0 then
+         Line(code, "      STRIDE      => -" &
+              To_String((-stride) / Address_Type(wsize)));
+      else
+         Line(code, "      STRIDE      => " &
+              To_String(stride / Address_Type(wsize)));
+      end if;
+      Line(code, "   )");
+      Line(code, "   port map (");
+      Line(code, "      clk      => clk,");
+      Line(code, "      rst      => rst,");
+      Line(code, "      addr     => " & name & "_addr,");
+      Line(code, "      din      => " & name & "_din,");
+      Line(code, "      dout     => " & name & "_dout,");
+      Line(code, "      re       => " & name & "_re,");
+      Line(code, "      we       => " & name & "_we,");
+      Line(code, "      mask     => " & name & "_mask,");
+      Line(code, "      ready    => " & name & "_ready,");
+      Line(code, "      maddr    => " & oname & "_addr,");
+      Line(code, "      min      => " & oname & "_dout,");
+      Line(code, "      mout     => " & oname & "_din,");
+      Line(code, "      mre      => " & oname & "_re,");
+      Line(code, "      mwe      => " & oname & "_we,");
+      Line(code, "      mmask    => " & oname & "_mask,");
+      Line(code, "      mready   => " & oname & "_ready");
+      Line(code, "   );");
+
    end Generate;
 
 end Memory.Prefetch;
