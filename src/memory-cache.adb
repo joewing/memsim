@@ -208,6 +208,14 @@ package body Memory.Cache is
          param := (param + 1) mod param_count;
       end loop;
 
+      -- Update the latency based on the associativity and policy.
+      case mem.policy is
+         when PLRU   =>
+            mem.latency := 3 + Time_Type(mem.associativity) / 8;
+         when others =>
+            mem.latency := 3 + Time_Type(mem.associativity) / 4;
+      end case;
+
       mem.data.Set_Length(Count_Type(mem.line_count));
       for i in line_count .. mem.line_count - 1 loop
          mem.data.Replace_Element(i, new Cache_Data);
