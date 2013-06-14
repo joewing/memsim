@@ -14,6 +14,7 @@ entity cache is
          -- 0: LRU
          -- 1: MRU
          -- 2: FIFO
+         -- 3: PLRU
       WRITE_POLICY      : in natural := 0
          -- 0: write-back,    write-allocate
          -- 1: write-through, write-around
@@ -58,7 +59,17 @@ architecture cache_arch of cache is
       end case;
    end get_dirty_bits;
 
-   constant AGE_BITS       : natural := ASSOC_BITS;
+   function get_age_bits return natural is
+   begin
+      case REPLACEMENT is
+         when 3 =>   -- PRLU requires 1 bit per way
+            return 1;
+         when others =>
+            return ASSOC_BITS;
+      end case;
+   end get_age_bits;
+
+   constant AGE_BITS       : natural := get_age_bits;
    constant LINE_BITS      : natural := WORD_WIDTH * LINE_SIZE;
 
    function get_way_bits return natural is
@@ -215,6 +226,8 @@ begin
                is_oldest := unsigned(temp_age) > unsigned(ages(i));
             when 2      => -- FIFO
                is_oldest := unsigned(temp_age) < unsigned(ages(i));
+            when 3      => -- PLRU
+               is_oldest := ages(i) = "00";
             when others =>
                report "invalid replacement policy" severity failure;
          end case;
@@ -466,24 +479,34 @@ begin
 
    -- Update ages.
    process(oldest_age, ages, hit_way, is_hit, hit_age, oldest_way)
+      variable reset_bits : boolean;
    begin
+      if REPLACEMENT = 3 then
+         reset_bits := true;
+         for i in 0 to ASSOCIATIVITY - 1 loop
+            if ages(i)(0) = '0' then
+               if is_hit = '1' and unsigned(hit_way) /= i then
+                  reset_bits := false;
+               elsif is_hit = '0' and unsigned(oldest_way) /= i then
+                  reset_bits := false;
+               end if;
+            end if;
+         end loop;
+      end if;
       for i in 0 to ASSOCIATIVITY - 1 loop
+         updated_ages(i) <= ages(i);
          if REPLACEMENT = 0 then -- LRU
             if is_hit = '1' then
                if i = unsigned(hit_way) then
                   updated_ages(i) <= (others => '0');
                elsif unsigned(ages(i)) <= unsigned(hit_age) then
                   updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
-               else
-                  updated_ages(i) <= ages(i);
                end if;
             else
                if i = unsigned(oldest_way) then
                   updated_ages(i) <= (others => '0');
                elsif unsigned(ages(i)) <= unsigned(oldest_age) then
                   updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
-               else
-                  updated_ages(i) <= ages(i);
                end if;
             end if;
          elsif REPLACEMENT = 1 then -- MRU
@@ -492,11 +515,7 @@ begin
                   updated_ages(i) <= (others => '0');
                elsif unsigned(ages(i)) <= unsigned(hit_age) then
                   updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
-               else
-                  updated_ages(i) <= ages(i);
                end if;
-            else
-               updated_ages(i) <= ages(i);
             end if;
          elsif REPLACEMENT = 2 then -- FIFO
             if is_hit = '0' then
@@ -505,8 +524,20 @@ begin
                else
                   updated_ages(i) <= std_logic_vector(unsigned(ages(i)) + 1);
                end if;
+            end if;
+         elsif REPLACEMENT = 3 then -- PRLU
+            if is_hit = '1' then
+               if unsigned(hit_way) = i then
+                  updated_ages(i) <= "11";
+               elsif reset_bits then
+                  updated_ages(i) <= "00";
+               end if;
             else
-               updated_ages(i) <= ages(i);
+               if unsigned(oldest_way) = i then
+                  updated_ages(i) <= "11";
+               elsif reset_bits then
+                  updated_ages(i) <= "00";
+               end if;
             end if;
          else
             report "unimplemented policy" severity failure;

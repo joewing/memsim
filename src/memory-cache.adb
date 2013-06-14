@@ -233,17 +233,23 @@ package body Memory.Cache is
       line        : Natural;
       to_replace  : Natural := 0;
       age         : Long_Integer;
+      age_sum     : Natural;
 
    begin
 
       Advance(mem, mem.latency);
 
       -- Update the age of all items in this set.
+      age_sum := 0;
       for i in 0 .. mem.associativity - 1 loop
          line := first + i * set_count;
          data := mem.data.Element(line);
-         data.age := data.age + 1;
-         Assert(data.age > 0, "invalid age");
+         if mem.policy = PLRU then
+            age_sum := age_sum + Natural(data.age);
+         else
+            data.age := data.age + 1;
+            Assert(data.age > 0, "invalid age");
+         end if;
       end loop;
 
       -- First check if this address is already in the cache.
@@ -257,8 +263,28 @@ package body Memory.Cache is
          line := first + i * set_count;
          data := mem.data.Element(line);
          if tag = data.address then    -- Cache hit.
-            if mem.policy /= FIFO then
+            if mem.policy = PLRU then
+
+               -- Reset ages to 0 if we marked all of them.
+               if age_sum + 1 = mem.associativity then
+                  for j in 0 .. mem.associativity - 1 loop
+                     declare
+                        temp : Cache_Data_Pointer;
+                     begin
+                        temp := mem.data.Element(first + j * set_count);
+                        temp.age := 0;
+                     end;
+                  end loop;
+               end if;
+
+               -- Make this age most recently used.
+               data.age := 1;
+
+            elsif mem.policy /= FIFO then
+
+               -- Other policies reset the age to 0.
                data.age := 0;
+
             end if;
             if is_read or mem.write_back then
                data.dirty := data.dirty or not is_read;
@@ -268,6 +294,11 @@ package body Memory.Cache is
             return;
          elsif mem.policy = MRU then
             if data.age < age then
+               to_replace := line;
+               age := data.age;
+            end if;
+         elsif mem.policy = PLRU then
+            if data.age = 0 then
                to_replace := line;
                age := data.age;
             end if;
@@ -293,8 +324,24 @@ package body Memory.Cache is
          end if;
 
          data.address   := tag;
-         data.age       := 0;
          data.dirty     := not is_read;
+
+         -- Update the age.
+         if mem.policy = PLRU then
+            if age_sum + 1 = mem.associativity then
+               for j in 0 .. mem.associativity - 1 loop
+                  declare
+                     temp : Cache_Data_Pointer;
+                  begin
+                     temp := mem.data.Element(first + j * set_count);
+                     temp.age := 0;
+                  end;
+               end loop;
+            end if;
+            data.age := 1;
+         else
+            data.age := 0;
+         end if;
 
          -- Read the new entry.
          -- We skip this if this was a write that wrote the entire line.
@@ -369,6 +416,7 @@ package body Memory.Cache is
             when LRU    => Append(result, "lru");
             when MRU    => Append(result, "mru");
             when FIFO   => Append(result, "fifo");
+            when PLRU   => Append(result, "plru");
          end case;
          Append(result, ")");
       end if;
@@ -463,6 +511,8 @@ package body Memory.Cache is
             Line(code, "      REPLACEMENT     => 1,");
          when FIFO   =>
             Line(code, "      REPLACEMENT     => 2,");
+         when PLRU   =>
+            Line(code, "      REPLACEMENT     => 3,");
       end case;
       if mem.write_back then
          Line(code, "      WRITE_POLICY    => 0");

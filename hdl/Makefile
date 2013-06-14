@@ -12,5 +12,5 @@ run-tb:
 run-trace:
 	ghdl -a $(FILES)
 	ghdl -e trace
-	ghdl -r trace --ieee-asserts-disable
+	ghdl -r trace --ieee-asserts=disable
 

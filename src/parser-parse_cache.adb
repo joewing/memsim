@@ -15,7 +15,8 @@ procedure Parse_Cache(parser  : in out Parser_Type;
    policies : constant Policy_Map_Array := (
       (To_Unbounded_String("lru"),        Cache.LRU),
       (To_Unbounded_String("mru"),        Cache.MRU),
-      (To_Unbounded_String("fifo"),       Cache.FIFO)
+      (To_Unbounded_String("fifo"),       Cache.FIFO),
+      (To_Unbounded_String("plru"),       Cache.PLRU)
    );
 
    mem            : Memory_Pointer := null;

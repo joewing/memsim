@@ -11,7 +11,9 @@ package Memory.Cache is
 
    type Policy_Type is (LRU,        -- Least recently used
                         MRU,        -- Most recently used
-                        FIFO);      -- First-in first-out
+                        FIFO,       -- First-in, first-out
+                        PLRU        -- Pseudo-LRU
+   );
 
    function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
