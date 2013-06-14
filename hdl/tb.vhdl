@@ -53,7 +53,7 @@ architecture tb_arch of tb is
 
 begin
 
-   mem1 : entity work.memory
+   mem1 : entity work.mem
       generic map (
          ADDR_WIDTH  => ADDR_WIDTH,
          WORD_WIDTH  => WORD_WIDTH

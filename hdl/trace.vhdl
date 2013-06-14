@@ -279,7 +279,7 @@ begin
    mem_re   <= mem_ready when do_read = '1' else '0';
    mem_we   <= mem_ready when do_write = '1' else '0';
 
-   mem1 : entity work.memory
+   mem1 : entity work.mem
       generic map (
          ADDR_WIDTH => ADDR_BITS,
          WORD_WIDTH => WORD_BITS

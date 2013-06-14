@@ -9,7 +9,7 @@ with HDL_Generator;           use HDL_Generator;
 procedure MemGen is
 
    mem         : Memory_Pointer;
-   name        : Unbounded_String := To_Unbounded_String("memory");
+   name        : Unbounded_String := To_Unbounded_String("mem");
    addr_width  : Positive := 64;
    mem_index   : Integer := -1;
 
