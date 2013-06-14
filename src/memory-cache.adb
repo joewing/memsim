@@ -448,18 +448,27 @@ package body Memory.Cache is
 
       -- Bits to store the age.
       assoc       : constant Positive  := mem.associativity;
-      age_bits    : constant Natural   := Log2(assoc - 1);
 
       -- Bits used for storing valid and dirty.
       valid_bits  : constant Natural := 1;
       dirty_bits  : constant Natural := 1;
 
       -- Bits per way.  This is the width of the memory.
-      width       : Natural := valid_bits + line_bits + tag_bits + age_bits;
+      width       : Natural := valid_bits + line_bits + tag_bits;
 
       result : Cost_Type;
 
    begin
+
+      -- Determine the number of age bits.
+      if assoc > 1 then
+         case mem.policy is
+            when PLRU =>
+               width := width + 1;
+            when others =>
+               width := width + Log2(assoc - 1);
+         end case;
+      end if;
 
       -- If this cache is a write-back cache, we need to track a dirty
       -- bit for each cache line.
