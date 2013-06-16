@@ -60,13 +60,18 @@ package body Memory.Transform is
 
    end Process;
 
+   function Get_Name(mem : Transform_Type) return String is
+   begin
+      return mem.name;
+   end Get_Name;
+
    function Get_Bank(mem : Transform_Type) return Memory_Pointer is
    begin
       return Memory_Pointer(mem.bank);
    end Get_Bank;
 
    procedure Set_Bank(mem  : in out Transform_Type;
-                      bank : access Memory_Type'Class) is
+                      bank : in Memory_Pointer) is
    begin
       mem.bank := bank;
    end Set_Bank;

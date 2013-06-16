@@ -11,11 +11,6 @@ package Memory.Transform.Offset is
                           generator : RNG.Generator;
                           max_cost  : Cost_Type) return Memory_Pointer;
 
-   function Get_Offset(mem : Offset_Type) return Address_Type;
-
-   procedure Set_Offset(mem      : in out Offset_Type;
-                        offset   : in Address_Type);
-
    overriding
    function Clone(mem : Offset_Type) return Memory_Pointer;
 
@@ -42,9 +37,7 @@ package Memory.Transform.Offset is
 
 private
 
-   type Offset_Type is new Transform_Type with record
-      offset : Address_Type;
-   end record;
+   type Offset_Type is new Transform_Type with null record;
 
    overriding
    function Apply(mem      : Offset_Type;

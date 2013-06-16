@@ -1,86 +1,53 @@
 
-with Memory.Join; use Memory.Join;
+package body Memory.Transform.EOR is
 
-package body Memory.Transform.Offset is
-
-   function Create_Offset return Offset_Pointer is
+   function Create_EOR return EOR_Pointer is
    begin
-      return new Offset_Type(name = "offset");
-   end Create_Offset;
+      return new EOR_Type(name = "eor");
+   end Create_EOR;
 
-   function Random_Offset(next      : access Memory_Type'Class;
-                          generator : RNG.Generator;
-                          max_cost  : Cost_Type) return Memory_Pointer is
-      result   : constant Offset_Pointer := Create_Offset;
-      wsize    : constant Natural := Get_Word_Size(next.all);
-      base     : Address_Type;
+   function Random_EOR(next      : access Memory_Type'Class;
+                       generator : RNG.Generator;
+                       max_cost  : Cost_Type) return Memory_Pointer is
+      result   : EOR_Pointer := Create_EOR;
+      abits    : constant Positive := Address_Type'Size;
+      bit      : constant Positive := 2 ** (RNG.Random(generator) mod abits);
    begin
       Set_Memory(result.all, next);
-
-      if (RNG.Random(generator) mod 2) = 0 then
-         -- Byte offset.
-         base := Address_Type(RNG.Random(generator) mod wsize);
-      else
-         -- Word offset.
-         base := Address_Type(2) ** (RNG.Random(generator) mod 16);
-      end if;
-
-      if (RNG.Random(generator) mod 2) = 0 then
-         -- Negative offset.
-         result.value := 0 - wsize * base;
-      else
-         -- Positive offset.
-         result.value := wsize * base;
-      end if;
-
+      result.value := bit;
       return Memory_Pointer(result);
-   end Random_Offset;
+   end Random_EOR;
 
-   function Clone(mem : Offset_Type) return Memory_Pointer is
-      result : constant Offset_Pointer := new Offset_Type'(mem);
+   function Clone(mem : EOR_Type) return Memory_Pointer is
+      result : constant EOR_Pointer := new EOR_Type'(mem);
    begin
       return Memory_Pointer(result);
    end Clone;
 
-   procedure Permute(mem         : in out Offset_Type;
+   procedure Permute(mem         : in out EOR_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
-      wsize : constant Natural := Get_Word_Size(mem);
+      abits : constant Positive := Address_Type'Size;
+      bit   : constant Positive := 2 ** (RNG.Random(generator) mod abits);
    begin
-      case RNG.Random(generator) mod 4 is
-         when 0      => -- Add word offset
-            mem.value := mem.value + wsize;
-         when 1      => -- Subtract word offset.
-            mem.value := mem.value - wsize;
-         when 2      => -- Add byte offset
-            mem.value := mem.value + 1;
-         when others => -- Subtract byte offset
-            mem.value := mem.value - 1;
-      end case;
-   end Permute;
+      mem.value := mem.value xor bit;
+   end Permuate;
 
-   function Apply(mem      : Offset_Type;
-                  address  : Address_Type;
-                  dir      : Boolean) return Address_Type is
-      offset : Address_Type;
+   procedure Set_Value(mem    : in out EOR_Type;
+                       value  : in Integer) is
    begin
-      if mem.value < 0 then
-         offset := 0 - Address_Type(-mem.value);
+      if value < 0 then
+         mem.value := 0 - Address_Type(-value);
       else
-         offset := Address_Type(mem.value);
+         mem.value := Address_Type(value);
       end if;
-      if dir then
-         return address + offset;
-      else
-         return address - offset;
-      end if;
-   end Apply;
+   end Set_Value;
 
-   function To_String(mem : Offset_Type) return Unbounded_String is
+   function To_String(mem : EOR_Type) return Unbounded_String is
       result : Unbounded_String;
    begin
-      Append(result, "(offset ");
-      Append(result, "(value" & Integer'Image(mem.value) & ")");
+      Append(result, "(xor ");
+      Append(result, "(value" & Address_Type'Image(mem.value) & ")");
       if mem.bank /= null then
          Append(result, "(bank ");
          Append(result, To_String(To_String(mem.bank.all)));
@@ -93,25 +60,27 @@ package body Memory.Transform.Offset is
       return result;
    end To_String;
 
-   procedure Generate_Simple(mem  : in Offset_Type;
+   procedure Generate_Simple(mem  : in EOR_Type;
                              sigs : in out Unbounded_String;
                              code : in out Unbounded_String) is
+
       word_bits   : constant Natural := 8 * Get_Word_Size(mem);
       other       : constant Memory_Pointer  := Get_Memory(mem);
       name        : constant String := "m" & To_String(Get_ID(mem));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
-      offset      : constant Integer := mem.offset;
+      value       : constant Address_Type := mem.value;
+
    begin
 
       Generate(other.all, sigs, code);
       Declare_Signals(sigs, name, word_bits);
 
       -- Transform into the bank.
-      Line(code, name & "_inst : entity work.offset");
+      Line(code, name & "_inst : entity work.eor");
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
       Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
-      Line(code, "      OFFSET         => " & To_String(offset));
+      Line(code, "      VALUE          => " & To_String(value)):
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");
@@ -134,7 +103,7 @@ package body Memory.Transform.Offset is
 
    end Generate_Simple;
 
-   procedure Generate_Banked(mem  : in Offset_Type;
+   procedure Generate_Banked(mem  : in EOR_Type;
                              sigs : in out Unbounded_String;
                              code : in out Unbounded_String) is
       word_bits   : constant Natural := 8 * Get_Word_Size(mem);
@@ -145,7 +114,7 @@ package body Memory.Transform.Offset is
       bname       : constant String := "m" & To_String(Get_ID(bank.all));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
       jname       : constant String := "m" & To_String(Get_ID(join.all));
-      offset      : constant Address_Type := mem.offset;
+      value       : constant Address_Type := mem.value;
    begin
 
       Generate(other.all, sigs, code);
@@ -153,11 +122,11 @@ package body Memory.Transform.Offset is
       Declare_Signals(sigs, name, word_bits);
 
       -- Transform into the bank.
-      Line(code, name & "_inst : entity work.offset");
+      Line(code, name & "_inst : entity work.eor");
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
       Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
-      Line(code, "      OFFSET         => " & To_String(offset));
+      Line(code, "      VALUE          => " & To_String(value));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");
@@ -179,11 +148,11 @@ package body Memory.Transform.Offset is
       Line(code, "   );");
 
       -- Transform out of the bank.
-      Line(code, jname & "_inst : entity work.offset");
+      Line(code, jname & "_inst : entity work.eor");
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
       Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
-      Line(code, "      OFFSET         => " & To_String(-offset));
+      Line(code, "      VALUE          => " & To_String(value));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");
@@ -206,18 +175,26 @@ package body Memory.Transform.Offset is
 
    end Generate_Banked;
 
-   function Is_Empty(mem : Offset_Type) return Boolean is
+   function Is_Empty(mem : EOR_Type) return Boolean is
    begin
-      return Is_Empty(Transform_Type(mem)) or mem.value = 0;
+      return mem.value = 0;
    end Is_Empty;
 
-   function Get_Alignment(mem : Offset_Type) return Positive is
-      alignment   : Positive := 1;
+   function Apply(mem      : EOR_Type;
+                  address  : Address_Type;
+                  dir      : Boolean) return Address_Type is
    begin
-      while (mem.value mod alignment) = 0 and alignment < 2 ** 16 loop
-         alignment := alignment * 2;
+      return address xor mem.value;
+   end Apply;
+
+   function Get_Alignment(mem : EOR_Type) return Positive is
+   begin
+      for i in Address_Type range 0 .. 16 loop
+         if (mem.value and (2 ** i)) /= 0 then
+            return Positive(2 ** i);
+         end if;
       end loop;
-      return alignment;
+      return 2 ** 16;
    end Get_Alignment;
 
-end Memory.Transform.Offset;
+end Memory.Transform.EOR;

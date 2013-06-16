@@ -9,10 +9,15 @@ package Memory.Transform is
 
    type Transform_Pointer is access all Transform_Type'Class;
 
+   function Get_Name(mem : Transform_Type) return String;
+
    function Get_Bank(mem : Transform_Type) return Memory_Pointer;
 
    procedure Set_Bank(mem  : in out Transform_Type;
-                      bank : access Memory_Type'Class);
+                      bank : in Memory_Pointer);
+
+   procedure Set_Value(mem    : in out Transform_Type;
+                       value  : in Integer);
 
    overriding
    procedure Reset(mem : in out Transform_Type);
@@ -78,9 +83,10 @@ package Memory.Transform is
 
 private
 
-   type Transform_Type is abstract new Container_Type and Wrapper_Type with
-   record
-      bank : access Memory_Type'Class := null;
+   type Transform_Type(name : String) is abstract
+      new Container_Type and Wrapper_Type with record
+      bank  : access Memory_Type'Class := null;
+      value : Integer := 0;
    end record;
 
    function Get_Alignment(mem : Transform_Type) return Positive;

@@ -1,7 +1,7 @@
 
 package Memory.Wrapper is
 
-   type Wrapper_Type is interface;
+   type Wrapper_Type is limited interface;
 
    type Wrapper_Pointer is access all Wrapper_Type'Class;
 

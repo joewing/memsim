@@ -5,31 +5,19 @@ with Util;        use Util;
 package body Memory.Transform.Shift is
 
    function Create_Shift return Shift_Pointer is
-      result : constant Shift_Pointer := new Shift_Type;
    begin
-      return result;
+      return new Shift_Type(name = "shift");
    end Create_Shift;
 
    function Random_Shift(next       : access Memory_Type'Class;
                          generator  : RNG.Generator;
                          max_cost   : Cost_Type) return Memory_Pointer is
-      result : constant Shift_Pointer := new Shift_Type;
+      result : constant Shift_Pointer := Create_Shift;
    begin
       Set_Memory(result.all, next);
       result.shift := (RNG.Random(generator) mod 16) + 1;
       return Memory_Pointer(result);
    end Random_Shift;
-
-   function Get_Shift(mem : Shift_Type) return Integer is
-   begin
-      return mem.shift;
-   end Get_Shift;
-
-   procedure Set_Shift(mem    : in out Shift_Type;
-                       shift  : in Integer) is
-   begin
-      mem.shift := shift;
-   end Set_Shift;
 
    function Clone(mem : Shift_Type) return Memory_Pointer is
       result : constant Shift_Pointer := new Shift_Type'(mem);
@@ -41,14 +29,14 @@ package body Memory.Transform.Shift is
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
    begin
-      if mem.shift = 0 then
-         mem.shift := mem.shift + 1;
-      elsif mem.shift = Address_Type'Size then
-         mem.shift := mem.shift - 1;
+      if mem.value = 0 then
+         mem.value := mem.value + 1;
+      elsif mem.value = Address_Type'Size then
+         mem.value := mem.value - 1;
       elsif (RNG.Random(generator) mod 2) = 0 then
-         mem.shift := mem.shift + 1;
+         mem.value := mem.value + 1;
       else
-         mem.shift := mem.shift - 1;
+         mem.value := mem.value - 1;
       end if;
    end Permute;
 
@@ -60,7 +48,7 @@ package body Memory.Transform.Shift is
       wbits    : constant Natural      := Log2(Natural(wsize));
       caddr    : constant Address_Type := address mod wsize;
       saddr    : constant Address_Type := address / wsize;
-      shift    : Integer := mem.shift;
+      shift    : Integer := mem.value;
       rmult    : Address_Type;
       lmult    : Address_Type;
    begin
@@ -89,7 +77,7 @@ package body Memory.Transform.Shift is
       result : Unbounded_String;
    begin
       Append(result, "(shift ");
-      Append(result, "(value" & Natural'Image(mem.shift) & ")");
+      Append(result, "(value" & Natural'Image(mem.value) & ")");
       if mem.bank /= null then
          Append(result, "(bank ");
          Append(result, To_String(To_String(mem.bank.all)));
@@ -109,7 +97,7 @@ package body Memory.Transform.Shift is
       other       : constant Memory_Pointer  := Get_Memory(mem);
       name        : constant String := "m" & To_String(Get_ID(mem));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
-      shift       : constant Integer := mem.shift;
+      shift       : constant Integer := mem.value;
    begin
       Generate(other.all, sigs, code);
       Declare_Signals(sigs, name, word_bits);
@@ -150,8 +138,8 @@ package body Memory.Transform.Shift is
       bname       : constant String := "m" & To_String(Get_ID(bank.all));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
       jname       : constant String := "m" & To_String(Get_ID(join.all));
-      shift       : constant Integer := mem.shift;
-      ishift      : constant Integer := -mem.shift;
+      shift       : constant Integer := mem.value;
+      ishift      : constant Integer := -mem.value;
    begin
       Generate(other.all, sigs, code);
       Generate(bank.all, sigs, code);
@@ -213,7 +201,7 @@ package body Memory.Transform.Shift is
 
    function Is_Empty(mem : Shift_Type) return Boolean is
    begin
-      return Is_Empty(Transform_Type(mem)) or mem.shift = 0;
+      return Is_Empty(Transform_Type(mem)) or mem.value = 0;
    end Is_Empty;
 
    function Get_Alignment(mem : Shift_Type) return Positive is

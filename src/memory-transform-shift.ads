@@ -11,11 +11,6 @@ package Memory.Transform.Shift is
                          generator  : RNG.Generator;
                          max_cost   : Cost_Type) return Memory_Pointer;
 
-   function Get_Shift(mem : Shift_Type) return Integer;
-
-   procedure Set_Shift(mem    : in out Shift_Type;
-                       shift  : in Integer);
-
    overriding
    function Clone(mem : Shift_Type) return Memory_Pointer;
 
@@ -42,9 +37,7 @@ package Memory.Transform.Shift is
 
 private
 
-   type Shift_Type is new Transform_Type with record
-      shift : Integer;
-   end record;
+   type Shift_Type is new Transform_Type with null record;
 
    overriding
    function Apply(mem      : Shift_Type;

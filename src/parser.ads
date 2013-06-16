@@ -8,6 +8,8 @@ with Lexer;          use Lexer;
 
 package Parser is
 
+   type Parser_Type is limited private;
+
    function Parse(file_name : String) return Memory_Pointer;
 
 private
@@ -22,7 +24,7 @@ private
 
    Parse_Error : exception;
 
-   type Parser_Type is record
+   type Parser_Type is limited record
       lexer    : Lexer_Type;
       wrappers : Wrapper_Vectors.Vector;
    end record;

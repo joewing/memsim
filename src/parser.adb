@@ -10,6 +10,9 @@ package body Parser is
    procedure Parse_Dup(parser : in out Parser_Type;
                        result : out Memory_Pointer) is separate;
 
+   procedure Parse_EOR(parser : in out Parser_Type;
+                       result : out Memory_Pointer) is separate;
+
    procedure Parse_Flash(parser  : in out Parser_Type;
                          result  : out Memory_Pointer) is separate;
 
@@ -60,6 +63,7 @@ package body Parser is
    parser_map : constant Memory_Parser_Array := (
       (To_Unbounded_String("cache"),            Parse_Cache'Access),
       (To_Unbounded_String("dup"),              Parse_Dup'Access),
+      (To_Unbounded_String("eor"),              Parse_EOR'Access),
       (To_Unbounded_String("flash"),            Parse_Flash'Access),
       (To_Unbounded_String("flip"),             Parse_Flip'Access),
       (To_Unbounded_String("join"),             Parse_Join'Access),
