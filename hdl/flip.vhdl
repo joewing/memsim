@@ -6,7 +6,8 @@ use ieee.numeric_std.all;
 entity flip is
    generic (
       ADDR_WIDTH  : natural := 32;
-      WORD_WIDTH  : natural := 32
+      WORD_WIDTH  : natural := 32;
+      VALUE       : natural := 0
    );
    port (
       clk      : in  std_logic;

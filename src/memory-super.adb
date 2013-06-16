@@ -8,6 +8,7 @@ with Memory.Transform;        use Memory.Transform;
 with Memory.Transform.Flip;   use Memory.Transform.Flip;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
+with Memory.Transform.EOR;    use Memory.Transform.EOR;
 with Memory.Prefetch;         use Memory.Prefetch;
 with Memory.Split;            use Memory.Split;
 with Memory.Join;             use Memory.Join;
@@ -93,11 +94,13 @@ package body Memory.Super is
       join     : Join_Pointer;
       bank     : Memory_Pointer;
    begin
-      case RNG.Random(mem.generator.all) mod 3 is
+      case RNG.Random(mem.generator.all) mod 4 is
          when 0 =>
             result := Random_Flip(next, mem.generator.all, cost);
          when 1 =>
             result := Random_Offset(next, mem.generator.all, cost);
+         when 2 =>
+            result := Random_EOR(next, mem.generator.all, cost);
          when others =>
             result := Random_Shift(next, mem.generator.all, cost);
       end case;

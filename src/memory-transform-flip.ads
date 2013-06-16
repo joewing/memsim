@@ -20,17 +20,7 @@ package Memory.Transform.Flip is
                      max_cost    : in Cost_Type);
 
    overriding
-   function To_String(mem : Flip_Type) return Unbounded_String;
-
-   overriding
-   procedure Generate_Simple(mem    : in Flip_Type;
-                             sigs   : in out Unbounded_String;
-                             code   : in out Unbounded_String);
-
-   overriding
-   procedure Generate_Banked(mem    : in Flip_Type;
-                             sigs   : in out Unbounded_String;
-                             code   : in out Unbounded_String);
+   function Get_Name(mem : Flip_Type) return String;
 
 private
 

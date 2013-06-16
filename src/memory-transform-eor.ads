@@ -20,20 +20,10 @@ package Memory.Transform.EOR is
                      max_cost    : in Cost_Type);
 
    overriding
-   function To_String(mem : EOR_Type) return Unbounded_String;
-
-   overriding
-   procedure Generate_Simple(mem  : in EOR_Type;
-                             sigs : in out Unbounded_String;
-                             code : in out Unbounded_String);
-
-   overriding
-   procedure Generate_Banked(mem  : in EOR_Type;
-                             sigs : in out Unbounded_String;
-                             code : in out Unbounded_String);
-
-   overriding
    function Is_Empty(mem : EOR_Type) return Boolean;
+
+   overriding
+   function Get_Name(mem : EOR_Type) return String;
 
 private
 

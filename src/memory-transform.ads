@@ -9,7 +9,7 @@ package Memory.Transform is
 
    type Transform_Pointer is access all Transform_Type'Class;
 
-   function Get_Name(mem : Transform_Type) return String;
+   function Get_Name(mem : Transform_Type) return String is abstract;
 
    function Get_Bank(mem : Transform_Type) return Memory_Pointer;
 
@@ -61,17 +61,12 @@ package Memory.Transform is
    function Forward_Get_Time(mem : Transform_Type) return Time_Type;
 
    overriding
+   function To_String(mem : Transform_Type) return Unbounded_String;
+
+   overriding
    procedure Generate(mem  : in Transform_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);
-
-   procedure Generate_Simple(mem    : in Transform_Type;
-                             sigs   : in out Unbounded_String;
-                             code   : in out Unbounded_String) is abstract;
-
-   procedure Generate_Banked(mem    : in Transform_Type;
-                             sigs   : in out Unbounded_String;
-                             code   : in out Unbounded_String) is abstract;
 
    function Is_Empty(mem : Transform_Type) return Boolean;
 
@@ -85,7 +80,6 @@ private
 
    type Transform_Type is abstract new Container_Type and Wrapper_Type with
    record
-      name  : Unbounded_String;
       bank  : access Memory_Type'Class := null;
       value : Integer := 0;
    end record;

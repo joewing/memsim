@@ -7,7 +7,7 @@ entity offset is
    generic (
       ADDR_WIDTH     : in natural := 32;
       WORD_WIDTH     : in natural := 32;
-      OFFSET         : in integer := 0
+      VALUE          : in integer := 0
    );
    port (
       clk      : in  std_logic;
@@ -32,7 +32,7 @@ end offset;
 architecture offset_arch of offset is
 
    constant WORD_BYTES  : natural := WORD_WIDTH / 8;
-   constant BOFFSET     : natural := OFFSET mod WORD_BYTES;
+   constant BOFFSET     : natural := VALUE mod WORD_BYTES;
    constant ZERO_MASK   : std_logic_vector(WORD_BYTES - 1 downto 0)
                            := (others => '0');
 
@@ -55,7 +55,7 @@ begin
       process(addr)
          variable woffset : signed(ADDR_WIDTH - 1 downto 0);
       begin
-         woffset  := to_signed(OFFSET / WORD_WIDTH, ADDR_WIDTH);
+         woffset  := to_signed(VALUE / WORD_WIDTH, ADDR_WIDTH);
          maddr    <= std_logic_vector(signed(addr) + woffset);
       end process;
 
@@ -123,7 +123,7 @@ begin
       process(addr, next_addr, maska, maskb, first_word)
          variable woffset     : signed(ADDR_WIDTH - 1 downto 0);
       begin
-         woffset  := to_signed(OFFSET / WORD_WIDTH, ADDR_WIDTH);
+         woffset  := to_signed(VALUE / WORD_WIDTH, ADDR_WIDTH);
          if first_word = '1' then
             maddr <= std_logic_vector(signed(addr) + woffset);
             mmask <= maska;

@@ -3,11 +3,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity shift is
+entity eor is
    generic (
-      ADDR_WIDTH     : natural := 32;
-      WORD_WIDTH     : natural := 32;
-      VALUE          : integer := 0
+      ADDR_WIDTH     : in natural := 32;
+      WORD_WIDTH     : in natural := 32;
+      VALUE          : in integer := 0
    );
    port (
       clk      : in  std_logic;
@@ -27,23 +27,21 @@ entity shift is
       mmask    : out std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
       mready   : in  std_logic
    );
-end shift;
+end eor;
 
-architecture shift_arch of shift is
+architecture arch of eor is
+
+   constant WORD_VALUE : integer := VALUE / (WORD_WIDTH / 8);
+
 begin
 
-   shift_positive : if VALUE >= 0 generate
-      maddr <= std_logic_vector(rotate_left(unsigned(addr), VALUE));
-   end generate;
-   shift_negative : if VALUE < 0 generate
-      maddr <= std_logic_vector(rotate_right(unsigned(addr), -VALUE));
-   end generate;
+   dout     <= min;
+   mout     <= din;
+   mre      <= re;
+   mwe      <= we;
+   mmask    <= mask;
+   maddr    <= addr xor std_logic_vector(to_signed(WORD_VALUE, ADDR_WIDTH));
 
-   mout  <= din;
-   dout  <= min;
-   mre   <= re;
-   mwe   <= we;
-   mmask <= mask;
-   ready <= mready;
+   -- TODO: handle bits set in non-word positions of the address.
 
-end shift_arch;
+end arch;
