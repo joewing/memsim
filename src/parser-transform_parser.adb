@@ -60,7 +60,7 @@ package body Parser.Transform_Parser is
       Set_Memory(Container_Type'Class(trans.all), mem);
       Set_Bank(trans.all, bank);
 
-      Set_Value(T_Type'Class(trans.all), ivalue);
+      Set_Value(trans.all, ivalue);
 
       result := Memory_Pointer(trans);
 

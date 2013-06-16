@@ -16,7 +16,7 @@ package body Test.Offset is
       Set_Memory(bank.all, join);
       Set_Memory(offset.all, mem);
       Set_Bank(offset.all, bank);
-      Set_Offset(offset.all, 3);
+      Set_Value(offset.all, 3);
 
       Check(Get_Time(mem.all) = 0);
       Check(Get_Time(offset.all) = 0);

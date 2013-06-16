@@ -1,15 +1,19 @@
 
+with Memory.Join; use Memory.Join;
+
 package body Memory.Transform.EOR is
 
    function Create_EOR return EOR_Pointer is
+      result : constant EOR_Pointer := new EOR_Type;
    begin
-      return new EOR_Type(name = "eor");
+      result.name := To_Unbounded_String("eor");
+      return result;
    end Create_EOR;
 
    function Random_EOR(next      : access Memory_Type'Class;
                        generator : RNG.Generator;
                        max_cost  : Cost_Type) return Memory_Pointer is
-      result   : EOR_Pointer := Create_EOR;
+      result   : constant EOR_Pointer := Create_EOR;
       abits    : constant Positive := Address_Type'Size;
       bit      : constant Positive := 2 ** (RNG.Random(generator) mod abits);
    begin
@@ -24,6 +28,14 @@ package body Memory.Transform.EOR is
       return Memory_Pointer(result);
    end Clone;
 
+   function "xor"(a: Integer; b: Integer) return Integer is
+      type MT is mod 2 ** Integer'Size;
+      tempa : constant MT := MT'Mod(a);
+      tempb : constant MT := MT'Mod(b);
+   begin
+      return Integer(tempa xor tempb);
+   end "xor";
+
    procedure Permute(mem         : in out EOR_Type;
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type) is
@@ -31,23 +43,13 @@ package body Memory.Transform.EOR is
       bit   : constant Positive := 2 ** (RNG.Random(generator) mod abits);
    begin
       mem.value := mem.value xor bit;
-   end Permuate;
-
-   procedure Set_Value(mem    : in out EOR_Type;
-                       value  : in Integer) is
-   begin
-      if value < 0 then
-         mem.value := 0 - Address_Type(-value);
-      else
-         mem.value := Address_Type(value);
-      end if;
-   end Set_Value;
+   end Permute;
 
    function To_String(mem : EOR_Type) return Unbounded_String is
       result : Unbounded_String;
    begin
       Append(result, "(xor ");
-      Append(result, "(value" & Address_Type'Image(mem.value) & ")");
+      Append(result, "(value" & Integer'Image(mem.value) & ")");
       if mem.bank /= null then
          Append(result, "(bank ");
          Append(result, To_String(To_String(mem.bank.all)));
@@ -68,7 +70,7 @@ package body Memory.Transform.EOR is
       other       : constant Memory_Pointer  := Get_Memory(mem);
       name        : constant String := "m" & To_String(Get_ID(mem));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
-      value       : constant Address_Type := mem.value;
+      value       : constant Integer := mem.value;
 
    begin
 
@@ -80,7 +82,7 @@ package body Memory.Transform.EOR is
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH     => ADDR_WIDTH,");
       Line(code, "      WORD_WIDTH     => " & To_String(word_bits) & ",");
-      Line(code, "      VALUE          => " & To_String(value)):
+      Line(code, "      VALUE          => " & To_String(value));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");
@@ -114,7 +116,7 @@ package body Memory.Transform.EOR is
       bname       : constant String := "m" & To_String(Get_ID(bank.all));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
       jname       : constant String := "m" & To_String(Get_ID(join.all));
-      value       : constant Address_Type := mem.value;
+      value       : constant Integer := mem.value;
    begin
 
       Generate(other.all, sigs, code);
@@ -184,13 +186,13 @@ package body Memory.Transform.EOR is
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type is
    begin
-      return address xor mem.value;
+      return address xor Address_Type'Mod(mem.value);
    end Apply;
 
    function Get_Alignment(mem : EOR_Type) return Positive is
    begin
-      for i in Address_Type range 0 .. 16 loop
-         if (mem.value and (2 ** i)) /= 0 then
+      for i in 0 .. 16 loop
+         if (Address_Type'Mod(mem.value) and (2 ** i)) /= 0 then
             return Positive(2 ** i);
          end if;
       end loop;

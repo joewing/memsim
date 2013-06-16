@@ -4,8 +4,10 @@ with Memory.Join; use Memory.Join;
 package body Memory.Transform.Offset is
 
    function Create_Offset return Offset_Pointer is
+      result : constant Offset_Pointer := new Offset_Type;
    begin
-      return new Offset_Type(name = "offset");
+      result.name := To_Unbounded_String("offset");
+      return result;
    end Create_Offset;
 
    function Random_Offset(next      : access Memory_Type'Class;
@@ -13,21 +15,21 @@ package body Memory.Transform.Offset is
                           max_cost  : Cost_Type) return Memory_Pointer is
       result   : constant Offset_Pointer := Create_Offset;
       wsize    : constant Natural := Get_Word_Size(next.all);
-      base     : Address_Type;
+      base     : Integer;
    begin
       Set_Memory(result.all, next);
 
       if (RNG.Random(generator) mod 2) = 0 then
          -- Byte offset.
-         base := Address_Type(RNG.Random(generator) mod wsize);
+         base := RNG.Random(generator) mod wsize;
       else
          -- Word offset.
-         base := Address_Type(2) ** (RNG.Random(generator) mod 16);
+         base := 2 ** (RNG.Random(generator) mod 16);
       end if;
 
       if (RNG.Random(generator) mod 2) = 0 then
          -- Negative offset.
-         result.value := 0 - wsize * base;
+         result.value := -(wsize * base);
       else
          -- Positive offset.
          result.value := wsize * base;
@@ -100,7 +102,7 @@ package body Memory.Transform.Offset is
       other       : constant Memory_Pointer  := Get_Memory(mem);
       name        : constant String := "m" & To_String(Get_ID(mem));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
-      offset      : constant Integer := mem.offset;
+      offset      : constant Integer := mem.value;
    begin
 
       Generate(other.all, sigs, code);
@@ -145,7 +147,7 @@ package body Memory.Transform.Offset is
       bname       : constant String := "m" & To_String(Get_ID(bank.all));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
       jname       : constant String := "m" & To_String(Get_ID(join.all));
-      offset      : constant Address_Type := mem.offset;
+      offset      : constant Integer := mem.value;
    begin
 
       Generate(other.all, sigs, code);

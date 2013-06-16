@@ -11,8 +11,6 @@ package Memory.Transform.EOR is
                        generator : RNG.Generator;
                        max_cost  : Cost_Type) return Memory_Pointer;
 
-   function Get_Name(mem : EOR_Type) return String;
-
    overriding
    function Clone(mem : EOR_Type) return Memory_Pointer;
 

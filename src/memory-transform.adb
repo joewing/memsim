@@ -62,8 +62,14 @@ package body Memory.Transform is
 
    function Get_Name(mem : Transform_Type) return String is
    begin
-      return mem.name;
+      return To_String(mem.name);
    end Get_Name;
+
+   procedure Set_Value(mem    : in out Transform_Type;
+                       value  : in Integer) is
+   begin
+      mem.value := value;
+   end Set_Value;
 
    function Get_Bank(mem : Transform_Type) return Memory_Pointer is
    begin
@@ -71,7 +77,7 @@ package body Memory.Transform is
    end Get_Bank;
 
    procedure Set_Bank(mem  : in out Transform_Type;
-                      bank : in Memory_Pointer) is
+                      bank : access Memory_Type'Class) is
    begin
       mem.bank := bank;
    end Set_Bank;

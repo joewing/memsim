@@ -16,7 +16,7 @@ package body Test.Shift is
       Set_Memory(bank.all, join);
       Set_Bank(shift.all, bank);
       Set_Memory(shift.all, mem);
-      Set_Shift(shift.all, 1);
+      Set_Value(shift.all, 1);
 
       Check(Get_Time(shift.all) = 0);
       Check(Get_Writes(shift.all) = 0);
@@ -89,7 +89,7 @@ package body Test.Shift is
       Set_Memory(bank.all, join);
       Set_Bank(shift.all, bank);
       Set_Memory(shift.all, mem);
-      Set_Shift(shift.all, -2);
+      Set_Value(shift.all, -2);
 
       Check(Get_Time(shift.all) = 0);
       Check(Get_Writes(shift.all) = 0);
@@ -142,7 +142,7 @@ package body Test.Shift is
       Set_Memory(bank.all, join);
       Set_Bank(shift.all, bank);
       Set_Memory(shift.all, mem);
-      Set_Shift(shift.all, 0);
+      Set_Value(shift.all, 0);
 
       Read(shift.all, 0, 8);
       Check(mem.last_addr = 0);

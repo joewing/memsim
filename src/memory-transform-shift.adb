@@ -5,8 +5,10 @@ with Util;        use Util;
 package body Memory.Transform.Shift is
 
    function Create_Shift return Shift_Pointer is
+      result : constant Shift_Pointer := new Shift_Type;
    begin
-      return new Shift_Type(name = "shift");
+      result.name := To_Unbounded_String("shift");
+      return result;
    end Create_Shift;
 
    function Random_Shift(next       : access Memory_Type'Class;
@@ -15,7 +17,7 @@ package body Memory.Transform.Shift is
       result : constant Shift_Pointer := Create_Shift;
    begin
       Set_Memory(result.all, next);
-      result.shift := (RNG.Random(generator) mod 16) + 1;
+      result.value := (RNG.Random(generator) mod 16) + 1;
       return Memory_Pointer(result);
    end Random_Shift;
 

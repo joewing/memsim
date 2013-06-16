@@ -14,7 +14,7 @@ package Memory.Transform is
    function Get_Bank(mem : Transform_Type) return Memory_Pointer;
 
    procedure Set_Bank(mem  : in out Transform_Type;
-                      bank : in Memory_Pointer);
+                      bank : access Memory_Type'Class);
 
    procedure Set_Value(mem    : in out Transform_Type;
                        value  : in Integer);
@@ -83,8 +83,9 @@ package Memory.Transform is
 
 private
 
-   type Transform_Type(name : String) is abstract
-      new Container_Type and Wrapper_Type with record
+   type Transform_Type is abstract new Container_Type and Wrapper_Type with
+   record
+      name  : Unbounded_String;
       bank  : access Memory_Type'Class := null;
       value : Integer := 0;
    end record;
