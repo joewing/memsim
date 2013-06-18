@@ -31,7 +31,9 @@ end eor;
 
 architecture arch of eor is
 
-   constant WORD_VALUE : integer := VALUE / (WORD_WIDTH / 8);
+   constant WORD_BITS   : integer := VALUE / (WORD_WIDTH / 8);
+   constant MASK_BITS   : integer := VALUE mod (WORD_WIDTH / 8);
+   constant WORD_BYTES  : integer := WORD_WIDTH / 8;
 
 begin
 
@@ -39,9 +41,19 @@ begin
    mout     <= din;
    mre      <= re;
    mwe      <= we;
-   mmask    <= mask;
-   maddr    <= addr xor std_logic_vector(to_signed(WORD_VALUE, ADDR_WIDTH));
+   maddr    <= addr xor std_logic_vector(to_signed(WORD_BITS, ADDR_WIDTH));
+   ready    <= mready;
 
-   -- TODO: handle bits set in non-word positions of the address.
+   -- Determine the updated mask.
+   process(mask)
+      variable xor_mask : unsigned(WORD_BYTES - 1 downto 0);
+      variable nb       : unsigned(WORD_BYTES - 1 downto 0);
+   begin
+      xor_mask := to_unsigned(MASK_BITS, WORD_BYTES);
+      for b in 0 to WORD_BYTES - 1 loop
+         nb := to_unsigned(b, WORD_BYTES) xor xor_mask;
+         mmask(to_integer(nb)) <= mask(b);
+      end loop;
+   end process;
 
 end arch;
