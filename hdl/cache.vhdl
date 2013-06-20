@@ -357,7 +357,7 @@ begin
    end process;
 
    -- Drive transfer_done and inc_transfer_count.
-   process(transfer_count, current_offset, state)
+   process(transfer_count, current_offset, state, mask)
       variable upd      : transfer_type;
       variable inc1     : transfer_type;
       variable inc2     : transfer_type;

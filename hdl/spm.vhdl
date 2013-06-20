@@ -31,11 +31,15 @@ end spm;
 
 architecture spm_arch of spm is
 
-   subtype word_type is std_logic_vector(WORD_WIDTH - 1 downto 0);
-   type word_array_type is array(0 to  SIZE - 1) of word_type;
+   constant WORD_BYTES : natural := WORD_WIDTH / 8;
+
+   subtype byte_type is std_logic_vector(7 downto 0);
+   type byte_array_type is array(0 to SIZE - 1) of byte_type;
+   type word_array_type is array(0 to WORD_BYTES - 1) of byte_array_type;
 
    signal data    : word_array_type;
-   signal value   : word_type;
+   signal is_hit  : std_logic;
+   signal value   : std_logic_vector(WORD_WIDTH - 1 downto 0);
    signal raddr   : natural;
    signal rin     : std_logic_vector(WORD_WIDTH - 1 downto 0);
    signal rre     : std_logic;
@@ -49,11 +53,14 @@ begin
       if clk'event and clk = '1' then
          if rst = '0' then
             if rre = '1' then
-               value <= data(raddr);
+               for b in 0 to WORD_BYTES - 1 loop
+                  value(b * 8 + 7 downto b * 8) <= data(b)(raddr);
+               end loop;
             elsif rwe = '1' then
-               for b in 0 to (WORD_WIDTH / 8) - 1 loop
-                  data(raddr)(b * 8 + 7 downto b * 8)
-                     <= rin(b * 8 + 7 downto b * 8);
+               for b in 0 to WORD_BYTES - 1 loop
+                  if rmask(b) = '1' then
+                     data(b)(raddr) <= rin(b * 8 + 7 downto b * 8);
+                  end if;
                end loop;
             end if;
          end if;
@@ -81,11 +88,13 @@ begin
       end if;
    end process;
 
+   is_hit <= '1' when unsigned(addr) < SIZE else '0';
+
    maddr <= addr;
-   mre   <= re when unsigned(addr) >= SIZE else '0';
-   mwe   <= we when unsigned(addr) >= SIZE else '0';
+   mre   <= re when is_hit = '0' else '0';
+   mwe   <= we when is_hit = '0' else '0';
    mmask <= mask;
-   dout  <= value when unsigned(addr) < SIZE else min;
+   dout  <= value when is_hit = '1' else min;
    mout  <= din;
    ready <= mready when rre = '0' and rwe = '0' else '0';
 

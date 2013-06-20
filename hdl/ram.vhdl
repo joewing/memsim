@@ -31,7 +31,7 @@ architecture ram_arch of ram is
 
    signal data       : word_array_type := (others => (others => '0'));
    signal value      : word_type;
-   signal counter    : natural;
+   signal counter    : unsigned(LATENCY - 1 downto 0);
    signal nat_addr   : natural;
    signal do_read    : std_logic;
    signal do_write   : std_logic;
@@ -44,16 +44,16 @@ begin
          do_read <= '0';
          do_write <= '0';
          if rst = '1' then
-            counter <= 0;
+            counter <= to_unsigned(1, LATENCY);
          elsif re = '1' then
-            counter <= LATENCY - 1;
+            counter <= "1" & to_unsigned(0, LATENCY - 1);
             do_read <= '1';
          elsif we = '1' then
-            counter <= LATENCY - 1;
+            counter <= "1" & to_unsigned(0, LATENCY - 1);
             do_write <= '1';
             value <= din;
-         elsif counter > 0 then
-            counter <= counter - 1;
+         elsif counter(0) = '0'  then
+            counter <= shift_right(counter, 1);
          end if;
          if SIZE > 0 then
             if do_read = '1' then
@@ -83,7 +83,13 @@ begin
       end if;
    end process;
 
-   ready <= '1' when counter = 0 else '0';
-   dout  <= value when counter = 0 else (others => 'Z');
+   ready <= counter(0);
+
+   doutn : if SIZE > 0 generate
+      dout  <= value when counter = 0 else (others => 'Z');
+   end generate;
+   dout0 : if SIZE = 0 generate
+      dout <= (others => 'Z');
+   end generate;
 
 end ram_arch;
