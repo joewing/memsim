@@ -130,8 +130,6 @@ package body Benchmark.Trace is
    begin
       if Check_Argument(arg, "file") then
          benchmark.file_name := To_Unbounded_String(value);
-      elsif Check_Argument(arg, "iterations") then
-         benchmark.iterations := Long_Integer'Value(value);
       else
          Set_Argument(Benchmark_Type(benchmark), arg);
       end if;
@@ -142,7 +140,7 @@ package body Benchmark.Trace is
 
    procedure Run(benchmark : in out Trace_Type) is
       file     : Stream_IO.File_Type;
-      done     : Boolean;
+      prune    : Boolean;
       mdata    : Memory_Access;
       state    : Parse_State_Type := State_Action;
       total    : Byte_Count_Type := 0;
@@ -150,11 +148,9 @@ package body Benchmark.Trace is
       Stream_IO.Open(File => file,
                      Mode => Stream_IO.In_File,
                      Name => To_String(benchmark.file_name));
-      for count in 1 .. benchmark.iterations loop
-         Put_Line("Iteration" & Long_Integer'Image(count) & " /" &
-                  Long_Integer'Image(benchmark.iterations));
-         done := False;
-         while not done loop
+      loop
+         prune := False;
+         while not prune loop
             Stream_IO.Read(file, benchmark.buffer, benchmark.last);
             exit when benchmark.last < benchmark.buffer'First;
             benchmark.pos := benchmark.buffer'First;
@@ -162,13 +158,13 @@ package body Benchmark.Trace is
                Parse_Action(benchmark, mdata, state);
             exception
                when Prune_Error =>
-                  done := True;
+                  prune := True;
             end;
             total := total + Byte_Count_Type(benchmark.last
                                           - benchmark.buffer'First + 1);
             Put_Line("Processed" & Byte_Count_Type'Image(total) & " bytes");
          end loop;
-         if not done then
+         if not prune then
             benchmark.buffer(benchmark.buffer'First) := 0;
             benchmark.pos := benchmark.buffer'First;
             benchmark.last := benchmark.pos;
@@ -176,15 +172,14 @@ package body Benchmark.Trace is
                Parse_Action(benchmark, mdata, state);
             exception
                when Prune_Error =>
-                  done := True;
+                  null;
             end;
          end if;
-         if count < benchmark.iterations then
-            Show_Stats(benchmark.mem.all);
-            Reset(benchmark.mem.all);
-            state := State_Action;
-            Stream_IO.Reset(file);
-         end if;
+         Show_Stats(benchmark.mem.all);
+         exit when Done(benchmark.mem.all);
+         Reset(benchmark.mem.all);
+         state := State_Action;
+         Stream_IO.Reset(file);
       end loop;
       Stream_IO.Close(file);
    exception

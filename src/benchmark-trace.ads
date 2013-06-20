@@ -31,7 +31,6 @@ private
 
    type Trace_Type is new Benchmark_Type with record
       file_name   : Unbounded_String := To_Unbounded_String("trace.txt");
-      iterations  : Long_Integer := 1;
       buffer      : Stream_Element_Array(1 .. Buffer_Size);
       pos         : Stream_Element_Offset := Stream_Element_Offset'Last;
       last        : Stream_Element_Offset := Stream_Element_Offset'First;

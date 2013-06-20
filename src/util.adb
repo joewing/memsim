@@ -27,4 +27,14 @@ package body Util is
       end if;
    end To_String;
 
+   function To_String(i : Long_Integer) return String is
+      str : constant String := Long_Integer'Image(i);
+   begin
+      if str(str'First) = ' ' then
+         return str(str'First + 1 .. str'Last);
+      else
+         return str;
+      end if;
+   end To_String;
+
 end Util;

@@ -7,4 +7,6 @@ package Util is
 
    function To_String(i : Integer) return String;
 
+   function To_String(i : Long_Integer) return String;
+
 end Util;

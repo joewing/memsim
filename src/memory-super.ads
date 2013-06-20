@@ -11,11 +11,13 @@ package Memory.Super is
 
    type Super_Pointer is access all Super_Type'Class;
 
-   function Create_Super(mem        : not null access Memory_Type'Class;
-                         max_cost   : Cost_Type;
-                         seed       : Integer;
-                         initial    : Long_Integer)
+   function Create_Super(mem              : not null access Memory_Type'Class;
+                         max_cost         : Cost_Type;
+                         seed             : Integer;
+                         max_iterations   : Long_Integer)
                          return Super_Pointer;
+   overriding
+   function Done(mem : Super_Type) return Boolean;
 
    overriding
    function Clone(mem : Super_Type) return Memory_Pointer;
@@ -65,7 +67,10 @@ private
       last_value     : Value_Type            := Value_Type'Last;
       table          : Value_Maps.Map;
       iteration      : Long_Integer          := 0;
+      total          : Long_Integer          := 0;
+      max_iterations : Long_Integer          := 1000;
       temperature    : Float                 := 0.0;
+
    end record;
 
 end Memory.Super;

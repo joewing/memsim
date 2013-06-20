@@ -11,6 +11,9 @@ package Memory.Container is
                         other : access Memory_Type'Class);
 
    overriding
+   function Done(mem : Container_Type) return Boolean;
+
+   overriding
    procedure Reset(mem : in out Container_Type);
 
    overriding

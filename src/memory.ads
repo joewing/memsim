@@ -33,6 +33,8 @@ package Memory is
                      generator   : in RNG.Generator;
                      max_cost    : in Cost_Type);
 
+   function Done(mem : Memory_Type) return Boolean;
+
    procedure Reset(mem : in out Memory_Type);
 
    procedure Read(mem      : in out Memory_Type;
@@ -102,5 +104,7 @@ private
    function To_String(t : Time_Type) return String;
 
    function To_String(i : Integer) return String renames Util.To_String;
+
+   function To_String(i : Long_Integer) return String renames Util.To_String;
 
 end Memory;

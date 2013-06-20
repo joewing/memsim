@@ -119,6 +119,11 @@ package body Memory.Super is
       return Memory_Pointer(result);
    end Clone;
 
+   function Done(mem : Super_Type) return Boolean is
+   begin
+      return mem.iteration >= mem.max_iterations;
+   end Done;
+
    function Count_Memories(ptr : Memory_Pointer) return Natural is
    begin
       if ptr /= null then
@@ -157,6 +162,8 @@ package body Memory.Super is
 
    procedure Reset(mem : in out Super_Type) is
    begin
+      Put_Line("Iteration:" & Long_Integer'Image(mem.iteration) &
+               " (" & To_String(mem.total) & " evaluations)");
       mem.current_length := 0;
       Reset(Container_Type(mem));
    end Reset;
@@ -516,17 +523,17 @@ package body Memory.Super is
 
    end Randomize;
 
-   function Create_Super(mem        : not null access Memory_Type'Class;
-                         max_cost   : Cost_Type;
-                         seed       : Integer;
-                         initial    : Long_Integer)
+   function Create_Super(mem              : not null access Memory_Type'Class;
+                         max_cost         : Cost_Type;
+                         seed             : Integer;
+                         max_iterations   : Long_Integer)
                          return Super_Pointer is
       result : constant Super_Pointer := new Super_Type;
    begin
-      result.max_cost   := max_cost;
-      result.initial    := initial;
-      result.last       := Memory_Pointer(mem);
-      result.current    := Clone(mem.all);
+      result.max_cost         := max_cost;
+      result.max_iterations   := max_iterations;
+      result.last             := Memory_Pointer(mem);
+      result.current          := Clone(mem.all);
       RNG.Reset(result.generator.all, seed);
       Set_Memory(result.all, result.current);
       Randomize(Super_Type(result.all));
@@ -550,7 +557,7 @@ package body Memory.Super is
       end if;
       Put_Line("Temperature:" & Float'Image(mem.temperature));
 
-      if value <= mem.last_value or rand < prob or mem.iteration = 0 then
+      if value <= mem.last_value or rand < prob or mem.total = 0 then
 
          -- Keep the current memory.
          mem.last_value := value;
@@ -607,6 +614,7 @@ package body Memory.Super is
       end if;
 
       -- If we get here, we have a better memory subsystem.
+      mem.iteration  := 0;
       mem.best_value := value;
       mem.best_cost  := simp_cost;
       mem.best_name  := simp_name;
@@ -679,7 +687,8 @@ package body Memory.Super is
       end loop;
 
       -- Keep track of the number of iterations.
-      mem.iteration := mem.iteration + 1;
+      mem.iteration  := mem.iteration + 1;
+      mem.total      := mem.total + 1;
 
    end Finish_Run;
 

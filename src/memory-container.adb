@@ -14,6 +14,15 @@ package body Memory.Container is
       mem.mem := other;
    end Set_Memory;
 
+   function Done(mem : Container_Type) return Boolean is
+   begin
+      if mem.mem /= null then
+         return Done(mem.mem.all);
+      else
+         return True;
+      end if;
+   end Done;
+
    procedure Reset(mem : in out Container_Type) is
    begin
       Reset(Memory_Type(mem));

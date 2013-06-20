@@ -13,6 +13,11 @@ package body Memory is
       null;
    end Permute;
 
+   function Done(mem : Memory_Type) return Boolean is
+   begin
+      return True;
+   end Done;
+
    procedure Reset(mem : in out Memory_Type) is
    begin
       mem.time := 0;
