@@ -26,13 +26,13 @@ package body Test.Flip is
       Read(flip.all, 8, 8);
       Check(mem.last_addr = 8);
       Check(mem.last_size = 8);
-      Check(bank.last_addr = 2 ** 63);
+      Check(bank.last_addr = 2 ** 31);
       Check(bank.last_size = 8);
       Check(Get_Time(flip.all) = 2);
       Check(Get_Writes(flip.all) = 0);
 
-      Write(flip.all, 2 ** 63, 8);
-      Check(mem.last_addr = 2 ** 63);
+      Write(flip.all, 2 ** 31, 8);
+      Check(mem.last_addr = 2 ** 31);
       Check(mem.last_size = 8);
       Check(bank.last_addr = 8);
       Check(bank.last_size = 8);
@@ -42,7 +42,7 @@ package body Test.Flip is
       Read(flip.all, 9, 4);
       Check(mem.last_addr = 9);
       Check(mem.last_size = 4);
-      Check(bank.last_addr = ((2 ** 63) or 1));
+      Check(bank.last_addr = ((2 ** 31) or 1));
       Check(bank.last_size = 4);
       Check(Get_Time(flip.all) = 4);
       Check(Get_Writes(flip.all) = 1);

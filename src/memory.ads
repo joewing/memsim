@@ -62,6 +62,8 @@ package Memory is
 
    function Get_Word_Size(mem : Memory_Type) return Positive is abstract;
 
+   function Get_Address_Size(mem : Memory_Type) return Positive;
+
    procedure Generate(mem  : in Memory_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is null;

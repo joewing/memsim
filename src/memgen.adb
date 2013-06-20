@@ -10,7 +10,7 @@ procedure MemGen is
 
    mem         : Memory_Pointer;
    name        : Unbounded_String := To_Unbounded_String("mem");
-   addr_width  : Positive := 64;
+   addr_width  : Positive := 32;
    mem_index   : Integer := -1;
 
    procedure Show_Usage is

@@ -31,7 +31,7 @@ package body Memory.Transform.Shift is
    begin
       if mem.value = 0 then
          mem.value := mem.value + 1;
-      elsif mem.value = Address_Type'Size then
+      elsif mem.value = Get_Address_Size(mem) * 8 then
          mem.value := mem.value - 1;
       elsif (RNG.Random(generator) mod 2) = 0 then
          mem.value := mem.value + 1;
@@ -48,34 +48,28 @@ package body Memory.Transform.Shift is
    function Apply(mem      : Shift_Type;
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type is
-      abits    : constant Integer      := Address_Type'Size;   -- FIXME
+      abits    : constant Integer      := 8 * Get_Address_Size(mem);
       wsize    : constant Address_Type := Address_Type(Get_Word_Size(mem));
-      wbits    : constant Natural      := Log2(Natural(wsize));
+      wbits    : constant Natural      := Log2(Natural(wsize)) - 1;
       caddr    : constant Address_Type := address mod wsize;
       saddr    : constant Address_Type := address / wsize;
       shift    : Integer := mem.value;
       rmult    : Address_Type;
       lmult    : Address_Type;
+      result   : Address_Type;
    begin
       if shift < 0 then
-         shift := (abits - wbits + shift + 1);
+         shift := (abits - wbits + shift);
       end if;
       shift := shift mod (abits - wbits);
       rmult := Address_Type(2) ** shift;
-      lmult := Address_Type(2) ** (abits - shift) / wsize;
+      lmult := Address_Type(2) ** (abits - shift - wbits);
       if dir then
-         if lmult /= 0 then
-            return ((saddr * rmult) or (saddr / lmult)) * wsize or caddr;
-         else
-            return address;
-         end if;
+         result := ((saddr * rmult) or (saddr / lmult)) * wsize or caddr;
       else
-         if rmult /= 0 then
-            return ((saddr * lmult) or (saddr / rmult)) * wsize or caddr;
-         else
-            return address;
-         end if;
+         result := ((saddr * lmult) or (saddr / rmult)) * wsize or caddr;
       end if;
+      return result and ((Address_Type(2) ** abits) - 1);
    end Apply;
 
    function Is_Empty(mem : Shift_Type) return Boolean is

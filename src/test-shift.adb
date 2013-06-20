@@ -53,8 +53,8 @@ package body Test.Shift is
       Check(bank.last_size = 8);
       Check(Get_Time(shift.all)  = 8);
 
-      Read(shift.all, 2 ** 63, 4);
-      Check(mem.last_addr = 2 ** 63);
+      Read(shift.all, 2 ** 31, 4);
+      Check(mem.last_addr = 2 ** 31);
       Check(mem.last_size = 4);
       Check(bank.last_addr = 8);
       Check(bank.last_size = 4);
@@ -121,7 +121,7 @@ package body Test.Shift is
       Write(shift.all, 9, 4);
       Check(mem.last_addr = 9);
       Check(mem.last_size = 4);
-      Check(bank.last_addr = ((Address_Type(2) ** 62) or 1));
+      Check(bank.last_addr = ((Address_Type(2) ** 30) or 1));
       Check(bank.last_size = 4);
       Check(Get_Time(shift.all) = 4);
       Check(Get_Writes(shift.all) = 2);

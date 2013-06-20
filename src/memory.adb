@@ -52,6 +52,12 @@ package body Memory is
       mem.time := mem.time + cycles;
    end Advance;
 
+   function Get_Address_Size(mem : Memory_Type) return Positive is
+   begin
+      -- TODO: Make this configurable.
+      return 4;
+   end Get_Address_Size;
+
    procedure Deallocate is
       new Ada.Unchecked_Deallocation(Memory_Type'Class, Memory_Pointer);
 
