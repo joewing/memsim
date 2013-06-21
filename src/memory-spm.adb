@@ -75,6 +75,7 @@ package body Memory.SPM is
    begin
       if address >= Address_Type(mem.size) then
          Read(Container_Type(mem), address, size);
+         Advance(mem, 1);
       elsif address + Address_Type(size) > Address_Type(mem.size) then
          declare
             naddr : constant Address_Type := Address_Type(mem.size);
@@ -82,6 +83,7 @@ package body Memory.SPM is
             nsize : constant Positive := Positive(last - naddr);
          begin
             Read(Container_Type(mem), naddr, nsize);
+            Advance(mem, 1);
          end;
       else
          Advance(mem, mem.latency);
@@ -94,12 +96,14 @@ package body Memory.SPM is
    begin
       if address >= Address_Type(mem.size) then
          Write(Container_Type(mem), address, size);
+         Advance(mem, 1);
       elsif address + Address_Type(size) > Address_Type(mem.size) then
          declare
             naddr : constant Address_Type := Address_Type(mem.size);
             nsize : constant Positive := Positive(naddr - address);
          begin
             Write(Container_Type(mem), naddr, nsize);
+            Advance(mem, 1);
          end;
       else
          Advance(mem, mem.latency);

@@ -12,7 +12,7 @@ architecture tb_arch of tb is
    signal rst     : std_logic;
    signal cycles  : integer;
 
-   constant ADDR_WIDTH : integer := 64;
+   constant ADDR_WIDTH : integer := 32;
    constant WORD_WIDTH : integer := 64;
 
    signal mem_addr   : std_logic_vector(ADDR_WIDTH - 1 downto 0);
@@ -20,7 +20,7 @@ architecture tb_arch of tb is
    signal mem_dout   : std_logic_vector(WORD_WIDTH - 1 downto 0);
    signal mem_re     : std_logic;
    signal mem_we     : std_logic;
-   signal mem_mask   : std_logic_vector((ADDR_WIDTH / 8) - 1 downto 0);
+   signal mem_mask   : std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
    signal mem_ready  : std_logic;
 
    procedure cycle(signal clk : out std_logic) is
@@ -86,99 +86,99 @@ begin
       assert mem_ready = '1' report "not ready" severity failure;
 
       -- Write a value.
-      mem_addr <= x"00000000_00000000";
+      mem_addr <= x"00000000";
       mem_din  <= x"00000000_FFFFFFFF";
       update(clk, mem_we, mem_ready);
 
       -- Write a value.
-      mem_addr <= x"00000000_00000001";
+      mem_addr <= x"00000001";
       mem_din <= x"00000000_01234567";
       update(clk, mem_we, mem_ready);
 
       -- Make sure the write took (hit).
-      mem_addr <= x"00000000_00000001";
+      mem_addr <= x"00000001";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"00000000_01234567"
          report "read failed" severity failure;
 
       -- Read another value (cold miss).
-      mem_addr <= x"00000000_00000000";
+      mem_addr <= x"00000000";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"00000000_FFFFFFFF"
          report "read failed" severity failure;
 
       -- Write another value (conflict).
-      mem_addr <= x"00000000_00000100";
+      mem_addr <= x"00000100";
       mem_din  <= x"00000000_00000321";
       update(clk, mem_we, mem_ready);
 
       -- Read the value (hit).
-      mem_addr <= x"00000000_00000100";
+      mem_addr <= x"00000100";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"00000000_00000321"
          report "read failed" severity failure;
 
       -- Read the previous value.
-      mem_addr <= x"00000000_00000001";
+      mem_addr <= x"00000001";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"00000000_01234567"
          report "read failed" severity failure;
 
       -- Another write.
-      mem_addr <= x"00000000_00000101";
+      mem_addr <= x"00000101";
       mem_din  <= x"00000000_00000abc";
       update(clk, mem_we, mem_ready);
 
       -- Some reads.
-      mem_addr <= x"00000000_00000101";
+      mem_addr <= x"00000101";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"0000000000000abc"
          report "read failed" severity failure;
-      mem_addr <= x"00000000_00000001";
+      mem_addr <= x"00000001";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"0000000001234567"
          report "read failed" severity failure;
-      mem_addr <= x"00000000_00000100";
+      mem_addr <= x"00000100";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"0000000000000321"
          report "read failed" severity failure;
 
       -- Overwite.
-      mem_addr <= x"00000000_00000001";
+      mem_addr <= x"00000001";
       mem_din  <= x"00000000_55555555";
       update(clk, mem_we, mem_ready);
 
       -- More reads.
-      mem_addr <= x"00000000_00000001";
+      mem_addr <= x"00000001";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"0000000055555555"
          report "read failed" severity failure;
-      mem_addr <= x"00000000_00000101";
+      mem_addr <= x"00000101";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"0000000000000abc"
          report "read failed" severity failure;
-      mem_addr <= x"00000000_00000100";
+      mem_addr <= x"00000100";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"0000000000000321"
          report "read failed" severity failure;
 
       -- Test a partial write.
-      mem_addr <= x"00000000_00000001";
+      mem_addr <= x"00000001";
       mem_din  <= x"AAAAAAAA_00000000";
       mem_mask <= "11110000";
       update(clk, mem_we, mem_ready);
 
       -- Test some reads.
       mem_mask <= (others => '1');
-      mem_addr <= x"00000000_00000001";
+      mem_addr <= x"00000001";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"AAAAAAAA_55555555"
          report "read failed" severity failure;
-      mem_addr <= x"00000000_00000101";
+      mem_addr <= x"00000101";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"0000000000000abc"
          report "read failed" severity failure;
-      mem_addr <= x"00000000_00000100";
+      mem_addr <= x"00000100";
       update(clk, mem_re, mem_ready);
       assert mem_dout = x"0000000000000321"
          report "read failed" severity failure;

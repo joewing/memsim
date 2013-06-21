@@ -40,7 +40,7 @@ architecture spm_arch of spm is
    signal data    : word_array_type;
    signal is_hit  : std_logic;
    signal value   : std_logic_vector(WORD_WIDTH - 1 downto 0);
-   signal raddr   : natural;
+   signal raddr   : std_logic_vector(ADDR_WIDTH - 1 downto 0);
    signal rin     : std_logic_vector(WORD_WIDTH - 1 downto 0);
    signal rre     : std_logic;
    signal rwe     : std_logic;
@@ -49,17 +49,19 @@ architecture spm_arch of spm is
 begin
 
    process(clk)
+      variable nat_addr : natural;
    begin
       if clk'event and clk = '1' then
-         if rst = '0' then
+         if rst = '0' and is_hit = '1' then
+            nat_addr := to_integer(unsigned(raddr));
             if rre = '1' then
                for b in 0 to WORD_BYTES - 1 loop
-                  value(b * 8 + 7 downto b * 8) <= data(b)(raddr);
+                  value(b * 8 + 7 downto b * 8) <= data(b)(nat_addr);
                end loop;
             elsif rwe = '1' then
                for b in 0 to WORD_BYTES - 1 loop
                   if rmask(b) = '1' then
-                     data(b)(raddr) <= rin(b * 8 + 7 downto b * 8);
+                     data(b)(nat_addr) <= rin(b * 8 + 7 downto b * 8);
                   end if;
                end loop;
             end if;
@@ -71,28 +73,27 @@ begin
    begin
       if clk'event and clk = '1' then
          if rst = '1' then
-            rre <= '0';
-            rwe <= '0';
+            rre      <= '0';
+            rwe      <= '0';
+            is_hit   <= '0';
          else
             if unsigned(addr) < SIZE then
-               raddr <= to_integer(unsigned(addr));
-               rre   <= re;
-               rwe   <= we;
-               rin   <= din;
-               rmask <= mask;
+               is_hit <= '1';
             else
-               rre <= '0';
-               rwe <= '0';
+               is_hit <= '0';
             end if;
+            raddr <= addr;
+            rre   <= re;
+            rwe   <= we;
+            rin   <= din;
+            rmask <= mask;
          end if;
       end if;
    end process;
 
-   is_hit <= '1' when unsigned(addr) < SIZE else '0';
-
-   maddr <= addr;
-   mre   <= re when is_hit = '0' else '0';
-   mwe   <= we when is_hit = '0' else '0';
+   maddr <= raddr;
+   mre   <= rre when is_hit = '0' else '0';
+   mwe   <= rwe when is_hit = '0' else '0';
    mmask <= mask;
    dout  <= value when is_hit = '1' else min;
    mout  <= din;

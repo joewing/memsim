@@ -86,7 +86,7 @@ begin
    ready <= counter(0);
 
    doutn : if SIZE > 0 generate
-      dout  <= value when counter = 0 else (others => 'Z');
+      dout  <= value when counter(0) = '1' else (others => 'Z');
    end generate;
    dout0 : if SIZE = 0 generate
       dout <= (others => 'Z');
