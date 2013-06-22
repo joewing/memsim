@@ -5,8 +5,6 @@ with Ada.Streams.Stream_IO;
 
 package body Benchmark.Trace is
 
-   type Byte_Count_Type is mod 2 ** 64;
-
    type Access_Type is (Read, Write, Modify, Idle);
 
    type Memory_Access is record
@@ -143,7 +141,6 @@ package body Benchmark.Trace is
       prune    : Boolean;
       mdata    : Memory_Access;
       state    : Parse_State_Type := State_Action;
-      total    : Byte_Count_Type := 0;
    begin
       Stream_IO.Open(File => file,
                      Mode => Stream_IO.In_File,
@@ -160,9 +157,6 @@ package body Benchmark.Trace is
                when Prune_Error =>
                   prune := True;
             end;
-            total := total + Byte_Count_Type(benchmark.last
-                                          - benchmark.buffer'First + 1);
-            Put_Line("Processed" & Byte_Count_Type'Image(total) & " bytes");
          end loop;
          if not prune then
             benchmark.buffer(benchmark.buffer'First) := 0;
