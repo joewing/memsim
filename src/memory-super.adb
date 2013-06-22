@@ -665,8 +665,17 @@ package body Memory.Super is
       end if;
       if mem.current_length /= mem.total_length then
          Put_Line("Prune");
-         value := Value_Type(Long_Float(value) * Long_Float(mem.total_length) /
-                             Long_Float(mem.current_length));
+         declare
+            mult : constant Long_Float := Long_Float(mem.total_length) *
+                                          Long_Float(mem.current_length);
+            fval : constant Long_Float := Long_Float(value) * mult;
+         begin
+            if fval >= Long_Float(Value_Type'Last) then
+               value := Value_Type'Last;
+            else
+               value := Value_Type(fval);
+            end if;
+         end;
          if value < mem.best_value then
             Put_Line("Prune overflow");
             value := mem.best_value + 1;
