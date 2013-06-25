@@ -9,7 +9,7 @@ This is a memory simulator to determine how long memory access take.
 Running memsim with no arguments will show its usage:
 
 <pre>
-usage: ./memsim \<memory\> \<benchmark\> [\<options\>]
+usage: ./memsim &lt;memory&gt; &lt;benchmark&gt; [&lt;options&gt;]
 benchmarks:
    hash [size=1024][iterations=1000][spacing=0]
    heap [size=1024][iterations=1000][spacing=0]
