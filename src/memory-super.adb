@@ -147,6 +147,8 @@ package body Memory.Super is
             begin
                return 1 + Count_Memories(Get_Memory(cp.all));
             end;
+         elsif ptr.all in Join_Type'Class then
+            return 1;
          end if;
       end if;
       return 0;
@@ -206,7 +208,7 @@ package body Memory.Super is
                Destroy(ptr);
                ptr := next;
             end;
-         else
+         elsif ptr.all not in Join_Type'Class then
             Destroy(ptr);
             ptr := null;
          end if;
@@ -287,7 +289,7 @@ package body Memory.Super is
                            in_bank  : in Boolean) is
    begin
 
-      Assert(ptr /= null);
+      Assert(ptr /= null, "null ptr in Insert_Memory");
 
       if index = 0 then
 
@@ -304,7 +306,7 @@ package body Memory.Super is
             bc : constant Natural         := Count_Memories(b);
             n  : Memory_Pointer           := Get_Memory(sp.all);
          begin
-            if 1 + ac >= index then
+            if 1 + ac > index then
 
                -- Insert to the first bank.
                Push_Limit(mem.generator.all, 0, Get_Offset(sp.all));
@@ -381,11 +383,10 @@ package body Memory.Super is
                             cost    : in Cost_Type) is
    begin
 
-      Assert(ptr /= null);
+      Assert(ptr /= null, "null ptr in Permute_Memory");
 
       if index = 0 then
 
-         Assert(ptr.all not in Join_Type'Class);
          Permute(ptr.all, mem.generator.all, cost + Get_Cost(ptr.all));
 
       elsif ptr.all in Split_Type'Class then
