@@ -2,26 +2,15 @@
 with Ada.Numerics.Discrete_Random;
 with Ada.Finalization; use Ada.Finalization;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Unchecked_Deallocation;
 
-with Util;
+with Distribution; use Distribution;
+with Util; use Util;
 
 package Memory is
 
    package RNG is new Ada.Numerics.Discrete_Random(Natural);
 
-   type Generator_Pointer is access all RNG.Generator;
-
    Prune_Error    : exception;
-
-   procedure Destroy is new Ada.Unchecked_Deallocation(RNG.Generator,
-                                                       Generator_Pointer);
-
-   type Address_Type is mod 2 ** 64;
-
-   type Time_Type is new Long_Integer range 0 .. Long_Integer'Last;
-
-   type Cost_Type is new Long_Integer range 0 .. Long_Integer'Last;
 
    type Memory_Type is abstract new Controlled with private;
 
@@ -30,7 +19,7 @@ package Memory is
    function Clone(mem : Memory_Type) return Memory_Pointer is abstract;
 
    procedure Permute(mem         : in out Memory_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type);
 
    function Done(mem : Memory_Type) return Boolean;

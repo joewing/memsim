@@ -1,7 +1,6 @@
 
 with Ada.Unchecked_Deallocation;
 with Ada.Assertions; use Ada.Assertions;
-with Util; use Util;
 with BRAM;
 with Random_Enum;
 
@@ -36,7 +35,7 @@ package body Memory.Cache is
    function Random_Boolean is new Random_Enum(Boolean);
 
    function Random_Cache(next       : access Memory_Type'Class;
-                         generator  : RNG.Generator;
+                         generator  : Distribution_Type;
                          max_cost   : Cost_Type)
                          return Memory_Pointer is
       result : Cache_Pointer := new Cache_Type;
@@ -65,7 +64,7 @@ package body Memory.Cache is
          declare
             line_size : constant Positive := result.line_size;
          begin
-            if Random_Boolean(RNG.Random(generator)) then
+            if Random_Boolean(Random(generator)) then
                result.line_size := line_size * 2;
                if Get_Cost(result.all) > max_cost then
                   result.line_size := line_size;
@@ -78,7 +77,7 @@ package body Memory.Cache is
          declare
             line_count : constant Positive := result.line_count;
          begin
-            if Random_Boolean(RNG.Random(generator)) then
+            if Random_Boolean(Random(generator)) then
                result.line_count := 2 * line_count;
                if Get_Cost(result.all) > max_cost then
                   result.line_count := line_count;
@@ -91,7 +90,7 @@ package body Memory.Cache is
          declare
             associativity : constant Positive := result.associativity;
          begin
-            if Random_Boolean(RNG.Random(generator)) then
+            if Random_Boolean(Random(generator)) then
                result.associativity := result.associativity * 2;
                if result.associativity > result.line_count or else
                   Get_Cost(result.all) > max_cost then
@@ -105,7 +104,7 @@ package body Memory.Cache is
          declare
             policy : constant Policy_Type := result.policy;
          begin
-            result.policy := Random_Policy(RNG.Random(generator));
+            result.policy := Random_Policy(Random(generator));
             if Get_Cost(result.all) > max_cost then
                result.policy := policy;
                exit;
@@ -116,7 +115,7 @@ package body Memory.Cache is
          declare
             write_back  : constant Boolean := result.write_back;
          begin
-            result.write_back := Random_Boolean(RNG.Random(generator));
+            result.write_back := Random_Boolean(Random(generator));
             if Get_Cost(result.all) > max_cost then
                result.write_back := write_back;
                exit;
@@ -147,11 +146,11 @@ package body Memory.Cache is
    end Clone;
 
    procedure Permute(mem         : in out Cache_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
 
       param_count    : constant Natural := 8;
-      param          : Natural := RNG.Random(generator) mod param_count;
+      param          : Natural := Random(generator) mod param_count;
       line_size      : constant Positive     := mem.line_size;
       line_count     : constant Positive     := mem.line_count;
       associativity  : constant Positive     := mem.associativity;
@@ -197,11 +196,11 @@ package body Memory.Cache is
                   mem.associativity := associativity;
                end if;
             when 6 =>      -- Change policy
-               mem.policy := Random_Policy(RNG.Random(generator));
+               mem.policy := Random_Policy(Random(generator));
                exit when Get_Cost(mem) <= max_cost;
                mem.policy := policy;
             when others => -- Change type
-               mem.write_back := Random_Boolean(RNG.Random(generator));
+               mem.write_back := Random_Boolean(Random(generator));
                exit when Get_Cost(mem) <= max_cost;
                mem.write_back := write_back;
          end case;
@@ -370,7 +369,6 @@ package body Memory.Cache is
       data : Cache_Data_Pointer;
    begin
       Reset(Container_Type(mem));
-      RNG.Reset(mem.generator.all);
       for i in 0 .. mem.line_count - 1 loop
          data := mem.data.Element(i);
          data.address   := Address_Type'Last;
@@ -565,7 +563,6 @@ package body Memory.Cache is
          ptr := new Cache_Data'(mem.data.Element(i).all);
          mem.data.Replace_Element(i, ptr);
       end loop;
-      mem.generator := new RNG.Generator;
    end Adjust;
 
    procedure Free is
@@ -581,7 +578,6 @@ package body Memory.Cache is
             Free(ptr);
          end;
       end loop;
-      Destroy(mem.generator);
    end Finalize;
 
    function Get_Line_Size(mem : Cache_Type) return Positive is

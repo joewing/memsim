@@ -1,11 +1,12 @@
 
 with Memory.Container;  use Memory.Container;
 with Memory.Wrapper;    use Memory.Wrapper;
+with Applicative;       use Applicative;
 
 package Memory.Transform is
 
    type Transform_Type is abstract new Container_Type
-      and Wrapper_Type with private;
+      and Applicative_Type and Wrapper_Type with private;
 
    type Transform_Pointer is access all Transform_Type'Class;
 
@@ -78,7 +79,8 @@ package Memory.Transform is
 
 private
 
-   type Transform_Type is abstract new Container_Type and Wrapper_Type with
+   type Transform_Type is abstract new Container_Type
+      and Applicative_Type and Wrapper_Type with
    record
       bank  : access Memory_Type'Class := null;
       value : Integer := 0;

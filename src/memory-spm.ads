@@ -12,7 +12,7 @@ package Memory.SPM is
                        latency   : Time_Type := 1) return SPM_Pointer;
 
    function Random_SPM(next      : access Memory_Type'Class;
-                       generator : RNG.Generator;
+                       generator : Distribution_Type;
                        max_cost  : Cost_Type)
                        return Memory_Pointer;
 
@@ -21,7 +21,7 @@ package Memory.SPM is
 
    overriding
    procedure Permute(mem         : in out SPM_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type);
 
    overriding

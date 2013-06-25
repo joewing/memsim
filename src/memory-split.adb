@@ -11,14 +11,14 @@ package body Memory.Split is
    end Create_Split;
 
    function Random_Split(next       : access Memory_Type'Class;
-                         generator  : RNG.Generator;
+                         generator  : Distribution_Type;
                          max_cost   : Cost_Type)
                          return Memory_Pointer is
       result   : constant Split_Pointer := Create_Split;
       wsize    : constant Natural := Get_Word_Size(next.all);
    begin
       Set_Memory(result.all, next);
-      result.offset := Address_Type(2 ** (RNG.Random(generator) mod 16));
+      result.offset := Address_Type(2 ** (Random(generator) mod 16));
       result.offset := result.offset * Address_Type(wsize);
       return Memory_Pointer(result);
    end Random_Split;
@@ -30,11 +30,11 @@ package body Memory.Split is
    end Clone;
 
    procedure Permute(mem         : in out Split_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
       wsize : constant Address_Type := Address_Type(Get_Word_Size(mem));
    begin
-      if mem.offset > wsize and then (RNG.Random(generator) mod 2) = 0 then
+      if mem.offset > wsize and then (Random(generator) mod 2) = 0 then
          mem.offset := mem.offset - wsize;
       else
          mem.offset := mem.offset + wsize;

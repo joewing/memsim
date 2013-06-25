@@ -10,12 +10,12 @@ package body Memory.Transform.Shift is
    end Create_Shift;
 
    function Random_Shift(next       : access Memory_Type'Class;
-                         generator  : RNG.Generator;
+                         generator  : Distribution_Type;
                          max_cost   : Cost_Type) return Memory_Pointer is
       result : constant Shift_Pointer := Create_Shift;
    begin
       Set_Memory(result.all, next);
-      result.value := (RNG.Random(generator) mod 16) + 1;
+      result.value := (Random(generator) mod 16) + 1;
       return Memory_Pointer(result);
    end Random_Shift;
 
@@ -26,14 +26,14 @@ package body Memory.Transform.Shift is
    end Clone;
 
    procedure Permute(mem         : in out Shift_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
    begin
       if mem.value = 0 then
          mem.value := mem.value + 1;
       elsif mem.value = Get_Address_Size(mem) * 8 then
          mem.value := mem.value - 1;
-      elsif (RNG.Random(generator) mod 2) = 0 then
+      elsif (Random(generator) mod 2) = 0 then
          mem.value := mem.value + 1;
       else
          mem.value := mem.value - 1;

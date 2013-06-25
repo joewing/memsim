@@ -8,7 +8,7 @@ package Memory.Transform.Flip is
    function Create_Flip return Flip_Pointer;
 
    function Random_Flip(next        : access Memory_Type'Class;
-                        generator   : RNG.Generator;
+                        generator   : Distribution_Type;
                         max_cost    : Cost_Type) return Memory_Pointer;
 
    overriding
@@ -16,7 +16,7 @@ package Memory.Transform.Flip is
 
    overriding
    procedure Permute(mem         : in out Flip_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type);
 
    overriding

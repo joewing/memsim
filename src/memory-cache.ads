@@ -25,7 +25,7 @@ package Memory.Cache is
                          return Cache_Pointer;
 
    function Random_Cache(next       : access Memory_Type'Class;
-                         generator  : RNG.Generator;
+                         generator  : Distribution_Type;
                          max_cost   : Cost_Type)
                          return Memory_Pointer;
 
@@ -34,7 +34,7 @@ package Memory.Cache is
 
    overriding
    procedure Permute(mem         : in out Cache_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type);
 
    overriding
@@ -95,7 +95,6 @@ private
       data           : Cache_Vectors.Vector;
       policy         : Policy_Type := LRU;
       write_back     : Boolean := True;
-      generator      : Generator_Pointer := new RNG.Generator;
    end record;
 
 end Memory.Cache;

@@ -15,7 +15,7 @@ package body Memory.SPM is
    end Create_SPM;
 
    function Random_SPM(next      : access Memory_Type'Class;
-                       generator : RNG.Generator;
+                       generator : Distribution_Type;
                        max_cost  : Cost_Type)
                        return Memory_Pointer is
       result : SPM_Pointer := new SPM_Type;
@@ -50,9 +50,9 @@ package body Memory.SPM is
    end Clone;
 
    procedure Permute(mem         : in out SPM_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
-      action : Natural := RNG.Random(generator) mod 2;
+      action : Natural := Random(generator) mod 2;
    begin
 
       for i in 1 .. 2 loop

@@ -8,7 +8,7 @@ package body Memory.Transform.Offset is
    end Create_Offset;
 
    function Random_Offset(next      : access Memory_Type'Class;
-                          generator : RNG.Generator;
+                          generator : Distribution_Type;
                           max_cost  : Cost_Type) return Memory_Pointer is
       result   : constant Offset_Pointer := Create_Offset;
       wsize    : constant Natural := Get_Word_Size(next.all);
@@ -16,15 +16,15 @@ package body Memory.Transform.Offset is
    begin
       Set_Memory(result.all, next);
 
-      if (RNG.Random(generator) mod 2) = 0 then
+      if (Random(generator) mod 2) = 0 then
          -- Byte offset.
-         base := RNG.Random(generator) mod wsize;
+         base := Random(generator) mod wsize;
       else
          -- Word offset.
-         base := 2 ** (RNG.Random(generator) mod 16);
+         base := 2 ** (Random(generator) mod 16);
       end if;
 
-      if (RNG.Random(generator) mod 2) = 0 then
+      if (Random(generator) mod 2) = 0 then
          -- Negative offset.
          result.value := -(wsize * base);
       else
@@ -42,11 +42,11 @@ package body Memory.Transform.Offset is
    end Clone;
 
    procedure Permute(mem         : in out Offset_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
       wsize : constant Natural := Get_Word_Size(mem);
    begin
-      case RNG.Random(generator) mod 4 is
+      case Random(generator) mod 4 is
          when 0      => -- Add word offset
             mem.value := mem.value + wsize;
          when 1      => -- Subtract word offset.

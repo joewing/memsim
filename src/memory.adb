@@ -1,13 +1,14 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
+with Ada.Unchecked_Deallocation;
 
 package body Memory is
 
    next_id : Natural := 0;
 
    procedure Permute(mem         : in out Memory_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
    begin
       null;

@@ -1,6 +1,7 @@
 
 with Memory.Split;      use Memory.Split;
 with Memory.Container;  use Memory.Container;
+with Util;              use Util;
 
 separate (Parser)
 procedure Parse_Split(parser  : in out Parser_Type;

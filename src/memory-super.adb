@@ -2,6 +2,7 @@
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Assertions;          use Ada.Assertions;
 with Ada.Numerics.Generic_Elementary_Functions;
+with Ada.Unchecked_Deallocation;
 with Memory.Cache;            use Memory.Cache;
 with Memory.SPM;              use Memory.SPM;
 with Memory.Transform;        use Memory.Transform;
@@ -43,7 +44,7 @@ package body Memory.Super is
       tcost    : constant Cost_Type := cost + Get_Cost(next.all);
       result   : Memory_Pointer := null;
    begin
-      case RNG.Random(mem.generator.all) mod 5 is
+      case Random(mem.generator.all) mod 5 is
          when 0      =>
             result := Create_Transform(mem, next, cost, in_bank);
          when 1      =>
@@ -94,7 +95,7 @@ package body Memory.Super is
       join     : Join_Pointer;
       bank     : Memory_Pointer;
    begin
-      case RNG.Random(mem.generator.all) mod 4 is
+      case Random(mem.generator.all) mod 4 is
          when 0 =>
             result := Random_Flip(next, mem.generator.all, cost);
          when 1 =>
@@ -105,7 +106,7 @@ package body Memory.Super is
             result := Random_Shift(next, mem.generator.all, cost);
       end case;
       trans := Transform_Pointer(result);
-      if in_bank or (RNG.Random(mem.generator.all) mod 2) = 0 then
+      if in_bank or (Random(mem.generator.all) mod 2) = 0 then
          join := Create_Join(trans, 0);
          bank := Create_Memory(mem, join, cost, True);
          Set_Bank(trans.all, bank);
@@ -491,27 +492,27 @@ package body Memory.Super is
       -- Select an action to take.
       -- Here we give extra weight to modifying an existing subsystem
       -- rather than adding or removing components.
-      case RNG.Random(mem.generator.all) mod 16 is
+      case Random(mem.generator.all) mod 16 is
          when 0      =>    -- Insert a component.
             if Cost_Type(len) >= mem.max_cost then
-               pos := RNG.Random(mem.generator.all) mod len;
+               pos := Random(mem.generator.all) mod len;
                Remove_Memory(mem.current, pos);
             else
-               pos := RNG.Random(mem.generator.all) mod (len + 1);
+               pos := Random(mem.generator.all) mod (len + 1);
                Insert_Memory(mem, mem.current, pos, left, False);
             end if;
          when 1 .. 3 =>    -- Remove a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
             else
-               pos := RNG.Random(mem.generator.all) mod len;
+               pos := Random(mem.generator.all) mod len;
                Remove_Memory(mem.current, pos);
             end if;
          when others =>    -- Modify a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
             else
-               pos := RNG.Random(mem.generator.all) mod len;
+               pos := Random(mem.generator.all) mod len;
                temp := Get_Memory(mem.current, pos);
                Permute(temp.all, mem.generator.all, left + Get_Cost(temp.all));
             end if;
@@ -534,7 +535,7 @@ package body Memory.Super is
       result.max_iterations   := max_iterations;
       result.last             := Memory_Pointer(mem);
       result.current          := Clone(mem.all);
-      RNG.Reset(result.generator.all, seed);
+      Set_Seed(result.generator.all, seed);
       Set_Memory(result.all, result.current);
       Randomize(Super_Type(result.all));
       return result;
@@ -546,7 +547,7 @@ package body Memory.Super is
       enew  : constant Float := Float(value);
       dele  : constant Float := abs(enew - eold);
       prob  : constant Float := Float_Math.Exp(-dele / mem.temperature);
-      rand  : constant Float := Float(RNG.Random(mem.generator.all)) /
+      rand  : constant Float := Float(Random(mem.generator.all)) /
                                 Float(Natural'Last);
    begin
 
@@ -712,10 +713,13 @@ package body Memory.Super is
    procedure Adjust(mem : in out Super_Type) is
    begin
       Adjust(Container_Type(mem));
-      mem.generator  := new RNG.Generator;
+      mem.generator  := new Distribution_Type;
       mem.last       := null;
       mem.current    := null;
    end Adjust;
+
+   procedure Destroy is new Ada.Unchecked_Deallocation(Distribution_Type,
+                                                       Distribution_Pointer);
 
    procedure Finalize(mem : in out Super_Type) is
    begin
