@@ -753,7 +753,6 @@ package body Memory.Super is
 
    procedure Finalize(mem : in out Super_Type) is
    begin
-Print(mem.generator.all);
       Set_Memory(mem, null);
       Finalize(Container_Type(mem));
       Destroy(mem.generator);
