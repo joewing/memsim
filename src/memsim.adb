@@ -110,7 +110,6 @@ begin
    end loop;
 
    Benchmark.Run(bm.all, mem);
-   Show_Stats(mem.all);
    Destroy(bm);
    Destroy(mem);
 

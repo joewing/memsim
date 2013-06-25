@@ -130,7 +130,7 @@ package body Memory.Super is
 
    function Done(mem : Super_Type) return Boolean is
    begin
-      return mem.iteration > mem.max_iterations;
+      return mem.iteration >= mem.max_iterations;
    end Done;
 
    function Count_Memories(ptr : Memory_Pointer) return Natural is
@@ -171,8 +171,6 @@ package body Memory.Super is
 
    procedure Reset(mem : in out Super_Type) is
    begin
-      Put_Line("Iteration:" & Long_Integer'Image(mem.iteration) &
-               " (" & To_String(mem.total) & " evaluations)");
       mem.current_length := 0;
       Reset(Container_Type(mem));
    end Reset;
@@ -713,31 +711,37 @@ package body Memory.Super is
 
       -- Keep track of the best memory.
       Track_Best(mem, cost, value);
+      Put_Line("Best Memory: " & To_String(mem.best_name));
+      Put_Line("Best Value:  " & Value_Type'Image(mem.best_value));
+      Put_Line("Best Cost:   " & Cost_Type'Image(mem.best_cost));
 
       -- Keep track of the result of running with this memory.
       Cache_Result(mem, value);
 
-      -- Generate new memories until we find a new one.
-      Put_Line("Temperature:" & Float'Image(mem.temperature));
-      loop
-         Update_Memory(mem, value);
-         value := Check_Cache(mem);
-         exit when value = 0;
-      end loop;
-      Put_Line(To_String(To_String(mem)));
-
       -- Keep track of the number of iterations.
       mem.iteration  := mem.iteration + 1;
       mem.total      := mem.total + 1;
+      if not Done(mem) then
+
+         Put_Line("Iteration:" & Long_Integer'Image(mem.iteration + 1) &
+                  " (evaluation " & To_String(mem.total + 1) &
+                  ", temperature" & Float'Image(mem.temperature) & ")");
+
+         -- Generate new memories until we find a new one.
+         loop
+            Update_Memory(mem, value);
+            value := Check_Cache(mem);
+            exit when value = 0;
+         end loop;
+         Put_Line(To_String(To_String(mem)));
+
+      end if;
 
    end Finish_Run;
 
    procedure Show_Access_Stats(mem : in out Super_Type) is
    begin
       Finish_Run(mem);
-      Put_Line("Best Memory: " & To_String(mem.best_name));
-      Put_Line("Best Value:  " & Value_Type'Image(mem.best_value));
-      Put_Line("Best Cost:   " & Cost_Type'Image(mem.best_cost));
    end Show_Access_Stats;
 
    procedure Adjust(mem : in out Super_Type) is
