@@ -121,7 +121,7 @@ package body Memory.Super is
 
    function Done(mem : Super_Type) return Boolean is
    begin
-      return mem.iteration >= mem.max_iterations;
+      return mem.iteration > mem.max_iterations;
    end Done;
 
    function Count_Memories(ptr : Memory_Pointer) return Natural is
@@ -175,7 +175,9 @@ package body Memory.Super is
       mem.current_length := mem.current_length + 1;
       Read(Container_Type(mem), address, size);
       if Get_Value(mem'Access) > mem.best_value then
-         raise Prune_Error;
+         if mem.current_length > mem.total_length / 4 then
+            raise Prune_Error;
+         end if;
       end if;
    end Read;
 
@@ -186,7 +188,9 @@ package body Memory.Super is
       mem.current_length := mem.current_length + 1;
       Write(Container_Type(mem), address, size);
       if Get_Value(mem'Access) > mem.best_value then
-         raise Prune_Error;
+         if mem.current_length > mem.total_length / 4 then
+            raise Prune_Error;
+         end if;
       end if;
    end Write;
 
@@ -536,7 +540,6 @@ package body Memory.Super is
       result.current          := Clone(mem.all);
       RNG.Reset(result.generator.all, seed);
       Set_Memory(result.all, result.current);
-      Randomize(Super_Type(result.all));
       return result;
    end Create_Super;
 
