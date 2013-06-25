@@ -190,16 +190,30 @@ package body Memory.Super is
       end if;
    end Write;
 
-   procedure Remove_Memory(ptr   : in out Memory_Pointer;
-                           index : in Natural) is
+   procedure Remove_Memory(ptr      : in out Memory_Pointer;
+                           index    : in Natural;
+                           updated  : out Boolean) is
    begin
 
       Assert(ptr /= null, "null ptr in Remove_Memory");
 
       if index = 0 then
-
-         -- Remove this memory.
-         if ptr.all in Container_Type'Class then
+         if ptr.all in Split_Type'Class then
+            declare
+               sp    : constant Split_Pointer   := Split_Pointer(ptr);
+               b0    : constant Memory_Pointer  := Get_Bank(sp.all, 0);
+               b1    : constant Memory_Pointer  := Get_Bank(sp.all, 1);
+               next  : constant Memory_Pointer  := Get_Memory(sp.all);
+            begin
+               if b0.all in Join_Type'Class
+                  and b1.all in Join_Type'Class then
+                  Set_Memory(sp.all, null);
+                  Destroy(ptr);
+                  ptr := next;
+                  updated := True;
+               end if;
+            end;
+         elsif ptr.all in Container_Type'Class then
             declare
                cp    : constant Container_Pointer  := Container_Pointer(ptr);
                next  : constant Memory_Pointer     := Get_Memory(cp.all);
@@ -207,12 +221,15 @@ package body Memory.Super is
                Set_Memory(cp.all, null);
                Destroy(ptr);
                ptr := next;
+               updated := True;
             end;
          elsif ptr.all not in Join_Type'Class then
             Destroy(ptr);
             ptr := null;
+            updated := True;
+         else
+            updated := False;
          end if;
-
       elsif ptr.all in Split_Type'Class then
          declare
             sp : constant Split_Pointer   := Split_Pointer(ptr);
@@ -222,63 +239,42 @@ package body Memory.Super is
             bc : constant Natural         := Count_Memories(b);
             n  : Memory_Pointer           := Get_Memory(sp.all);
          begin
-
             if 1 + ac > index then
-
-               -- The memory to remove is in the first bank.
-               Remove_Memory(a, index - 1);
+               Remove_Memory(a, index - 1, updated);
                Set_Bank(sp.all, 0, a);
-
             elsif 1 + ac + bc > index then
-
-               -- The memory to remove is in the second bank.
-               Remove_Memory(b, index - ac - 1);
+               Remove_Memory(b, index - ac - 1, updated);
                Set_Bank(sp.all, 1, b);
-
             else
-
-               -- The memory to remove follows this memory.
-               Remove_Memory(n, index - ac - bc - 1);
+               Remove_Memory(n, index - ac - bc - 1, updated);
                Set_Memory(sp.all, n);
-
             end if;
          end;
-
       elsif ptr.all in Transform_Type'Class then
-
          declare
             tp    : constant Transform_Pointer  := Transform_Pointer(ptr);
             bank  : Memory_Pointer              := Get_Bank(tp.all);
             count : constant Natural            := Count_Memories(bank);
             next  : Memory_Pointer              := Get_Memory(tp.all);
          begin
-
             if 1 + count > index then
-
-               -- Remove from the bank.
-               Remove_Memory(bank, index - 1);
+               Remove_Memory(bank, index - 1, updated);
                Set_Bank(tp.all, bank);
-
             else
-
-               -- The memory to remove follows this memory.
-               Remove_Memory(next, index - count - 1);
+               Remove_Memory(next, index - count - 1, updated);
                Set_Memory(tp.all, next);
-
             end if;
-
          end;
-
       elsif ptr.all in Container_Type'Class then
-
          declare
             cp : constant Container_Pointer  := Container_Pointer(ptr);
             n  : Memory_Pointer              := Get_Memory(cp.all);
          begin
-            Remove_Memory(n, index - 1);
+            Remove_Memory(n, index - 1, updated);
             Set_Memory(cp.all, n);
          end;
-
+      else
+         updated := False;
       end if;
    end Remove_Memory;
 
@@ -377,10 +373,10 @@ package body Memory.Super is
 
    end Insert_Memory;
 
-   procedure Permute_Memory(mem     : in Super_Type;
-                            ptr     : in Memory_Pointer;
-                            index   : in Natural;
-                            cost    : in Cost_Type) is
+   function Permute_Memory(mem   : in Super_Type;
+                           ptr   : in Memory_Pointer;
+                           index : in Natural;
+                           cost  : in Cost_Type) return Boolean is
    begin
 
       Assert(ptr /= null, "null ptr in Permute_Memory");
@@ -388,6 +384,7 @@ package body Memory.Super is
       if index = 0 then
 
          Permute(ptr.all, mem.generator.all, cost + Get_Cost(ptr.all));
+         return ptr.all not in Join_Type'Class;
 
       elsif ptr.all in Split_Type'Class then
 
@@ -398,19 +395,21 @@ package body Memory.Super is
             b  : constant Memory_Pointer  := Get_Bank(sp.all, 1);
             bc : constant Natural         := Count_Memories(b);
             n  : constant Memory_Pointer  := Get_Memory(sp.all);
+            rc : Boolean;
          begin
             if 1 + ac > index then
                Push_Limit(mem.generator.all, 0, Get_Offset(sp.all));
-               Permute_Memory(mem, a, index - 1, cost);
+               rc := Permute_Memory(mem, a, index - 1, cost);
                Pop_Limit(mem.generator.all);
             elsif 1 + ac + bc > index then
                Push_Limit(mem.generator.all, Get_Offset(sp.all),
                           Address_Type'Last);
-               Permute_Memory(mem, b, index - ac - 1, cost);
+               rc := Permute_Memory(mem, b, index - ac - 1, cost);
                Pop_Limit(mem.generator.all);
             else
-               Permute_Memory(mem, n, index - ac - bc - 1, cost);
+               rc := Permute_Memory(mem, n, index - ac - bc - 1, cost);
             end if;
+            return rc;
          end;
 
       elsif ptr.all in Transform_Type'Class then
@@ -420,20 +419,22 @@ package body Memory.Super is
             bank  : constant Memory_Pointer     := Get_Bank(tp.all);
             count : constant Natural            := Count_Memories(bank);
             next  : constant Memory_Pointer     := Get_Memory(tp.all);
+            rc    : Boolean;
          begin
             if 1 + count > index then
                Push_Transform(mem.generator.all, Applicative_Pointer(tp));
-               Permute_Memory(mem, bank, index - 1, cost);
+               rc := Permute_Memory(mem, bank, index - 1, cost);
                Pop_Transform(mem.generator.all);
             else
                if Get_Bank(tp.all) = null then
                   Push_Transform(mem.generator.all, Applicative_Pointer(tp));
-                  Permute_Memory(mem, next, index - count - 1, cost);
+                  rc := Permute_Memory(mem, next, index - count - 1, cost);
                   Pop_Transform(mem.generator.all);
                else
-                  Permute_Memory(mem, next, index - count - 1, cost);
+                  rc := Permute_Memory(mem, next, index - count - 1, cost);
                end if;
             end if;
+            return rc;
          end;
 
       elsif ptr.all in Container_Type'Class then
@@ -442,8 +443,13 @@ package body Memory.Super is
             cp : constant Container_Pointer  := Container_Pointer(ptr);
             n  : constant Memory_Pointer     := Get_Memory(cp.all);
          begin
-            Permute_Memory(mem, n, index - 1, cost);
+            return Permute_Memory(mem, n, index - 1, cost);
          end;
+
+      else
+
+         Assert(False, "invalid type in Permute_Memory");
+         return False;
 
       end if;
    end Permute_Memory;
@@ -508,6 +514,7 @@ package body Memory.Super is
    procedure Randomize(mem : in out Super_Type) is
       len   : constant Natural := Count_Memories(mem.current);
       pos   : Natural;
+      rc    : Boolean;
       cost  : constant Cost_Type := Get_Cost(mem.current.all);
       left  : constant Cost_Type := mem.max_cost - cost;
    begin
@@ -515,23 +522,28 @@ package body Memory.Super is
       -- Select an action to take.
       -- Here we give extra weight to modifying an existing subsystem
       -- rather than adding or removing components.
-      case Random(mem.generator.all) mod 8 is
+      case Random(mem.generator.all) mod 16 is
          when 0      =>    -- Insert a component.
             pos := Random(mem.generator.all) mod (len + 1);
             Insert_Memory(mem, mem.current, pos, left, False);
-         when 1 =>         -- Remove a component.
+         when 1 .. 2 =>    -- Remove a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
             else
-               pos := Random(mem.generator.all) mod len;
-               Remove_Memory(mem.current, pos);
+               loop
+                  pos := Random(mem.generator.all) mod len;
+                  Remove_Memory(mem.current, pos, rc);
+                  exit when rc;
+               end loop;
             end if;
          when others =>    -- Modify a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
             else
-               pos := Random(mem.generator.all) mod len;
-               Permute_Memory(mem, mem.current, pos, left);
+               loop
+                  pos := Random(mem.generator.all) mod len;
+                  exit when Permute_Memory(mem, mem.current, pos, left);
+               end loop;
             end if;
       end case;
       Set_Memory(mem, mem.current);
