@@ -9,12 +9,13 @@ This is a memory simulator to determine how long memory access take.
 Running memsim with no arguments will show its usage:
 
 <pre>
-usage: ./memsim &lt;memory&gt; &lt;benchmark&gt; [&lt;options&gt;]
+usage: ./memsim <memory> <benchmark> [<options>]
 benchmarks:
-  hash [size=1024] [iterations=1000] [spacing=100]
-  heap [size=1024] [iterations=1000] [spacing=100]
-  stride [size=1024] [iterations=1000] [stride=1] [spacing=100]
-  trace [file=trace.txt] [iterations=1] [spacing=100]
+   hash [size=1024][iterations=1000][spacing=0]
+   heap [size=1024][iterations=1000][spacing=0]
+   mm [size=256][iterations=1][spacing=0]
+   stride [size=1024][iterations=1000][stride=1][spacing=0]
+   trace [file=trace.txt][spacing=0]
 </pre>
 
 The &lt;memory&gt; parameter specifies a memory description file.
@@ -25,6 +26,8 @@ The following benchmarks are available:
  - *hash*: A benchmark to generate random 4-byte memory accesses.
  - *heap*: A benchmark to perform random insertions and deletions of
    4-byte items in a full binary heap.
+ - *mm*: A benchmark to simulate matrix-matrix multiplication on 4-byte
+   values.
  - *stride*: A benchmark to perform strided 4-byte memory accesses.
  - *trace*: A benchmark to execute a memory access trace.
 
@@ -96,7 +99,6 @@ The following memory containers are available:
    - latency: The latency of a cache hit (1).
    - policy: The replacement policy (lru, mru, fifo, or random,
      defaults is lru).
-   - exclusive: Determine if read values are cached (defaults to true).
    - write\_back: Set if the cache should use write back instead of
      write through (defaults to false).
  - dup: Access duplicator.  This can be used to test several memories at
@@ -104,28 +106,42 @@ The following memory containers are available:
  - perfect\_prefetch: Perfect prefetcher.  Takes the following parameter:
    - memory: The contained memory.
  - prefetch: Strided prefetcher.  Prefetches the address computed by
-   (address * multiplier + stride) Takes the following parameters:
+   (address + stride) Takes the following parameters:
    - memory: The contained memory.
    - stride: The stride size (defaults to 1).
-   - multiplier: The stride multiplier (defaults to 1).
  - spm: Scratchpad memory.  Takes the following parameters:
    - memory: The contained memory.
    - size: The size of the scratchpad (defaults to 0).
    - latency: The latency of a hit in the scratchpad.
  - stats: Access statistics logger.  Takes the following parameter:
    - memory: The contained memory.
- - super: Memory hierarchy optimizer (for use with the trace benchmark).
+ - super: Memory hierarchy optimizer.
    Takes the following parameters:
    - memory: The contained memory.
    - optimize: The optimization target (time or writes, defaults to time).
-   - max\_cost: The maximum cost in transistors (defaults to 0).
+   - max\_cost: The maximum cost in block RAMs (defaults to 0).
+   - max\_iterations: The maximum iterations to run without improvement.
  - trace: Access trace logger.  Takes the following parameter:
    - memory: The contained memory.
- - transform: Address transformer.  Takes the following parameters:
+ - offset: Address offset transform.  Takes the following parameters:
+   - bank: The memory to see the transformed addresses (if present).
+     If not present, addresses are transformed for the memory parameter.
    - memory: The contained memory.
-   - offset: An address offset (exactly one of shift or offset must be
-     specified).
-   - shift: A number of bits to rotate the address left.
+   - value: A value to add to the address.
+ - shift: Address shift transform.  Takes the following parameters:
+   - bank: The memory to see the transformed addresses (if present).
+     If not present, addresses are transformed for the memory parameter.
+   - memory: The contained memory.
+   - value: The number of bits to shift left.
+ - eor: Address XOR transform.  Takes the following parameters:
+   - bank: The memory to see the transformed addresses (if present).
+     If not present, addresses are transformed for the memory parameter.
+   - memory: The contained memory.
+   - value: The value to XOR with the address.
+ - flip: Address flip transform.  Takes the following parameters:
+   - bank: The memory to see the transformed addresses (if present).
+     If not present, addresses are transformed for the memory parameter.
+   - memory: The contained memory.
 
 Building
 ------------------------------------------------------------------------------
