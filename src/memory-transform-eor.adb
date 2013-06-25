@@ -8,11 +8,11 @@ package body Memory.Transform.EOR is
    end Create_EOR;
 
    function Random_EOR(next      : access Memory_Type'Class;
-                       generator : RNG.Generator;
+                       generator : Distribution_Type;
                        max_cost  : Cost_Type) return Memory_Pointer is
       result   : constant EOR_Pointer := Create_EOR;
       abits    : constant Positive := Integer'Size - 1;
-      bit      : constant Positive := 2 ** (RNG.Random(generator) mod abits);
+      bit      : constant Positive := 2 ** (Random(generator) mod abits);
    begin
       Set_Memory(result.all, next);
       result.value := bit;
@@ -34,10 +34,10 @@ package body Memory.Transform.EOR is
    end "xor";
 
    procedure Permute(mem         : in out EOR_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
       abits : constant Positive := Integer'Size - 1;
-      bit   : constant Positive := 2 ** (RNG.Random(generator) mod abits);
+      bit   : constant Positive := 2 ** (Random(generator) mod abits);
    begin
       mem.value := mem.value xor bit;
    end Permute;

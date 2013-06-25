@@ -1,5 +1,6 @@
 
 with Memory.Prefetch;
+with Util; use Util;
 
 separate (Parser)
 procedure Parse_Prefetch(parser   : in out Parser_Type;

@@ -2,6 +2,7 @@
 with Memory.Super_Time;
 with Memory.Super_Writes;
 with Memory.Super_None;
+with Util; use Util;
 
 separate (Parser)
 procedure Parse_Super(parser  : in out Parser_Type;

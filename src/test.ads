@@ -1,9 +1,11 @@
 
 with GNAT.Source_Info;
 
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Memory.Container; use Memory.Container;
-use Memory;
+with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+
+with Memory;                  use Memory;
+with Memory.Container;        use Memory.Container;
+with Util;                    use Util;
 
 package Test is
 

@@ -11,7 +11,7 @@ package Memory.Split is
    function Create_Split return Split_Pointer;
 
    function Random_Split(next       : access Memory_Type'Class;
-                         generator  : RNG.Generator;
+                         generator  : Distribution_Type;
                          max_cost   : Cost_Type)
                          return Memory_Pointer;
 
@@ -20,7 +20,7 @@ package Memory.Split is
 
    overriding
    procedure Permute(mem         : in out Split_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type);
 
    function Get_Bank(mem    : Split_Type;

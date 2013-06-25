@@ -1,5 +1,6 @@
 
 with Memory.Flash;
+with Util; use Util;
 
 separate (Parser)
 procedure Parse_Flash(parser  : in out Parser_Type;

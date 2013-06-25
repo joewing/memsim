@@ -1,5 +1,6 @@
 
 with Memory.RAM;
+with Util; use Util;
 
 separate (Parser)
 procedure Parse_RAM(parser : in out Parser_Type;

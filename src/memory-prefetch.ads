@@ -12,7 +12,7 @@ package Memory.Prefetch is
                             return Prefetch_Pointer;
 
    function Random_Prefetch(next       : access Memory_Type'Class;
-                            generator  : RNG.Generator;
+                            generator  : Distribution_Type;
                             max_cost   : Cost_Type)
                             return Memory_Pointer;
 
@@ -21,7 +21,7 @@ package Memory.Prefetch is
 
    overriding
    procedure Permute(mem         : in out Prefetch_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type);
 
    overriding

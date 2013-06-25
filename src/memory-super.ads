@@ -52,7 +52,7 @@ private
    type Super_Type is new Container_Type with record
       max_cost       : Cost_Type             := 1e6;
       initial        : Long_Integer          := 10;
-      generator      : Generator_Pointer     := new RNG.Generator;
+      generator      : Distribution_Pointer;
 
       total_length   : Natural               := 0;
       current_length : Natural               := 0;

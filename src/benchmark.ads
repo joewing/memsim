@@ -2,11 +2,11 @@
 with Ada.Numerics.Discrete_Random;
 with Ada.Containers.Vectors;
 with Ada.Finalization;
-with Memory;
-
 use Ada.Containers;
 use Ada.Finalization;
-use Memory;
+
+with Memory;   use Memory;
+with Util;     use Util;
 
 package Benchmark is
 

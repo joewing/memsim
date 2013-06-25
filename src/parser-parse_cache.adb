@@ -1,5 +1,6 @@
 
 with Memory.Cache;
+with Util; use Util;
 
 separate (Parser)
 procedure Parse_Cache(parser  : in out Parser_Type;

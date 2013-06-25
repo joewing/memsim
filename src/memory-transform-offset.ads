@@ -8,7 +8,7 @@ package Memory.Transform.Offset is
    function Create_Offset return Offset_Pointer;
 
    function Random_Offset(next      : access Memory_Type'Class;
-                          generator : RNG.Generator;
+                          generator : Distribution_Type;
                           max_cost  : Cost_Type) return Memory_Pointer;
 
    overriding
@@ -16,7 +16,7 @@ package Memory.Transform.Offset is
 
    overriding
    procedure Permute(mem         : in out Offset_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type);
 
    overriding

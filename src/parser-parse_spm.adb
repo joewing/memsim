@@ -1,5 +1,6 @@
 
 with Memory.SPM;
+with Util; use Util;
 
 separate (Parser)
 procedure Parse_SPM(parser : in out Parser_Type;

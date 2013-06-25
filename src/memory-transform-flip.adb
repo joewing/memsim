@@ -10,7 +10,7 @@ package body Memory.Transform.Flip is
    end Create_Flip;
 
    function Random_Flip(next        : access Memory_Type'Class;
-                        generator   : RNG.Generator;
+                        generator   : Distribution_Type;
                         max_cost    : Cost_Type) return Memory_Pointer is
       result : constant Flip_Pointer := new Flip_Type;
    begin
@@ -25,7 +25,7 @@ package body Memory.Transform.Flip is
    end Clone;
 
    procedure Permute(mem         : in out Flip_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
    begin
       null;

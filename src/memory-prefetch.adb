@@ -12,7 +12,7 @@ package body Memory.Prefetch is
    end Create_Prefetch;
 
    function Random_Prefetch(next       : access Memory_Type'Class;
-                            generator  : RNG.Generator;
+                            generator  : Distribution_Type;
                             max_cost   : Cost_Type)
                             return Memory_Pointer is
       result   : Prefetch_Pointer := new Prefetch_Type;
@@ -24,7 +24,7 @@ package body Memory.Prefetch is
          Destroy(Memory_Pointer(result));
          return Memory_Pointer(next);
       end if;
-      result.stride := Address_Type(RNG.Random(generator) mod 3) - 1;
+      result.stride := Address_Type(Random(generator) mod 3) - 1;
       result.stride := result.stride * Address_Type(wsize);
       return Memory_Pointer(result);
    end Random_Prefetch;
@@ -36,11 +36,11 @@ package body Memory.Prefetch is
    end Clone;
 
    procedure Permute(mem         : in out Prefetch_Type;
-                     generator   : in RNG.Generator;
+                     generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
       wsize : constant Positive := Get_Word_Size(mem);
    begin
-      if (RNG.Random(generator) mod 2) = 0 then
+      if (Random(generator) mod 2) = 0 then
          mem.stride := mem.stride + Address_Type(wsize);
       else
          mem.stride := mem.stride - Address_Type(wsize);
