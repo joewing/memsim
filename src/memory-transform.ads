@@ -18,7 +18,7 @@ package Memory.Transform is
                       bank : access Memory_Type'Class);
 
    procedure Set_Value(mem    : in out Transform_Type;
-                       value  : in Integer);
+                       value  : in Long_Integer);
 
    overriding
    procedure Reset(mem : in out Transform_Type);
@@ -83,7 +83,7 @@ private
       and Applicative_Type and Wrapper_Type with
    record
       bank  : access Memory_Type'Class := null;
-      value : Integer := 0;
+      value : Long_Integer := 0;
    end record;
 
    function Get_Alignment(mem : Transform_Type) return Positive;

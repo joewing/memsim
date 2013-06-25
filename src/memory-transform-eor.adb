@@ -12,7 +12,8 @@ package body Memory.Transform.EOR is
                        max_cost  : Cost_Type) return Memory_Pointer is
       result   : constant EOR_Pointer := Create_EOR;
       abits    : constant Positive := Integer'Size - 1;
-      bit      : constant Positive := 2 ** (Random(generator) mod abits);
+      rand     : constant Positive := Random(generator);
+      bit      : constant Long_Integer := Long_Integer(2) ** (rand mod abits);
    begin
       Set_Memory(result.all, next);
       result.value := bit;
@@ -25,19 +26,20 @@ package body Memory.Transform.EOR is
       return Memory_Pointer(result);
    end Clone;
 
-   function "xor"(a: Integer; b: Integer) return Integer is
-      type MT is mod 2 ** Integer'Size;
+   function "xor"(a: Long_Integer; b: Long_Integer) return Long_Integer is
+      type MT is mod 2 ** Long_Integer'Size;
       tempa : constant MT := MT'Mod(a);
       tempb : constant MT := MT'Mod(b);
    begin
-      return Integer(tempa xor tempb);
+      return Long_Integer(tempa xor tempb);
    end "xor";
 
    procedure Permute(mem         : in out EOR_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
       abits : constant Positive := Integer'Size - 1;
-      bit   : constant Positive := 2 ** (Random(generator) mod abits);
+      rand  : constant Positive := Random(generator);
+      bit   : constant Long_Integer := Long_Integer(2) ** (rand mod abits);
    begin
       mem.value := mem.value xor bit;
    end Permute;

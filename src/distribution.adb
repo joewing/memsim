@@ -1,5 +1,9 @@
 
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Distribution is
+
+   min_size : constant Address_Type := 4096;
 
    procedure Set_Seed(dist : in out Distribution_Type;
                       seed : in Integer) is
@@ -13,9 +17,9 @@ package body Distribution is
 
       function Check_Overlap(a, b : Range_Type) return Boolean is
          a1 : constant Address_Type := a.start;
-         a2 : constant Address_Type := a1 + Address_Type(a.size);
+         a2 : constant Address_Type := a1 + Address_Type(a.size) + min_size;
          b1 : constant Address_Type := b.start;
-         b2 : constant Address_Type := b1 + Address_Type(b.size);
+         b2 : constant Address_Type := b1 + Address_Type(b.size) + min_size;
       begin
          -- a1 b1 a2
          -- b1 a1 b2
@@ -38,20 +42,17 @@ package body Distribution is
       -- Check if this address already exists.
       for i in 1 .. Integer(dist.ranges.Length) loop
          declare
-            r : Range_Type := dist.ranges.Element(i);
+            r     : Range_Type := dist.ranges.Element(i);
+            rsize : constant Address_Type := Address_Type(r.size);
+            rend  : constant Address_Type := r.start + rsize;
          begin
-            if address >= r.start and
-               address <= r.start + Address_Type(r.size) then
-               if address + Address_Type(size) <=
-                  r.start + Address_Type(r.size) then
-                  -- This address is wholely contained.
-                  return;
-               else
+            if address >= r.start and address < rend + min_size then
+               if address + Address_Type(size) > rend then
                   -- This address extends the range.
                   r.size := Positive(address + Address_Type(size) - r.start);
                   dist.ranges.Replace_Element(i, r);
-                  return;
                end if;
+               return;
             end if;
          end;
       end loop;
@@ -69,7 +70,7 @@ package body Distribution is
             begin
                if Check_Overlap(r, other) then
                   Extend_Range(r, other);
-                  dist.ranges.Set_Length(dist.ranges.Length - 1);
+                  dist.ranges.Delete(i);
                end if;
             end;
          end loop;
@@ -80,49 +81,95 @@ package body Distribution is
 
    end Insert;
 
-   procedure Add_Transform(dist  : in out Distribution_Type;
-                           trans : in Applicative_Pointer) is
+   procedure Push_Limit(dist  : in out Distribution_Type;
+                        lower : in Address_Type;
+                        upper : in Address_Type) is
+      l : constant Limit_Type := Limit_Type'(trans => null,
+                                             lower => lower,
+                                             upper => upper);
    begin
-      dist.transformations.Append(trans);
-   end Add_Transform;
+      dist.limits.Append(l);
+   end Push_Limit;
 
-   procedure Reset_Transform(dist : in out Distribution_Type) is
+   procedure Pop_Limit(dist : in out Distribution_Type) is
    begin
-      dist.transformations.Clear;
-   end Reset_Transform;
+      dist.limits.Delete_Last;
+   end Pop_Limit;
+
+   procedure Push_Transform(dist  : in out Distribution_Type;
+                            trans : in Applicative_Pointer) is
+      l : constant Limit_Type := Limit_Type'(trans => trans,
+                                             lower => 0,
+                                             upper => 0);
+   begin
+      dist.limits.Append(l);
+   end Push_Transform;
+
+   procedure Pop_Transform(dist : in out Distribution_Type) is
+   begin
+      dist.limits.Delete_Last;
+   end Pop_Transform;
 
    function Random_Address(dist        : Distribution_Type;
                            alignment   : Positive) return Address_Type is
 
       r     : Range_Type;
       addr  : Address_Type;
+      valid : Boolean;
+      count : Natural;
 
    begin
 
-      -- Select a random range.
-      declare
-         i : constant Natural
-            := RNG.Random(dist.generator) mod Natural(dist.ranges.Length);
-      begin
-         r := dist.ranges.Element(i);
-      end;
+      -- We make multiple attempts to pick a valid address, otherwise
+      -- we settle for any address even if it is not valid.
+      -- It is possible that no valid addresses exist.
+      count := 100;
+      loop
 
-      -- Select an address in the range.
-      addr := r.start + Address_Type(RNG.Random(dist.generator) mod r.size);
-
-      -- Transform the address.
-      for i in 1 .. Integer(dist.transformations.Length) loop
+         -- Select a random range.
          declare
-            tp : constant Applicative_Pointer
-               := dist.transformations.Element(i);
+            i : Natural := RNG.Random(dist.generator);
          begin
-            addr := Apply(tp.all, addr, True);
+            i := i mod Natural(dist.ranges.Length);
+            r := dist.ranges.Element(i + 1);
          end;
-      end loop;
 
-      -- Enforce alignment.
-      -- This could push the addres outside of the range.
-      addr := addr - (addr mod Address_Type(alignment));
+         -- Select an address in the range.
+         -- Pick the start and end values with a higher probability.
+         case RNG.Random(dist.generator) mod 4 is
+            when 0 =>
+               addr := r.start;
+            when 1 =>
+               addr := r.start + Address_Type(r.size);
+            when others =>
+               addr := r.start +
+                       Address_Type(RNG.Random(dist.generator) mod r.size);
+         end case;
+
+         -- Transform the address and check validity.
+         valid := True;
+         for i in 1 .. Integer(dist.limits.Length) loop
+            declare
+               l : constant Limit_Type := dist.limits.Element(i);
+            begin
+               if l.trans /= null then
+                  addr := Apply(l.trans.all, addr, True);
+               elsif addr < l.lower or addr > l.upper then
+                  valid := False;
+               end if;
+            end;
+         end loop;
+
+         -- Enforce alignment.
+         -- This could push the addres outside of the range.
+         addr := addr - (addr mod Address_Type(alignment));
+
+         -- Exit if we have a valid address or exceeded the
+         -- max number of iterations.
+         count := count - 1;
+         exit when valid or count = 0;
+
+      end loop;
 
       return addr;
 
@@ -132,5 +179,17 @@ package body Distribution is
    begin
       return RNG.Random(dist.generator);
    end Random;
+
+   procedure Print(dist : in Distribution_Type) is
+      size : Natural := 0;
+   begin
+      Put_Line("Ranges:");
+      for i in 1 .. Integer(dist.ranges.Length) loop
+         Put_Line("  " & Address_Type'Image(dist.ranges.Element(i).start) &
+                  ": " & Natural'Image(dist.ranges.Element(i).size));
+         size := size + dist.ranges.Element(i).size;
+      end loop;
+      Put_Line("Size: " & Natural'Image(size));
+   end Print;
 
 end Distribution;

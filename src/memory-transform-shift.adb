@@ -1,6 +1,4 @@
 
-with Util;        use Util;
-
 package body Memory.Transform.Shift is
 
    function Create_Shift return Shift_Pointer is
@@ -15,7 +13,7 @@ package body Memory.Transform.Shift is
       result : constant Shift_Pointer := Create_Shift;
    begin
       Set_Memory(result.all, next);
-      result.value := (Random(generator) mod 16) + 1;
+      result.value := Long_Integer((Random(generator) mod 16)) + 1;
       return Memory_Pointer(result);
    end Random_Shift;
 
@@ -28,10 +26,11 @@ package body Memory.Transform.Shift is
    procedure Permute(mem         : in out Shift_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
+      asize : constant Long_Integer := Long_Integer(Get_Address_Size(mem));
    begin
       if mem.value = 0 then
          mem.value := mem.value + 1;
-      elsif mem.value = Get_Address_Size(mem) * 8 then
+      elsif mem.value = asize * 8 then
          mem.value := mem.value - 1;
       elsif (Random(generator) mod 2) = 0 then
          mem.value := mem.value + 1;
@@ -53,17 +52,17 @@ package body Memory.Transform.Shift is
       wbits    : constant Natural      := Log2(Natural(wsize)) - 1;
       caddr    : constant Address_Type := address mod wsize;
       saddr    : constant Address_Type := address / wsize;
-      shift    : Integer := mem.value;
+      shift    : Long_Integer := mem.value;
       rmult    : Address_Type;
       lmult    : Address_Type;
       result   : Address_Type;
    begin
       if shift < 0 then
-         shift := (abits - wbits + shift);
+         shift := Long_Integer(abits - wbits) + shift;
       end if;
-      shift := shift mod (abits - wbits);
-      rmult := Address_Type(2) ** shift;
-      lmult := Address_Type(2) ** (abits - shift - wbits);
+      shift := shift mod Long_Integer(abits - wbits);
+      rmult := Address_Type(2) ** Natural(shift);
+      lmult := Address_Type(2) ** (abits - Natural(shift) - wbits);
       if dir then
          result := ((saddr * rmult) or (saddr / lmult)) * wsize or caddr;
       else

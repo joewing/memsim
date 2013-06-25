@@ -1,6 +1,4 @@
 
-with Util;        use Util;
-
 package body Memory.Transform.Flip is
 
    function Create_Flip return Flip_Pointer is

@@ -11,7 +11,7 @@ package body Parser.Transform_Parser is
       tname    : constant String := Get_Name(trans.all);
       mem      : Memory_Pointer  := null;
       bank     : Memory_Pointer  := null;
-      ivalue   : Integer         := 0;
+      ivalue   : Long_Integer    := 0;
 
    begin
 
@@ -43,7 +43,7 @@ package body Parser.Transform_Parser is
                begin
                   Match(parser, Literal);
                   if name = "value" then
-                     ivalue := Integer'Value(value);
+                     ivalue := Long_Integer'Value(value);
                   else
                      Raise_Error(parser, "invalid attribute in " &
                                  tname & ": " & name);

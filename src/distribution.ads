@@ -19,15 +19,23 @@ package Distribution is
                     address   : in Address_Type;
                     size      : in Positive);
 
-   procedure Add_Transform(dist  : in out Distribution_Type;
-                           trans : in Applicative_Pointer);
+   procedure Push_Limit(dist  : in out Distribution_Type;
+                        lower : in Address_Type;
+                        upper : in Address_Type);
 
-   procedure Reset_Transform(dist : in out Distribution_Type);
+   procedure Pop_Limit(dist : in out Distribution_Type);
+
+   procedure Push_Transform(dist    : in out Distribution_Type;
+                            trans   : in Applicative_Pointer);
+
+   procedure Pop_Transform(dist : in out Distribution_Type);
 
    function Random_Address(dist        : Distribution_Type;
                            alignment   : Positive) return Address_Type;
 
    function Random(dist : Distribution_Type) return Natural;
+
+   procedure Print(dist : in Distribution_Type);
 
 private
 
@@ -36,17 +44,22 @@ private
       size     : Positive;
    end record;
 
+   type Limit_Type is record
+      trans    : Applicative_Pointer   := null;
+      lower    : Address_Type          := 0;
+      upper    : Address_Type          := 0;
+   end record;
+
    package RNG is new Ada.Numerics.Discrete_Random(Natural);
 
    package Range_Vectors is new Vectors(Positive, Range_Type);
 
-   package Transformation_Vectors is
-      new Vectors(Positive, Applicative_Pointer);
+   package Limit_Vectors is new Vectors(Positive, Limit_Type);
 
    type Distribution_Type is limited record
       generator         : RNG.Generator;
       ranges            : Range_Vectors.Vector;
-      transformations   : Transformation_Vectors.Vector;
+      limits            : Limit_Vectors.Vector;
    end record;
 
 end Distribution;

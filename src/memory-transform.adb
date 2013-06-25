@@ -61,7 +61,7 @@ package body Memory.Transform is
    end Process;
 
    procedure Set_Value(mem    : in out Transform_Type;
-                       value  : in Integer) is
+                       value  : in Long_Integer) is
    begin
       mem.value := value;
    end Set_Value;
@@ -187,7 +187,7 @@ package body Memory.Transform is
       name        : constant String := "m" & To_String(Get_ID(mem));
       oname       : constant String := "m" & To_String(Get_ID(other.all));
       tname       : constant String := Get_Name(Transform_Type'Class(mem));
-      value       : constant Integer := mem.value;
+      value       : constant Long_Integer := mem.value;
    begin
 
       Generate(other.all, sigs, code);
@@ -233,7 +233,7 @@ package body Memory.Transform is
       oname       : constant String := "m" & To_String(Get_ID(other.all));
       jname       : constant String := "m" & To_String(Get_ID(join.all));
       tname       : constant String := Get_Name(Transform_Type'Class(mem));
-      value       : constant Integer := mem.value;
+      value       : constant Long_Integer := mem.value;
    begin
 
       Generate(other.all, sigs, code);

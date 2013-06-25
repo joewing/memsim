@@ -13,6 +13,7 @@ with Memory.Transform.EOR;    use Memory.Transform.EOR;
 with Memory.Prefetch;         use Memory.Prefetch;
 with Memory.Split;            use Memory.Split;
 with Memory.Join;             use Memory.Join;
+with Applicative;             use Applicative;
 
 package body Memory.Super is
 
@@ -76,10 +77,15 @@ package body Memory.Super is
       result   := Split_Pointer(Random_Split(next, mem.generator.all, cost));
       join0    := Create_Join(result, 0);
       cost0    := (cost + 1) / 2;
+      Push_Limit(mem.generator.all, 0, Get_Offset(result.all));
       bank0    := Create_Memory(mem, join0, cost0, True);
+      Pop_Limit(mem.generator.all);
       join1    := Create_Join(result, 1);
       cost1    := cost - cost0;
+      Push_Limit(mem.generator.all, Get_Offset(result.all),
+                 Address_Type'Last);
       bank1    := Create_Memory(mem, join1, cost1, True);
+      Pop_Limit(mem.generator.all);
       Set_Bank(result.all, 0, bank0);
       Set_Bank(result.all, 1, bank1);
       return Memory_Pointer(result);
@@ -108,7 +114,9 @@ package body Memory.Super is
       trans := Transform_Pointer(result);
       if in_bank or (Random(mem.generator.all) mod 2) = 0 then
          join := Create_Join(trans, 0);
+         Push_Transform(mem.generator.all, Applicative_Pointer(trans));
          bank := Create_Memory(mem, join, cost, True);
+         Pop_Transform(mem.generator.all);
          Set_Bank(trans.all, bank);
       end if;
       return result;
@@ -175,7 +183,9 @@ package body Memory.Super is
    begin
       mem.current_length := mem.current_length + 1;
       Read(Container_Type(mem), address, size);
-      if Get_Value(mem'Access) > mem.best_value then
+      if mem.total = 0 then
+         Insert(mem.generator.all, address, size);
+      elsif Get_Value(mem'Access) >= mem.best_value * 2 then
          if mem.current_length > mem.total_length / 4 then
             raise Prune_Error;
          end if;
@@ -188,73 +198,14 @@ package body Memory.Super is
    begin
       mem.current_length := mem.current_length + 1;
       Write(Container_Type(mem), address, size);
-      if Get_Value(mem'Access) > mem.best_value then
+      if mem.total = 0 then
+         Insert(mem.generator.all, address, size);
+      elsif Get_Value(mem'Access) >= mem.best_value * 2 then
          if mem.current_length > mem.total_length / 4 then
             raise Prune_Error;
          end if;
       end if;
    end Write;
-
-   function Get_Memory(ptr    : Memory_Pointer;
-                       index  : Natural) return Container_Pointer is
-
-      temp : Natural := index;
-
-   begin
-      Assert(ptr /= null, "null ptr in Get_Memory");
-      if ptr.all in Join_Type'Class then
-         return null;
-      elsif temp = 0 then
-         return Container_Pointer(ptr);
-      else
-         temp := temp - 1;
-         if ptr.all in Split_Type'Class then
-            declare
-               sp : constant Split_Pointer      := Split_Pointer(ptr);
-               a  : constant Memory_Pointer     := Get_Bank(sp.all, 0);
-               b  : constant Memory_Pointer     := Get_Bank(sp.all, 1);
-               n  : constant Memory_Pointer     := Get_Memory(sp.all);
-               r  : Container_Pointer;
-            begin
-               r := Get_Memory(a, temp);
-               if r /= null then
-                  return r;
-               end if;
-               temp := temp - Count_Memories(a);
-               r := Get_Memory(b, temp);
-               if r /= null then
-                  return r;
-               end if;
-               temp := temp - Count_Memories(b);
-               return Get_Memory(n, temp);
-            end;
-         elsif ptr.all in Transform_Type'Class then
-            declare
-               tp    : constant Transform_Pointer  := Transform_Pointer(ptr);
-               bank  : constant Memory_Pointer     := Get_Bank(tp.all);
-               next  : constant Memory_Pointer     := Get_Memory(tp.all);
-               r     : Container_Pointer;
-            begin
-               if bank /= null then
-                  r := Get_Memory(bank, temp);
-                  if r /= null then
-                     return r;
-                  end if;
-                  temp := temp - Count_Memories(bank);
-               end if;
-               return Get_Memory(next, temp);
-            end;
-         elsif ptr.all in Container_Type'Class then
-            declare
-               cp : constant Container_Pointer  := Container_Pointer(ptr);
-               n  : constant Memory_Pointer     := Get_Memory(cp.all);
-            begin
-               return Get_Memory(n, temp);
-            end;
-         end if;
-      end if;
-      return null;
-   end Get_Memory;
 
    procedure Remove_Memory(ptr   : in out Memory_Pointer;
                            index : in Natural) is
@@ -373,13 +324,18 @@ package body Memory.Super is
             if 1 + ac > index then
 
                -- Insert to the first bank.
+               Push_Limit(mem.generator.all, 0, Get_Offset(sp.all));
                Insert_Memory(mem, a, index - 1, cost, True);
+               Pop_Limit(mem.generator.all);
                Set_Bank(sp.all, 0, a);
 
             elsif 1 + ac + bc > index then
 
                -- Insert to the second bank.
+               Push_Limit(mem.generator.all, Get_Offset(sp.all),
+                          Address_Type'Last);
                Insert_Memory(mem, b, index - ac - 1, cost, True);
+               Pop_Limit(mem.generator.all);
                Set_Bank(sp.all, 1, b);
 
             else
@@ -402,13 +358,21 @@ package body Memory.Super is
             if 1 + count > index then
 
                -- Insert to the bank.
+               Push_Transform(mem.generator.all, Applicative_Pointer(tp));
                Insert_Memory(mem, bank, index - 1, cost, True);
+               Pop_Transform(mem.generator.all);
                Set_Bank(tp.all, bank);
 
             else
 
                -- Insert after the transform.
-               Insert_Memory(mem, next, index - count - 1, cost, in_bank);
+               if Get_Bank(tp.all) = null then
+                  Push_Transform(mem.generator.all, Applicative_Pointer(tp));
+                  Insert_Memory(mem, next, index - count - 1, cost, in_bank);
+                  Pop_Transform(mem.generator.all);
+               else
+                  Insert_Memory(mem, next, index - count - 1, cost, in_bank);
+               end if;
                Set_Memory(tp.all, next);
 
             end if;
@@ -427,6 +391,75 @@ package body Memory.Super is
       end if;
 
    end Insert_Memory;
+
+   procedure Permute_Memory(mem     : in Super_Type;
+                            ptr     : in Memory_Pointer;
+                            index   : in Natural;
+                            cost    : in Cost_Type) is
+   begin
+
+      if index = 0 then
+
+         Permute(ptr.all, mem.generator.all, cost + Get_Cost(ptr.all));
+
+      elsif ptr.all in Split_Type'Class then
+
+         declare
+            sp : constant Split_Pointer   := Split_Pointer(ptr);
+            a  : constant Memory_Pointer  := Get_Bank(sp.all, 0);
+            ac : constant Natural         := Count_Memories(a);
+            b  : constant Memory_Pointer  := Get_Bank(sp.all, 1);
+            bc : constant Natural         := Count_Memories(b);
+            n  : constant Memory_Pointer  := Get_Memory(sp.all);
+         begin
+            if 1 + ac > index then
+               Push_Limit(mem.generator.all, 0, Get_Offset(sp.all));
+               Permute_Memory(mem, a, index - 1, cost);
+               Pop_Limit(mem.generator.all);
+            elsif 1 + ac + bc > index then
+               Push_Limit(mem.generator.all, Get_Offset(sp.all),
+                          Address_Type'Last);
+               Permute_Memory(mem, b, index - ac - 1, cost);
+               Pop_Limit(mem.generator.all);
+            else
+               Permute_Memory(mem, n, index - ac - bc - 1, cost);
+            end if;
+         end;
+
+      elsif ptr.all in Transform_Type'Class then
+
+         declare
+            tp    : constant Transform_Pointer  := Transform_Pointer(ptr);
+            bank  : constant Memory_Pointer     := Get_Bank(tp.all);
+            count : constant Natural            := Count_Memories(bank);
+            next  : constant Memory_Pointer     := Get_Memory(tp.all);
+         begin
+            if 1 + count > index then
+               Push_Transform(mem.generator.all, Applicative_Pointer(tp));
+               Permute_Memory(mem, bank, index - 1, cost);
+               Pop_Transform(mem.generator.all);
+            else
+               if Get_Bank(tp.all) = null then
+                  Push_Transform(mem.generator.all, Applicative_Pointer(tp));
+                  Permute_Memory(mem, next, index - count - 1, cost);
+                  Pop_Transform(mem.generator.all);
+               else
+                  Permute_Memory(mem, next, index - count - 1, cost);
+               end if;
+            end if;
+         end;
+
+      elsif ptr.all in Container_Type'Class then
+
+         declare
+            cp : constant Container_Pointer  := Container_Pointer(ptr);
+            n  : constant Memory_Pointer     := Get_Memory(cp.all);
+         begin
+            Permute_Memory(mem, n, index - 1, cost);
+         end;
+
+      end if;
+   end Permute_Memory;
 
    function Simplify_Memory(ptr : Memory_Pointer) return Memory_Pointer is
    begin
@@ -486,7 +519,6 @@ package body Memory.Super is
    end Simplify_Memory;
 
    procedure Randomize(mem : in out Super_Type) is
-      temp  : Container_Pointer := null;
       len   : constant Natural := Count_Memories(mem.current);
       pos   : Natural;
       cost  : constant Cost_Type := Get_Cost(mem.current.all);
@@ -517,13 +549,11 @@ package body Memory.Super is
                Insert_Memory(mem, mem.current, 0, left, False);
             else
                pos := Random(mem.generator.all) mod len;
-               temp := Get_Memory(mem.current, pos);
-               Permute(temp.all, mem.generator.all, left + Get_Cost(temp.all));
+               Permute_Memory(mem, mem.current, pos, left);
             end if;
       end case;
       Set_Memory(mem, mem.current);
 
-      Put_Line(To_String(To_String(mem)));
       Assert(Get_Cost(mem) <= mem.max_cost, "Invalid randomize");
 
    end Randomize;
@@ -539,6 +569,7 @@ package body Memory.Super is
       result.max_iterations   := max_iterations;
       result.last             := Memory_Pointer(mem);
       result.current          := Clone(mem.all);
+      result.generator        := new Distribution_Type;
       Set_Seed(result.generator.all, seed);
       Set_Memory(result.all, result.current);
       return result;
@@ -557,9 +588,8 @@ package body Memory.Super is
       -- Update the temperature.
       mem.temperature := mem.temperature * 0.99;
       if mem.temperature < 1.0 / Float(Natural'Last) then
-         mem.temperature := enew;
+         mem.temperature := enew * 2.0;
       end if;
-      Put_Line("Temperature:" & Float'Image(mem.temperature));
 
       if value <= mem.last_value or rand < prob or mem.total = 0 then
 
@@ -649,12 +679,7 @@ package body Memory.Super is
       if Value_Maps."="(cursor, Value_Maps.No_Element) then
          return 0;
       else
-         declare
-            value : constant Value_Type := Value_Maps.Element(cursor);
-         begin
-            Put_Line("Value: " & Value_Type'Image(value));
-            return value;
-         end;
+         return Value_Maps.Element(cursor);
       end if;
    end Check_Cache;
 
@@ -693,11 +718,13 @@ package body Memory.Super is
       Cache_Result(mem, value);
 
       -- Generate new memories until we find a new one.
+      Put_Line("Temperature:" & Float'Image(mem.temperature));
       loop
          Update_Memory(mem, value);
          value := Check_Cache(mem);
          exit when value = 0;
       end loop;
+      Put_Line(To_String(To_String(mem)));
 
       -- Keep track of the number of iterations.
       mem.iteration  := mem.iteration + 1;
@@ -726,6 +753,7 @@ package body Memory.Super is
 
    procedure Finalize(mem : in out Super_Type) is
    begin
+Print(mem.generator.all);
       Set_Memory(mem, null);
       Finalize(Container_Type(mem));
       Destroy(mem.generator);

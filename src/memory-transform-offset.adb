@@ -11,25 +11,29 @@ package body Memory.Transform.Offset is
                           generator : Distribution_Type;
                           max_cost  : Cost_Type) return Memory_Pointer is
       result   : constant Offset_Pointer := Create_Offset;
-      wsize    : constant Natural := Get_Word_Size(next.all);
-      base     : Integer;
+      wsize    : constant Positive := Get_Word_Size(next.all);
+      lwsize   : constant Long_Integer := Long_Integer(wsize);
+      rand     : constant Natural := Random(generator);
    begin
       Set_Memory(result.all, next);
 
-      if (Random(generator) mod 2) = 0 then
+      if (rand mod 2) = 0 then
          -- Byte offset.
-         base := Random(generator) mod wsize;
+         result.value := Long_Integer(Random(generator)) mod lwsize;
+         if ((rand / 2) mod 2) = 0 then
+            result.value := -result.value;
+         end if;
       else
          -- Word offset.
-         base := 2 ** (Random(generator) mod 16);
-      end if;
-
-      if (Random(generator) mod 2) = 0 then
-         -- Negative offset.
-         result.value := -(wsize * base);
-      else
-         -- Positive offset.
-         result.value := wsize * base;
+         declare
+            temp : constant Address_Type := Random_Address(generator, wsize);
+         begin
+            if temp > Address_Type(Long_Integer'Last) then
+               result.value := -Long_Integer(-temp);
+            else
+               result.value := Long_Integer(temp);
+            end if;
+         end;
       end if;
 
       return Memory_Pointer(result);
@@ -44,18 +48,28 @@ package body Memory.Transform.Offset is
    procedure Permute(mem         : in out Offset_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
-      wsize : constant Natural := Get_Word_Size(mem);
+      wsize : constant Positive := Get_Word_Size(mem);
    begin
-      case Random(generator) mod 4 is
-         when 0      => -- Add word offset
-            mem.value := mem.value + wsize;
-         when 1      => -- Subtract word offset.
-            mem.value := mem.value - wsize;
-         when 2      => -- Add byte offset
+      if abs(mem.value) < Long_Integer(wsize) then
+         if mem.value < Long_Integer(wsize - 1)
+            and then (Random(generator) mod 2) = 0 then
             mem.value := mem.value + 1;
-         when others => -- Subtract byte offset
+         elsif mem.value > -Long_Integer(wsize - 1) then
             mem.value := mem.value - 1;
-      end case;
+         else
+            mem.value := mem.value + 1;
+         end if;
+      else
+         declare
+            temp : constant Address_Type := Random_Address(generator, wsize);
+         begin
+            if temp > Address_Type(Long_Integer'Last) then
+               mem.value := -Long_Integer(-temp);
+            else
+               mem.value := Long_Integer(temp);
+            end if;
+         end;
+      end if;
    end Permute;
 
    function Get_Name(mem : Offset_Type) return String is
@@ -86,12 +100,12 @@ package body Memory.Transform.Offset is
    end Is_Empty;
 
    function Get_Alignment(mem : Offset_Type) return Positive is
-      alignment   : Positive := 1;
+      alignment   : Long_Integer := 1;
    begin
       while (mem.value mod alignment) = 0 and alignment < 2 ** 16 loop
          alignment := alignment * 2;
       end loop;
-      return alignment;
+      return Positive(alignment);
    end Get_Alignment;
 
 end Memory.Transform.Offset;
