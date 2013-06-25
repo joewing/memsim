@@ -68,26 +68,13 @@ package body Memory.Super is
                          return Memory_Pointer is
       result   : Split_Pointer;
       join0    : Join_Pointer;
-      cost0    : Cost_Type;
-      bank0    : Memory_Pointer;
       join1    : Join_Pointer;
-      cost1    : Cost_Type;
-      bank1    : Memory_Pointer;
    begin
       result   := Split_Pointer(Random_Split(next, mem.generator.all, cost));
       join0    := Create_Join(result, 0);
-      cost0    := (cost + 1) / 2;
-      Push_Limit(mem.generator.all, 0, Get_Offset(result.all));
-      bank0    := Create_Memory(mem, join0, cost0, True);
-      Pop_Limit(mem.generator.all);
       join1    := Create_Join(result, 1);
-      cost1    := cost - cost0;
-      Push_Limit(mem.generator.all, Get_Offset(result.all),
-                 Address_Type'Last);
-      bank1    := Create_Memory(mem, join1, cost1, True);
-      Pop_Limit(mem.generator.all);
-      Set_Bank(result.all, 0, bank0);
-      Set_Bank(result.all, 1, bank1);
+      Set_Bank(result.all, 0, join0);
+      Set_Bank(result.all, 1, join1);
       return Memory_Pointer(result);
    end Create_Split;
 
@@ -99,7 +86,6 @@ package body Memory.Super is
       result   : Memory_Pointer;
       trans    : Transform_Pointer;
       join     : Join_Pointer;
-      bank     : Memory_Pointer;
    begin
       case Random(mem.generator.all) mod 4 is
          when 0 =>
@@ -114,10 +100,7 @@ package body Memory.Super is
       trans := Transform_Pointer(result);
       if in_bank or (Random(mem.generator.all) mod 2) = 0 then
          join := Create_Join(trans, 0);
-         Push_Transform(mem.generator.all, Applicative_Pointer(trans));
-         bank := Create_Memory(mem, join, cost, True);
-         Pop_Transform(mem.generator.all);
-         Set_Bank(trans.all, bank);
+         Set_Bank(trans.all, join);
       end if;
       return result;
    end Create_Transform;
@@ -304,6 +287,8 @@ package body Memory.Super is
                            in_bank  : in Boolean) is
    begin
 
+      Assert(ptr /= null);
+
       if index = 0 then
 
          -- Insert other before ptr.
@@ -319,7 +304,7 @@ package body Memory.Super is
             bc : constant Natural         := Count_Memories(b);
             n  : Memory_Pointer           := Get_Memory(sp.all);
          begin
-            if 1 + ac > index then
+            if 1 + ac >= index then
 
                -- Insert to the first bank.
                Push_Limit(mem.generator.all, 0, Get_Offset(sp.all));
@@ -396,8 +381,11 @@ package body Memory.Super is
                             cost    : in Cost_Type) is
    begin
 
+      Assert(ptr /= null);
+
       if index = 0 then
 
+         Assert(ptr.all not in Join_Type'Class);
          Permute(ptr.all, mem.generator.all, cost + Get_Cost(ptr.all));
 
       elsif ptr.all in Split_Type'Class then
@@ -526,16 +514,11 @@ package body Memory.Super is
       -- Select an action to take.
       -- Here we give extra weight to modifying an existing subsystem
       -- rather than adding or removing components.
-      case Random(mem.generator.all) mod 16 is
+      case Random(mem.generator.all) mod 8 is
          when 0      =>    -- Insert a component.
-            if Cost_Type(len) >= mem.max_cost then
-               pos := Random(mem.generator.all) mod len;
-               Remove_Memory(mem.current, pos);
-            else
-               pos := Random(mem.generator.all) mod (len + 1);
-               Insert_Memory(mem, mem.current, pos, left, False);
-            end if;
-         when 1 .. 3 =>    -- Remove a component.
+            pos := Random(mem.generator.all) mod (len + 1);
+            Insert_Memory(mem, mem.current, pos, left, False);
+         when 1 =>         -- Remove a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
             else
