@@ -7,7 +7,17 @@ package body Benchmark is
                  mem       : in Memory.Memory_Pointer) is
    begin
       benchmark.mem := mem;
-      Run(benchmark);
+      loop
+         begin
+            Run(benchmark);
+         exception
+            when Prune_Error =>
+               null;
+         end;
+         Show_Stats(benchmark.mem.all);
+         exit when Done(benchmark.mem.all);
+         Reset(benchmark.mem.all);
+      end loop;
    end Run;
 
    procedure Set_Argument(benchmark : in out Benchmark_Type;
@@ -88,7 +98,9 @@ package body Benchmark is
    procedure Idle(benchmark   : in Benchmark_Type'Class;
                   cycles      : in Time_Type) is
    begin
-      Idle(benchmark.mem.all, cycles);
+      if cycles > 0 then
+         Idle(benchmark.mem.all, cycles);
+      end if;
    end Idle;
 
    procedure Deallocate is

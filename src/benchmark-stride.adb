@@ -26,21 +26,14 @@ package body Benchmark.Stride is
 
    procedure Run(benchmark : in out Stride_Type) is
    begin
-
-      for i in 0 .. benchmark.size - 1 loop
-         Write_Value(benchmark, i, Get_Random(benchmark));
-      end loop;
-
       for i in 1 .. benchmark.iterations loop
-         for offset in 0 .. benchmark.size - 1 loop
-            declare
-               temp : constant Integer := Read_Value(benchmark, offset) + 1;
-            begin
-               Write_Value(benchmark, offset, temp);
-            end;
+         for offset in 0 .. Address_Type(benchmark.size - 1) loop
+            Read(benchmark, offset * 4, 4);
+            if benchmark.spacing > 0 then
+               Idle(benchmark, benchmark.spacing);
+            end if;
          end loop;
       end loop;
-
    end Run;
 
 end Benchmark.Stride;

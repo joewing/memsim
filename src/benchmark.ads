@@ -36,7 +36,7 @@ private
       generator   : Random.Generator;
       mem         : Memory.Memory_Pointer;
       data        : Data_Vectors.Vector;
-      spacing     : Time_Type := 100;
+      spacing     : Time_Type := 0;
    end record;
 
    function Check_Argument(arg   : String;

@@ -49,9 +49,7 @@ package body Benchmark.Trace is
          when Idle   =>
             Idle(benchmark, Time_Type(mdata.value));
       end case;
-      if benchmark.spacing > 0 then
-         Idle(benchmark, benchmark.spacing);
-      end if;
+      Idle(benchmark, benchmark.spacing);
    end Process_Action;
 
    procedure Parse_Action(benchmark : in out Trace_Type;
@@ -138,7 +136,6 @@ package body Benchmark.Trace is
 
    procedure Run(benchmark : in out Trace_Type) is
       file     : Stream_IO.File_Type;
-      prune    : Boolean;
       mdata    : Memory_Access;
       state    : Parse_State_Type := State_Action;
    begin
@@ -146,41 +143,25 @@ package body Benchmark.Trace is
                      Mode => Stream_IO.In_File,
                      Name => To_String(benchmark.file_name));
       loop
-         prune := False;
-         while not prune loop
-            Stream_IO.Read(file, benchmark.buffer, benchmark.last);
-            exit when benchmark.last < benchmark.buffer'First;
-            benchmark.pos := benchmark.buffer'First;
-            begin
-               Parse_Action(benchmark, mdata, state);
-            exception
-               when Prune_Error =>
-                  prune := True;
-            end;
-         end loop;
-         if not prune then
-            benchmark.buffer(benchmark.buffer'First) := 0;
-            benchmark.pos := benchmark.buffer'First;
-            benchmark.last := benchmark.pos;
-            begin
-               Parse_Action(benchmark, mdata, state);
-            exception
-               when Prune_Error =>
-                  null;
-            end;
-         end if;
-         Show_Stats(benchmark.mem.all);
-         exit when Done(benchmark.mem.all);
-         Reset(benchmark.mem.all);
-         state := State_Action;
-         Stream_IO.Reset(file);
+         Stream_IO.Read(file, benchmark.buffer, benchmark.last);
+         exit when benchmark.last < benchmark.buffer'First;
+         benchmark.pos := benchmark.buffer'First;
+         Parse_Action(benchmark, mdata, state);
       end loop;
+      benchmark.buffer(benchmark.buffer'First) := 0;
+      benchmark.pos := benchmark.buffer'First;
+      benchmark.last := benchmark.pos;
+      Parse_Action(benchmark, mdata, state);
       Stream_IO.Close(file);
    exception
       when ex: Device_Error =>
          Put_Line("error: could not read " & To_String(benchmark.file_name) &
                   ": " & Exception_Name(ex) & ": " & Exception_Message(ex));
          Stream_IO.Close(file);
+         raise;
+      when others =>
+         Stream_IO.Close(file);
+         raise;
    end Run;
 
 end Benchmark.Trace;

@@ -24,22 +24,19 @@ package body Benchmark.Hash is
 
    procedure Run(benchmark : in out Hash_Type) is
    begin
-
-      for i in 0 .. benchmark.size - 1 loop
-         Write_Value(benchmark, i, Get_Random(benchmark));
-      end loop;
-
       for i in 1 .. benchmark.iterations loop
          declare
             rand  : constant Integer := Get_Random(benchmark);
             index : constant Natural := rand mod benchmark.size;
-            temp  : Integer;
          begin
-            temp := Read_Value(benchmark, index);
-            pragma Unreferenced(temp);
+            if (Get_Random(benchmark) mod 2) = 0 then
+               Read(benchmark, Address_Type(index) * 4, 4);
+            else
+               Write(benchmark, Address_Type(index) * 4, 4);
+            end if;
+            Idle(benchmark, benchmark.spacing);
          end;
       end loop;
-
    end Run;
 
 end Benchmark.Hash;
