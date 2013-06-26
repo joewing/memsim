@@ -6,11 +6,6 @@ package body Benchmark.Heap is
       return new Heap_Type;
    end Create_Heap;
 
-   procedure Init(benchmark : in out Heap_Type) is
-   begin
-      Write_Value(benchmark, 0, 0);
-   end Init;
-
    procedure Insert(benchmark : in out Heap_Type;
                     value     : in Integer) is
 
@@ -101,8 +96,6 @@ package body Benchmark.Heap is
    begin
       if Check_Argument(arg, "size") then
          benchmark.size := Positive'Value(value);
-      elsif Check_Argument(arg, "iterations") then
-         benchmark.iterations := Positive'Value(value);
       else
          Set_Argument(Benchmark_Type(benchmark), arg);
       end if;
@@ -113,22 +106,17 @@ package body Benchmark.Heap is
 
    procedure Run(benchmark : in out Heap_Type) is
    begin
-
-      Init(benchmark);
-
+      Write_Value(benchmark, 0, 0);
       for i in 1 .. benchmark.size loop
          Insert(benchmark, Get_Random(benchmark));
       end loop;
-
-      for i in 1 .. benchmark.iterations loop
+      for i in 1 .. benchmark.size loop
          declare
             value : Integer;
          begin
             Remove(benchmark, value);
          end;
-         Insert(benchmark, Get_Random(benchmark));
       end loop;
-
    end Run;
 
 end Benchmark.Heap;

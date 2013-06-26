@@ -8,6 +8,8 @@ package body Benchmark is
    begin
       benchmark.mem := mem;
       loop
+         Random.Reset(benchmark.generator, 15);
+         Reset(benchmark.mem.all);
          begin
             Run(benchmark);
          exception
@@ -16,7 +18,6 @@ package body Benchmark is
          end;
          Show_Stats(benchmark.mem.all);
          exit when Done(benchmark.mem.all);
-         Reset(benchmark.mem.all);
       end loop;
    end Run;
 

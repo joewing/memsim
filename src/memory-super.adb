@@ -45,17 +45,23 @@ package body Memory.Super is
       tcost    : constant Cost_Type := cost + Get_Cost(next.all);
       result   : Memory_Pointer := null;
    begin
-      case Random(mem.generator.all) mod 5 is
+      case Random(mem.generator.all) mod 8 is
          when 0      =>
             result := Create_Transform(mem, next, cost, in_bank);
          when 1      =>
-            result := Random_Prefetch(next, mem.generator.all, tcost);
+            if mem.has_idle then
+               result := Random_Prefetch(next, mem.generator.all, tcost);
+            else
+               result := Create_Memory(mem, next, cost, in_bank);
+            end if;
          when 2      =>
             result := Random_SPM(next, mem.generator.all, tcost);
          when 3      =>
             result := Random_Cache(next, mem.generator.all, tcost);
-         when others =>
+         when 4      =>
             result := Create_Split(mem, next, cost, in_bank);
+         when others =>
+            result := Create_Memory(mem, next, cost, in_bank);
       end case;
       Assert(result /= null, "Memory.Super.Create_Memory returning null");
       return result;
@@ -98,7 +104,7 @@ package body Memory.Super is
             result := Random_Shift(next, mem.generator.all, cost);
       end case;
       trans := Transform_Pointer(result);
-      if in_bank or (Random(mem.generator.all) mod 2) = 0 then
+      if in_bank or else (Random(mem.generator.all) mod 2) = 0 then
          join := Create_Join(trans, 0);
          Set_Bank(trans.all, join);
       end if;
@@ -189,6 +195,15 @@ package body Memory.Super is
          end if;
       end if;
    end Write;
+
+   procedure Idle(mem      : in out Super_Type;
+                  cycles   : in Time_Type) is
+   begin
+      if cycles > 0 then
+         mem.has_idle := True;
+         Idle(Container_Type(mem), cycles);
+      end if;
+   end Idle;
 
    procedure Remove_Memory(ptr      : in out Memory_Pointer;
                            index    : in Natural;
@@ -526,7 +541,7 @@ package body Memory.Super is
          when 0      =>    -- Insert a component.
             pos := Random(mem.generator.all) mod (len + 1);
             Insert_Memory(mem, mem.current, pos, left, False);
-         when 1 .. 2 =>    -- Remove a component.
+         when 1 | 2  =>    -- Remove a component.
             if len = 0 then
                Insert_Memory(mem, mem.current, 0, left, False);
             else
@@ -573,19 +588,12 @@ package body Memory.Super is
                            value : in Value_Type) is
       eold  : constant Float := Float(mem.last_value);
       enew  : constant Float := Float(value);
-      dele  : constant Float := abs(enew - eold);
-      prob  : constant Float := Float_Math.Exp(-dele / mem.temperature);
+      prob  : constant Float := eold / enew;
       rand  : constant Float := Float(Random(mem.generator.all)) /
                                 Float(Natural'Last);
    begin
 
-      -- Update the temperature.
-      mem.temperature := mem.temperature * 0.99;
-      if mem.temperature < 1.0 / Float(Natural'Last) then
-         mem.temperature := enew * 2.0;
-      end if;
-
-      if value <= mem.last_value or rand < prob or mem.total = 0 then
+      if rand < prob then
 
          -- Keep the current memory.
          mem.last_value := value;
@@ -600,7 +608,6 @@ package body Memory.Super is
 
       end if;
 
-      -- Make a random modification to the memory.
       Set_Memory(mem, mem.current);
       Randomize(mem);
 
@@ -720,8 +727,7 @@ package body Memory.Super is
       if not Done(mem) then
 
          Put_Line("Iteration:" & Long_Integer'Image(mem.iteration + 1) &
-                  " (evaluation " & To_String(mem.total + 1) &
-                  ", temperature" & Float'Image(mem.temperature) & ")");
+                  " (evaluation " & To_String(mem.total + 1) & ")");
 
          -- Generate new memories until we find a new one.
          loop

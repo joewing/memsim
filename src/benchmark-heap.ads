@@ -14,7 +14,6 @@ private
 
    type Heap_Type is new Benchmark_Type with record
       size        : Positive := 1024;
-      iterations  : Positive := 1000;
    end record;
 
 end Benchmark.Heap;

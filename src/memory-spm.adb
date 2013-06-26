@@ -24,7 +24,7 @@ package body Memory.SPM is
       Set_Memory(result.all, next);
       result.latency := 2;
       result.size := Get_Word_Size(next.all);
-      for i in 1 .. 10 loop
+      for i in 1 .. Random(generator) mod 16 loop
          result.size := result.size * 2;
          if Get_Cost(result.all) > max_cost then
             result.size := result.size / 2;
@@ -38,6 +38,15 @@ package body Memory.SPM is
          Destroy(Memory_Pointer(result));
          return Memory_Pointer(next);
       else
+         declare
+            cost : constant Cost_Type := Get_Cost(result.all);
+         begin
+            loop
+               result.size := result.size * 2;
+               exit when Get_Cost(result.all) /= cost;
+            end loop;
+            result.size := result.size / 2;
+         end;
          return Memory_Pointer(result);
       end if;
 
@@ -52,20 +61,41 @@ package body Memory.SPM is
    procedure Permute(mem         : in out SPM_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
-      action : Natural := Random(generator) mod 2;
+      wsize    : constant Natural := Get_Word_Size(mem);
+      cost     : constant Cost_Type := Get_Cost(mem);
+      size     : constant Natural := mem.size;
+      action   : Natural := Random(generator) mod 2;
    begin
 
       for i in 1 .. 2 loop
-         if action = 0 then         -- Increment.
-            mem.size := mem.size * 2;
+         if action = 0 then         -- Increase size.
+            loop
+               mem.size := mem.size * 2;
+               exit when Get_Cost(mem) /= cost;
+            end loop;
             exit when Get_Cost(mem) <= max_cost;
-            mem.size := mem.size / 2;
-         elsif mem.size > 1 then    -- Decrement.
-            mem.size := mem.size / 2;
-            exit;
+            mem.size := size;
+         elsif mem.size > wsize then    -- Decrease size.
+            loop
+               mem.size := mem.size / 2;
+               exit when Get_Cost(mem) /= cost;
+            end loop;
+            exit when mem.size > wsize;
+            mem.size := size;
          end if;
          action := (action + 1) mod 2;
       end loop;
+
+      -- Use up as much of this block ram as possible.
+      declare
+         new_cost : constant Cost_Type := Get_Cost(mem);
+      begin
+         loop
+            mem.size := mem.size * 2;
+            exit when Get_Cost(mem) /= new_cost;
+         end loop;
+         mem.size := mem.size / 2;
+      end;
 
    end Permute;
 

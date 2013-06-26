@@ -12,7 +12,7 @@ Running memsim with no arguments will show its usage:
 usage: ./memsim &lt;memory&gt; &lt;benchmark&gt; [&lt;options&gt;]
 benchmarks:
    hash [size=1024][iterations=1000][spacing=0]
-   heap [size=1024][iterations=1000][spacing=0]
+   heap [size=1024][spacing=0]
    mm [size=256][iterations=1][spacing=0]
    stride [size=1024][iterations=1000][stride=1][spacing=0]
    trace [file=trace.txt][spacing=0]

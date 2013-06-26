@@ -18,7 +18,10 @@ package body Memory.Split is
       wsize    : constant Natural := Get_Word_Size(next.all);
    begin
       Set_Memory(result.all, next);
-      result.offset := Random_Address(generator, wsize);
+      for i in 1 .. 10 loop
+         result.offset := Random_Address(generator, wsize);
+         exit when result.offset /= 0;
+      end loop;
       return Memory_Pointer(result);
    end Random_Split;
 
@@ -33,7 +36,10 @@ package body Memory.Split is
                      max_cost    : in Cost_Type) is
       wsize : constant Positive := Get_Word_Size(mem);
    begin
-      mem.offset := Random_Address(generator, wsize);
+      for i in 1 .. 10 loop
+         mem.offset := Random_Address(generator, wsize);
+         exit when mem.offset /= 0;
+      end loop;
       Assert(Get_Cost(mem) <= max_cost, "Invalid Permute in Memory.Split");
    end Permute;
 

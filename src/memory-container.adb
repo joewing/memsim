@@ -29,6 +29,7 @@ package body Memory.Container is
       if mem.mem /= null then
          Reset(mem.mem.all);
       end if;
+      mem.start_time := 0;
    end Reset;
 
    procedure Read(mem      : in out Container_Type;

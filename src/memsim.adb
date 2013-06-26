@@ -43,7 +43,7 @@ procedure MemSim is
                "[size=1024][iterations=1000][spacing=0]",
                Benchmark.Hash.Create_Hash'Access),
       BM_Entry("heap",
-               "[size=1024][iterations=1000][spacing=0]",
+               "[size=1024][spacing=0]",
                Benchmark.Heap.Create_Heap'Access),
       BM_Entry("mm",
                "[size=256][iterations=1][spacing=0]",

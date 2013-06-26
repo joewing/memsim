@@ -96,7 +96,7 @@ package body Memory.Transform.Offset is
 
    function Is_Empty(mem : Offset_Type) return Boolean is
    begin
-      return Is_Empty(Transform_Type(mem)) or mem.value = 0;
+      return mem.value = 0 or else Is_Empty(Transform_Type(mem));
    end Is_Empty;
 
    function Get_Alignment(mem : Offset_Type) return Positive is

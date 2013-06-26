@@ -152,7 +152,11 @@ package body Memory.Transform is
 
    function Is_Empty(mem : Transform_Type) return Boolean is
    begin
-      return mem.bank /= null and then mem.bank.all in Join_Type'Class;
+      if mem.bank /= null then
+         return mem.bank.all in Join_Type'Class;
+      else
+         return False;
+      end if;
    end Is_Empty;
 
    function Get_Alignment(mem : Transform_Type) return Positive is

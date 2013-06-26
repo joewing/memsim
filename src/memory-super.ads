@@ -36,6 +36,10 @@ package Memory.Super is
                    size    : in Positive);
 
    overriding
+   procedure Idle(mem      : in out Super_Type;
+                  cycles   : in Time_Type);
+
+   overriding
    procedure Show_Access_Stats(mem : in out Super_Type);
 
    overriding
@@ -51,7 +55,6 @@ private
 
    type Super_Type is new Container_Type with record
       max_cost       : Cost_Type             := 1e6;
-      initial        : Long_Integer          := 10;
       generator      : Distribution_Pointer;
 
       total_length   : Natural               := 0;
@@ -69,7 +72,8 @@ private
       iteration      : Long_Integer          := 0;
       total          : Long_Integer          := 0;
       max_iterations : Long_Integer          := 1000;
-      temperature    : Float                 := 0.0;
+
+      has_idle       : Boolean               := False;
 
    end record;
 
