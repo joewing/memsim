@@ -48,16 +48,14 @@ package body Memory.Transform.Offset is
    procedure Permute(mem         : in out Offset_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
-      wsize : constant Positive := Get_Word_Size(mem);
+      wsize    : constant Positive := Get_Word_Size(mem);
+      lwsize   : constant Long_Integer := Long_Integer(wsize);
+      rand     : constant Natural := Random(generator);
    begin
       if abs(mem.value) < Long_Integer(wsize) then
-         if mem.value < Long_Integer(wsize - 1)
-            and then (Random(generator) mod 2) = 0 then
-            mem.value := mem.value + 1;
-         elsif mem.value > -Long_Integer(wsize - 1) then
-            mem.value := mem.value - 1;
-         else
-            mem.value := mem.value + 1;
+         mem.value := Long_Integer(Random(generator)) mod lwsize;
+         if ((rand / 2) mod 2) = 0 then
+            mem.value := -mem.value;
          end if;
       else
          declare

@@ -110,6 +110,35 @@ package body Distribution is
       dist.limits.Delete_Last;
    end Pop_Transform;
 
+   function Get_Weighted_Value(dist       : Distribution_Type;
+                               start      : Address_Type;
+                               size       : Positive;
+                               alignment  : Positive) return Address_Type is
+
+      addr  : Address_Type := start;
+      nsize : Natural := size;
+
+   begin
+
+      loop
+         if nsize <= alignment then
+            return addr;
+         end if;
+         case RNG.Random(dist.generator) mod 8 is
+            when 0 =>      -- Use the first address.
+               return addr;
+            when 1 =>      -- Use the last address.
+               return addr + Address_Type(nsize - alignment);
+            when 2 .. 4 => -- Lower half of the range.
+               nsize := (nsize + 1) / 2;
+            when others => -- Upper half of the range.
+               addr  := addr + Address_Type(nsize / 2);
+               nsize := (nsize + 1) / 2;
+         end case;
+      end loop;
+
+   end Get_Weighted_Value;
+
    function Random_Address(dist        : Distribution_Type;
                            alignment   : Positive) return Address_Type is
 
@@ -135,16 +164,7 @@ package body Distribution is
          end;
 
          -- Select an address in the range.
-         -- Pick the start and end values with a higher probability.
-         case RNG.Random(dist.generator) mod 4 is
-            when 0 =>
-               addr := r.start;
-            when 1 =>
-               addr := r.start + Address_Type(r.size);
-            when others =>
-               addr := r.start +
-                       Address_Type(RNG.Random(dist.generator) mod r.size);
-         end case;
+         addr := Get_Weighted_Value(dist, r.start, r.size, alignment);
 
          -- Transform the address and check validity.
          valid := True;

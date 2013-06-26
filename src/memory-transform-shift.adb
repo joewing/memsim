@@ -13,7 +13,7 @@ package body Memory.Transform.Shift is
       result : constant Shift_Pointer := Create_Shift;
    begin
       Set_Memory(result.all, next);
-      result.value := Long_Integer((Random(generator) mod 16)) + 1;
+      result.value := Long_Integer((Random(generator) mod 32)) + 1;
       return Memory_Pointer(result);
    end Random_Shift;
 
@@ -28,15 +28,7 @@ package body Memory.Transform.Shift is
                      max_cost    : in Cost_Type) is
       asize : constant Long_Integer := Long_Integer(Get_Address_Size(mem));
    begin
-      if mem.value = 0 then
-         mem.value := mem.value + 1;
-      elsif mem.value = asize * 8 then
-         mem.value := mem.value - 1;
-      elsif (Random(generator) mod 2) = 0 then
-         mem.value := mem.value + 1;
-      else
-         mem.value := mem.value - 1;
-      end if;
+      mem.value := Long_Integer((Random(generator) mod 32)) + 1;
    end Permute;
 
    function Get_Name(mem : Shift_Type) return String is

@@ -37,11 +37,11 @@ package body Memory.Transform.EOR is
    procedure Permute(mem         : in out EOR_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
-      abits : constant Positive := Integer'Size - 1;
-      rand  : constant Positive := Random(generator);
-      bit   : constant Long_Integer := Long_Integer(2) ** (rand mod abits);
+      abits    : constant Positive := Integer'Size - 1;
+      rand     : constant Positive := Random(generator);
+      bit      : constant Long_Integer := Long_Integer(2) ** (rand mod abits);
    begin
-      mem.value := mem.value xor bit;
+      mem.value := bit;
    end Permute;
 
    function Get_Name(mem : EOR_Type) return String is
