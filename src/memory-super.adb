@@ -1,7 +1,6 @@
 
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Assertions;          use Ada.Assertions;
-with Ada.Numerics.Generic_Elementary_Functions;
 with Ada.Unchecked_Deallocation;
 with Memory.Cache;            use Memory.Cache;
 with Memory.SPM;              use Memory.SPM;
@@ -16,8 +15,6 @@ with Memory.Join;             use Memory.Join;
 with Applicative;             use Applicative;
 
 package body Memory.Super is
-
-   package Float_Math is new Ada.Numerics.Generic_Elementary_Functions(Float);
 
    function Create_Memory(mem       : Super_Type;
                           next      : access Memory_Type'Class;

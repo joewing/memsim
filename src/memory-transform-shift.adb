@@ -26,7 +26,6 @@ package body Memory.Transform.Shift is
    procedure Permute(mem         : in out Shift_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
-      asize : constant Long_Integer := Long_Integer(Get_Address_Size(mem));
    begin
       mem.value := Long_Integer((Random(generator) mod 32)) + 1;
    end Permute;

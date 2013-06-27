@@ -26,14 +26,6 @@ package body Memory.Transform.EOR is
       return Memory_Pointer(result);
    end Clone;
 
-   function "xor"(a: Long_Integer; b: Long_Integer) return Long_Integer is
-      type MT is mod 2 ** Long_Integer'Size;
-      tempa : constant MT := MT'Mod(a);
-      tempb : constant MT := MT'Mod(b);
-   begin
-      return Long_Integer(tempa xor tempb);
-   end "xor";
-
    procedure Permute(mem         : in out EOR_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
