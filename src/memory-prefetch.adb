@@ -60,18 +60,23 @@ package body Memory.Prefetch is
 
       -- Add any time left from the last prefetch.
       Advance(mem, mem.pending);
+      mem.pending := 0;
 
       -- Fetch the requested address.
       Read(Container_Type(mem), address, size);
 
       -- Prefetch the next address and save the time needed for the fetch.
-      declare
-         next_address : constant Address_Type := address + mem.stride;
-      begin
-         Start(mem);
-         Do_Read(mem, next_address, 1);
-         Commit(mem, mem.pending);
-      end;
+      if mem.stride /= 0 and then address mod mem.stride = 0 then
+         declare
+            asize : constant Address_Type := Address_Type(size) + mem.stride;
+            ssize : constant Address_Type := (asize - 1) / mem.stride;
+            next  : constant Address_Type := address + mem.stride * ssize;
+         begin
+            Start(mem);
+            Do_Read(mem, next, 1);
+            Commit(mem, mem.pending);
+         end;
+      end if;
 
    end Read;
 
@@ -92,12 +97,12 @@ package body Memory.Prefetch is
    procedure Idle(mem      : in out Prefetch_Type;
                   cycles   : in Time_Type) is
    begin
-      if cycles > mem.pending then
+      if cycles >= mem.pending then
          mem.pending := 0;
       else
          mem.pending := mem.pending - cycles;
       end if;
-      Advance(mem, cycles);
+      Idle(Container_Type(mem), cycles);
    end Idle;
 
    function Get_Time(mem : Prefetch_Type) return Time_Type is
