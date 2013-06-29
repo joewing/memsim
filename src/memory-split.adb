@@ -211,6 +211,11 @@ package body Memory.Split is
       return result;
    end Get_Writes;
 
+   function Is_Registered(mem : Split_Type) return Boolean is
+   begin
+      return False;
+   end Is_Registered;
+
    procedure Generate(mem  : in Split_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is

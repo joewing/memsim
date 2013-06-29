@@ -35,6 +35,9 @@ package Memory.SPM is
                    size    : in Positive);
 
    overriding
+   function Is_Registered(mem : SPM_Type) return Boolean;
+
+   overriding
    function To_String(mem : SPM_Type) return Unbounded_String;
 
    overriding

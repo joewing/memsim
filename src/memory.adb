@@ -59,6 +59,11 @@ package body Memory is
       return 4;
    end Get_Address_Size;
 
+   function Is_Registered(mem : Memory_Type) return Boolean is
+   begin
+      return True;
+   end Is_Registered;
+
    procedure Deallocate is
       new Ada.Unchecked_Deallocation(Memory_Type'Class, Memory_Pointer);
 

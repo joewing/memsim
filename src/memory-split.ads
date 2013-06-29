@@ -65,6 +65,9 @@ package Memory.Split is
    function Get_Writes(mem : Split_Type) return Long_Integer;
 
    overriding
+   function Is_Registered(mem : Split_Type) return Boolean;
+
+   overriding
    procedure Generate(mem  : in Split_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);

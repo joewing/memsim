@@ -160,6 +160,11 @@ package body Memory.SPM is
       return result;
    end Get_Cost;
 
+   function Is_Registered(mem : SPM_Type) return Boolean is
+   begin
+      return False;
+   end Is_Registered;
+
    procedure Generate(mem  : in SPM_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is

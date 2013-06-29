@@ -53,6 +53,8 @@ package Memory is
 
    function Get_Address_Size(mem : Memory_Type) return Positive;
 
+   function Is_Registered(mem : Memory_Type) return Boolean;
+
    procedure Generate(mem  : in Memory_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is null;
