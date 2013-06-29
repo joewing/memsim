@@ -534,7 +534,7 @@ package body Memory.Super is
       -- Select an action to take.
       -- Here we give extra weight to modifying an existing subsystem
       -- rather than adding or removing components.
-      case Random(mem.generator.all) mod 16 is
+      case Random(mem.generator.all) mod 32 is
          when 0      =>    -- Insert a component.
             pos := Random(mem.generator.all) mod (len + 1);
             Insert_Memory(mem, mem.current, pos, left, False);
@@ -583,19 +583,24 @@ package body Memory.Super is
 
    procedure Update_Memory(mem   : in out Super_Type;
                            value : in Value_Type) is
-      eold  : constant Float := Float(mem.last_value);
-      enew  : constant Float := Float(value);
-      prob  : constant Float := eold / enew;
-      rand  : constant Float := Float(Random(mem.generator.all)) /
-                                Float(Natural'Last);
+      eold  : constant Long_Integer := Long_Integer(mem.last_value);
+      enew  : constant Long_Integer := Long_Integer(value);
+      diff  : constant Long_Integer := enew - eold;
    begin
 
-      if rand < prob then
+      if mem.threshold = 0 then
+         mem.threshold := enew;
+      end if;
+
+      if diff <= mem.threshold then
 
          -- Keep the current memory.
          mem.last_value := value;
          Destroy(mem.last);
          mem.last := Clone(mem.current.all);
+
+         -- Decrease the threshold.
+         mem.threshold := (mem.threshold * 1023) / 1024;
 
       else
 
@@ -603,8 +608,12 @@ package body Memory.Super is
          Destroy(mem.current);
          mem.current := Clone(mem.last.all);
 
+         -- Increase the threshold.
+         mem.threshold := (mem.threshold * 1025) / 1024;
+
       end if;
 
+      mem.steps := mem.steps + 1;
       Set_Memory(mem, mem.current);
       Randomize(mem);
 
@@ -724,7 +733,9 @@ package body Memory.Super is
       if not Done(mem) then
 
          Put_Line("Iteration:" & Long_Integer'Image(mem.iteration + 1) &
-                  " (evaluation " & To_String(mem.total + 1) & ")");
+                  " (evaluation " & To_String(mem.total + 1) &
+                  ", steps " & To_String(mem.steps + 1) &
+                  ", threshold " & To_String(mem.threshold) & ")");
 
          -- Generate new memories until we find a new one.
          loop
