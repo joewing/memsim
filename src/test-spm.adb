@@ -25,23 +25,23 @@ package body Test.SPM is
       Check(Get_Writes(spm.all) = 0);
 
       Read(spm.all, 1024, 4);
-      Check(Get_Time(spm.all) = 103);
+      Check(Get_Time(spm.all) = 102);
       Check(Get_Writes(spm.all) = 0);
 
       Read(spm.all, 1023, 2);
-      Check(Get_Time(spm.all) = 204);
+      Check(Get_Time(spm.all) = 202);
       Check(Get_Writes(spm.all) = 0);
 
       Write(spm.all, 1024, 1);
-      Check(Get_Time(spm.all) = 305);
+      Check(Get_Time(spm.all) = 302);
       Check(Get_Writes(spm.all) = 1);
 
       Write(spm.all, 8, 1);
-      Check(Get_Time(spm.all) = 306);
+      Check(Get_Time(spm.all) = 303);
       Check(Get_Writes(spm.all) = 1);
 
       Write(spm.all, 8192, 16);
-      Check(Get_Time(spm.all) = 507);
+      Check(Get_Time(spm.all) = 503);
       Check(Get_Writes(spm.all) = 2);
 
       Destroy(Memory_Pointer(spm));
