@@ -9,6 +9,8 @@ package body Memory.Transform is
                      dir      : in Boolean;
                      is_read  : in Boolean) is
 
+      abits    : constant Positive := 8 * Get_Address_Size(mem);
+      mask     : constant Address_Type := Address_Type(2) ** abits - 1;
       start    : Address_Type := address;
       trans    : Address_Type := Apply(Transform_Type'Class(mem), start, dir);
       total    : Address_Type := 0;
@@ -20,7 +22,7 @@ package body Memory.Transform is
 
    begin
 
-      trans := trans mod Address_Type(Get_Address_Size(mem));
+      trans := trans and mask;
       incr := Address_Type(Get_Alignment(Transform_Type'Class(mem)));
       while (address mod incr) /= 0 loop
          incr := incr / 2;
@@ -33,7 +35,7 @@ package body Memory.Transform is
          nsize := Address_Type'Min(size - total, incr);
          while total + nsize < size loop
             temp := Apply(Transform_Type'Class(mem), start + nsize, dir);
-            temp := temp mod Address_Type(Get_Address_Size(mem));
+            temp := temp and mask;
             exit when last + incr /= temp;
             last := temp;
             nsize := Address_Type'Min(size - total, nsize + incr);
