@@ -20,6 +20,7 @@ package body Memory.Transform is
 
    begin
 
+      trans := trans mod Address_Type(Get_Address_Size(mem));
       incr := Address_Type(Get_Alignment(Transform_Type'Class(mem)));
       while (address mod incr) /= 0 loop
          incr := incr / 2;
@@ -32,6 +33,7 @@ package body Memory.Transform is
          nsize := Address_Type'Min(size - total, incr);
          while total + nsize < size loop
             temp := Apply(Transform_Type'Class(mem), start + nsize, dir);
+            temp := temp mod Address_Type(Get_Address_Size(mem));
             exit when last + incr /= temp;
             last := temp;
             nsize := Address_Type'Min(size - total, nsize + incr);
