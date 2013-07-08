@@ -13,7 +13,7 @@ with Memory.Prefetch;         use Memory.Prefetch;
 with Memory.Split;            use Memory.Split;
 with Memory.Join;             use Memory.Join;
 with Applicative;             use Applicative;
-with Simplify_Memory;         use Simplify_Memory;
+with Simplify_Memory;
 
 package body Memory.Super is
 

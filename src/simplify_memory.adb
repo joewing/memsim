@@ -7,9 +7,9 @@ with Memory.Join; use Memory.Join;
 
 function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
 
-   function Simplify_Transform(tp : Transform_Pointer)
-                               return Transform_Pointer is
-         tp    : Transform_Pointer  := Transform_Pointer(ptr);
+   function Simplify_Transform(ptr : Transform_Pointer)
+                               return Memory_Pointer is
+         tp    : Transform_Pointer  := ptr;
          bank  : Memory_Pointer     := Get_Bank(tp.all);
          next  : Memory_Pointer     := Get_Memory(tp.all);
    begin
@@ -20,12 +20,12 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
          Set_Bank(tp.all, bank);
       end if;
 
-      if bank = null and next.all in Offset_Transform'Class then
+      if bank = null and next.all in Offset_Type'Class then
          declare
-            nt : Transform_Pointer  := Transform_Pointer(next);
-            oo : Long_Integer       := Get_Value(nt.all);
+            nt : Transform_Pointer        := Transform_Pointer(next);
+            oo : constant Long_Integer    := Get_Value(nt.all);
          begin
-            Set_Value(tp.all, Get_Value(tp.all) + oo);            
+            Set_Value(tp.all, Get_Value(tp.all) + oo);
             next := Get_Memory(nt.all);
             Set_Memory(nt.all, null);
             Destroy(Memory_Pointer(nt));
@@ -38,15 +38,15 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
          return next;
       else
          Set_Memory(tp.all, next);
-         return ptr;
+         return Memory_Pointer(ptr);
       end if;
 
    end Simplify_Transform;
 
 begin
-   if ptr.all in Split_Type'Class then
+   if mem.all in Split_Type'Class then
       declare
-         sp : Split_Pointer   := Split_Pointer(ptr);
+         sp : Split_Pointer   := Split_Pointer(mem);
          b0 : Memory_Pointer  := Get_Bank(sp.all, 0);
          b1 : Memory_Pointer  := Get_Bank(sp.all, 1);
          n  : Memory_Pointer  := Get_Memory(sp.all);
@@ -62,21 +62,21 @@ begin
             return n;
          else
             Set_Memory(sp.all, n);
-            return ptr;
+            return mem;
          end if;
       end;
-   elsif ptr.all in Transform_Type'Class then
-      return Simplify_Transform(ptr);
-   elsif ptr.all in Container_Type'Class then
+   elsif mem.all in Transform_Type'Class then
+      return Simplify_Transform(Transform_Pointer(mem));
+   elsif mem.all in Container_Type'Class then
       declare
-         cp : constant Container_Pointer  := Container_Pointer(ptr);
+         cp : constant Container_Pointer  := Container_Pointer(mem);
          n  : Memory_Pointer              := Get_Memory(cp.all);
       begin
          n := Simplify_Memory(n);
          Set_Memory(cp.all, n);
-         return ptr;
+         return mem;
       end;
    else
-      return ptr;
+      return mem;
    end if;
-end Simplify;
+end Simplify_Memory;
