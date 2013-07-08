@@ -681,8 +681,14 @@ begin
       if INDEX_BITS > 0 then
          current_index <= addr(INDEX_TOP downto INDEX_BOTTOM);
       end if;
-      if TAG_BITS > 0 then
-         current_tag <= addr(TAG_TOP downto TAG_BOTTOM);
+   end process;
+
+   process(clk)
+   begin
+      if clk'event and clk = '1' then
+         if TAG_BITS > 0 then
+            current_tag <= addr(TAG_TOP downto TAG_BOTTOM);
+         end if;
       end if;
    end process;
 
