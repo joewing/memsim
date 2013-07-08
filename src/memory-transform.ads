@@ -20,6 +20,8 @@ package Memory.Transform is
    procedure Set_Value(mem    : in out Transform_Type;
                        value  : in Long_Integer);
 
+   function Get_Value(mem : Transform_Type) return Long_Integer;
+
    overriding
    procedure Reset(mem : in out Transform_Type);
 

@@ -607,6 +607,8 @@ begin
       if LINE_SIZE > 1 then
          low_bits := next_transfer_count(LINE_SIZE_BITS - 1 downto 0);
          case next_state is
+            when STATE_WRITE1             | STATE_WRITE2 =>
+               maddr <= addr;
             when STATE_WRITEBACK_READ1    | STATE_WRITEBACK_READ2 |
                  STATE_WRITEBACK_WRITE1   | STATE_WRITEBACK_WRITE2 =>
                maddr <= oldest_high & low_bits;

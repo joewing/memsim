@@ -41,19 +41,23 @@ begin
    process(clk)
    begin
       if clk'event and clk = '1' then
-         do_read <= '0';
-         do_write <= '0';
          if rst = '1' then
             counter <= to_unsigned(1, LATENCY);
+            do_read <= '0';
+            do_write <= '0';
          elsif re = '1' then
             counter <= "1" & to_unsigned(0, LATENCY - 1);
             do_read <= '1';
+            do_write <= '0';
          elsif we = '1' then
             counter <= "1" & to_unsigned(0, LATENCY - 1);
             do_write <= '1';
+            do_read <= '0';
             value <= din;
          elsif counter(0) = '0'  then
             counter <= shift_right(counter, 1);
+            do_read <= '0';
+            do_write <= '0';
          end if;
          if SIZE > 0 then
             if do_read = '1' then

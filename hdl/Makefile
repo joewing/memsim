@@ -8,7 +8,7 @@ all: run-tb
 run-tb:
 	ghdl -a $(FILES)
 	ghdl -e tb
-	ghdl -r tb --ieee-asserts=disable --stop-time=1ms --wave=dump.ghw
+	ghdl -r tb --ieee-asserts=disable --stop-time=1ms
 
 run-trace:
 	ghdl -a $(FILES)

@@ -70,6 +70,11 @@ package body Memory.Transform is
       mem.value := value;
    end Set_Value;
 
+   function Get_Value(mem : Transform_Type) return Long_Integer is
+   begin
+      return mem.value;
+   end Get_Value;
+
    function Get_Bank(mem : Transform_Type) return Memory_Pointer is
    begin
       return Memory_Pointer(mem.bank);

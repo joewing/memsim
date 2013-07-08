@@ -13,6 +13,7 @@ with Memory.Prefetch;         use Memory.Prefetch;
 with Memory.Split;            use Memory.Split;
 with Memory.Join;             use Memory.Join;
 with Applicative;             use Applicative;
+with Simplify_Memory;         use Simplify_Memory;
 
 package body Memory.Super is
 
@@ -465,63 +466,6 @@ package body Memory.Super is
 
       end if;
    end Permute_Memory;
-
-   function Simplify_Memory(ptr : Memory_Pointer) return Memory_Pointer is
-   begin
-      if ptr.all in Split_Type'Class then
-         declare
-            sp : Split_Pointer   := Split_Pointer(ptr);
-            b0 : Memory_Pointer  := Get_Bank(sp.all, 0);
-            b1 : Memory_Pointer  := Get_Bank(sp.all, 1);
-            n  : Memory_Pointer  := Get_Memory(sp.all);
-         begin
-            b0 := Simplify_Memory(b0);
-            Set_Bank(sp.all, 0, b0);
-            b1 := Simplify_Memory(b1);
-            Set_Bank(sp.all, 1, b1);
-            n := Simplify_Memory(n);
-            if b0.all in Join_Type'Class and b1.all in Join_Type'Class then
-               Set_Memory(sp.all, null);
-               Destroy(Memory_Pointer(sp));
-               return n;
-            else
-               Set_Memory(sp.all, n);
-               return ptr;
-            end if;
-         end;
-      elsif ptr.all in Transform_Type'Class then
-         declare
-            tp    : Transform_Pointer  := Transform_Pointer(ptr);
-            bank  : Memory_Pointer     := Get_Bank(tp.all);
-            next  : Memory_Pointer     := Get_Memory(tp.all);
-         begin
-            if bank /= null then
-               bank := Simplify_Memory(bank);
-               Set_Bank(tp.all, bank);
-            end if;
-            next := Simplify_Memory(next);
-            if tp.Is_Empty then
-               Set_Memory(tp.all, null);
-               Destroy(Memory_Pointer(tp));
-               return next;
-            else
-               Set_Memory(tp.all, next);
-               return ptr;
-            end if;
-         end;
-      elsif ptr.all in Container_Type'Class then
-         declare
-            cp : constant Container_Pointer  := Container_Pointer(ptr);
-            n  : Memory_Pointer              := Get_Memory(cp.all);
-         begin
-            n := Simplify_Memory(n);
-            Set_Memory(cp.all, n);
-            return ptr;
-         end;
-      else
-         return ptr;
-      end if;
-   end Simplify_Memory;
 
    procedure Randomize(mem : in out Super_Type) is
       len   : constant Natural := Count_Memories(mem.current);
