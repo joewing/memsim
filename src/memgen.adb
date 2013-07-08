@@ -5,6 +5,7 @@ with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Memory;                  use Memory;
 with Parser;                  use Parser;
 with HDL_Generator;           use HDL_Generator;
+with Simplify_Memory;
 
 procedure MemGen is
 
@@ -12,6 +13,7 @@ procedure MemGen is
    name        : Unbounded_String := To_Unbounded_String("mem");
    addr_width  : Positive := 32 - 3;
    mem_index   : Integer := -1;
+   simplify    : Boolean := True;
 
    procedure Show_Usage is
    begin
@@ -19,10 +21,12 @@ procedure MemGen is
       Put_Line("options:");
       Put_Line("  -width <int>   Address width (default" &
                Positive'Image(addr_width) & ")");
+      Put_Line("  -nosimplify    Disable memory simplification");
    end Show_Usage;
 
 begin
 
+   -- Parse arguments.
    declare
       i     : Positive := 1;
       arg   : Unbounded_String;
@@ -35,6 +39,8 @@ begin
          elsif arg = "-name" and i + 1 <= Argument_Count then
             i := i + 1;
             name := To_Unbounded_String(Argument(i));
+         elsif arg = "-nosimplify" then
+            simplify := False;
          elsif mem_index < 0 then
             mem_index := i;
          else
@@ -49,14 +55,22 @@ begin
       return;
    end if;
 
-   mem := Parser.Parse(Argument(1));
+   -- Parse the memory subsystem.
+   mem := Parser.Parse(Argument(mem_index));
    if mem = null then
       Put_Line("error: could not open memory: " & Argument(1));
       return;
    end if;
 
+   -- Simplify the memory subsystem if desired.
+   if simplify then
+      mem := Simplify_Memory(mem);
+   end if;
+
+   -- Output the VHDL for the memory subsystem.
    Put_Line(Generate(mem, To_String(name), addr_width));
 
+   -- Clean up.
    Destroy(mem);
 
 end MemGen;
