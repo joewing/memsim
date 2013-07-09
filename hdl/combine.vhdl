@@ -44,8 +44,18 @@ architecture combine_arch of combine is
 
 begin
 
+   process(clk)
+   begin
+      if clk'event and clk = '1' then
+         if (re0 or we0) = '1' then
+            bank0 <= '1';
+         elsif (re1 or we1) = '1' then
+            bank0 <= '0';
+         end if;
+      end if;
+   end process;
+
    b1_addr  <= std_logic_vector(unsigned(addr1) + OFFSET);
-   bank0    <= re0 or we0;
    maddr    <= addr0 when bank0 = '1' else std_logic_vector(b1_addr);
    mout     <= din0 when bank0 = '1' else din1;
    dout0    <= min;

@@ -49,12 +49,12 @@ begin
    mout0    <= din;
    mout1    <= din;
    dout     <= min0 when bank0 = '1' else min1;
-   mre0     <= '1' when bank0 = '1' and re = '1' else '0';
-   mre1     <= '1' when bank0 = '0' and re = '1' else '0';
-   mwe0     <= '1' when bank0 = '1' and we = '1' else '0';
-   mwe1     <= '1' when bank0 = '0' and we = '1' else '0';
+   mre0     <= re and bank0;
+   mre1     <= re and not bank0;
+   mwe0     <= we and bank0;
+   mwe1     <= we and not bank0;
    mmask0   <= mask;
    mmask1   <= mask;
-   ready    <= '1' when mready0 = '1' and mready1 = '1' else '0';
+   ready    <= mready0 and mready1;
 
 end split_arch;
