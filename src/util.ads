@@ -9,6 +9,8 @@ package Util is
 
    function Log2(n : Natural) return Natural;
 
+   function Log2(n : Long_Integer) return Natural;
+
    function Round_Power2(n : Natural) return Natural;
 
    function To_String(i : Integer) return String;

@@ -234,7 +234,7 @@ package body Memory.Split is
       out0name    : constant String := "m" & To_String(Get_ID(join0.all));
       out1name    : constant String := "m" & To_String(Get_ID(join1.all));
       wsize       : constant Address_Type := Address_Type(Get_Word_Size(mem));
-      offset      : constant Address_Type := mem.offset / wsize;
+      offset      : constant Long_Integer := Long_Integer(mem.offset / wsize);
    begin
 
       Generate(other.all, sigs, code);
@@ -251,7 +251,7 @@ package body Memory.Split is
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH      => ADDR_WIDTH,");
       Line(code, "      WORD_WIDTH      => " & To_String(word_bits) & ",");
-      Line(code, "      OFFSET          => " & To_String(offset));
+      Line(code, "      BOFFSET         => " & To_String(Log2(offset) - 1));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");
@@ -286,7 +286,7 @@ package body Memory.Split is
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH      => ADDR_WIDTH,");
       Line(code, "      WORD_WIDTH      => " & To_String(word_bits) & ",");
-      Line(code, "      OFFSET          => " & To_String(offset));
+      Line(code, "      BOFFSET         => " & To_String(Log2(offset) - 1));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");

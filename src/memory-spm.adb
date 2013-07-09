@@ -180,7 +180,7 @@ package body Memory.SPM is
       Line(code, "   generic map (");
       Line(code, "      ADDR_WIDTH => ADDR_WIDTH,");
       Line(code, "      WORD_WIDTH => " & To_String(word_bits) & ",");
-      Line(code, "      SIZE       => " & To_String(size));
+      Line(code, "      SIZE_BITS  => " & To_String(Log2(size) - 1));
       Line(code, "   )");
       Line(code, "   port map (");
       Line(code, "      clk      => clk,");

@@ -7,7 +7,7 @@ entity spm is
    generic (
       ADDR_WIDTH  : in natural := 64;
       WORD_WIDTH  : in natural := 64;
-      SIZE        : in natural := 128
+      SIZE_BITS   : in natural := 7
    );
    port (
       clk      : in  std_logic;
@@ -31,21 +31,24 @@ end spm;
 
 architecture spm_arch of spm is
 
-   constant WORD_BYTES : natural := WORD_WIDTH / 8;
+   constant WORD_BYTES  : natural := WORD_WIDTH / 8;
+   constant SIZE        : natural := 2 ** SIZE_BITS;
 
    subtype byte_type is std_logic_vector(7 downto 0);
    type byte_array_type is array(0 to SIZE - 1) of byte_type;
    type word_array_type is array(0 to WORD_BYTES - 1) of byte_array_type;
 
-   signal data    : word_array_type;
-   signal is_hit  : std_logic;
-   signal value   : std_logic_vector(WORD_WIDTH - 1 downto 0);
-   signal raddr   : natural;
-   signal rin     : std_logic_vector(WORD_WIDTH - 1 downto 0);
-   signal rre     : std_logic;
-   signal rwe     : std_logic;
-   signal rmask   : std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
-   signal busy    : std_logic;
+   signal data       : word_array_type;
+   signal addr_slice : std_logic_vector(ADDR_WIDTH - 1 downto SIZE_BITS);
+   signal is_hit     : std_logic;
+   signal value      : std_logic_vector(WORD_WIDTH - 1 downto 0);
+   signal raddr      : natural;
+   signal rin        : std_logic_vector(WORD_WIDTH - 1 downto 0);
+   signal rre        : std_logic;
+   signal rwe        : std_logic;
+   signal rmask      : std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
+   signal busy       : std_logic;
+   signal was_hit    : std_logic;
 
 begin
 
@@ -68,31 +71,34 @@ begin
       end if;
    end process;
 
+   addr_slice  <= addr(ADDR_WIDTH - 1 downto SIZE_BITS);
+   is_hit      <= '1' when unsigned(addr_slice) = 0 else '0';
+
    process(clk)
    begin
       if clk'event and clk = '1' then
          if rst = '1' then
-            rre   <= '0';
-            rwe   <= '0';
-            busy  <= '0';
+            rre      <= '0';
+            rwe      <= '0';
+            busy     <= '0';
+            was_hit  <= '0';
          else
-            raddr <= to_integer(unsigned(addr));
-            rin   <= din;
-            rmask <= mask;
-            rre   <= is_hit and re;
-            rwe   <= is_hit and we;
-            busy  <= re or we;
+            raddr    <= to_integer(unsigned(addr));
+            rin      <= din;
+            rmask    <= mask;
+            rre      <= is_hit and re;
+            rwe      <= is_hit and we;
+            busy     <= re or we;
+            was_hit  <= is_hit;
          end if;
       end if;
    end process;
-
-   is_hit <= '1' when unsigned(addr) < SIZE else '0';
 
    maddr <= addr;
    mre   <= re and not is_hit;
    mwe   <= we and not is_hit;
    mmask <= mask;
-   dout  <= value when is_hit = '1' else min;
+   dout  <= value when was_hit = '1' else min;
    mout  <= din;
    ready <= mready and not busy;
 

@@ -167,7 +167,9 @@ architecture cache_arch of cache is
    signal hit_line         : line_type;
    signal hit_age          : age_type;
    signal is_hit           : std_logic;
+   signal was_hit          : std_logic;
 
+   signal rmin             : std_logic_vector(WORD_WIDTH - 1 downto 0);
    signal mre_temp         : std_logic;
    signal mwe_temp         : std_logic;
 
@@ -252,12 +254,6 @@ begin
             is_hit   <= '1';
          end if;
       end loop;
-   end process;
-
-   process(clk)
-   begin
-      if clk'event and clk = '1' then
-      end if;
    end process;
 
    -- Determine the next state.
@@ -367,35 +363,37 @@ begin
    end process;
 
    -- Drive transfer_done and inc_transfer_count.
-   process(transfer_count, current_offset, state, mask)
+   process(clk)
       variable upd      : transfer_type;
       variable inc1     : transfer_type;
       variable inc2     : transfer_type;
    begin
-      inc1 := std_logic_vector(unsigned(transfer_count) + 1);
-      inc2 := std_logic_vector(unsigned(transfer_count) + 2);
-      case state is
-         when STATE_WRITE_FILL1 | STATE_WRITE_FILL2 =>
-            if inc1 = current_offset and mask = FULL_MASK then
-               upd := inc2;
-            else
+      if clk'event and clk = '1' then
+         inc1 := std_logic_vector(unsigned(transfer_count) + 1);
+         inc2 := std_logic_vector(unsigned(transfer_count) + 2);
+         case next_state is
+            when STATE_WRITE_FILL1 | STATE_WRITE_FILL2 =>
+               if inc1 = current_offset and mask = FULL_MASK then
+                  upd := inc2;
+               else
+                  upd := inc1;
+               end if;
+            when others =>
                upd := inc1;
-            end if;
-         when others =>
-            upd := inc1;
-      end case;
-      updated_transfer_count <= upd;
-      if unsigned(upd) = LINE_SIZE then
-         transfer_done <= '1';
-      else
-         transfer_done <= '0';
+         end case;
+         updated_transfer_count <= upd;
+         if unsigned(upd) = LINE_SIZE then
+            transfer_done <= '1';
+         else
+            transfer_done <= '0';
+         end if;
       end if;
    end process;
 
    -- Update the current row.
    process(hit_way, oldest_way, state, next_state, current_tag, valid,
            dirty, tags, updated_ages, ages, min, din, current_offset,
-           transfer_count, row, is_hit, mask)
+           transfer_count, row, was_hit, mask)
       variable offset      : natural;
       variable line_top    : natural;
       variable line_bottom : natural;
@@ -413,7 +411,7 @@ begin
       variable byte_top    : natural;
       variable byte_bottom : natural;
    begin
-      if is_hit = '1' then
+      if was_hit = '1' then
          write_way := hit_way;
       else
          write_way := oldest_way;
@@ -423,7 +421,7 @@ begin
                or state = STATE_READ_MISS2
                or state = STATE_WRITE_FILL2;
       write_line :=  (state = STATE_WRITE2 and WRITE_POLICY = 0)
-                  or (state = STATE_WRITE2 and is_hit = '1')
+                  or (state = STATE_WRITE2 and was_hit = '1')
                   or state = STATE_WRITEBACK_WRITE2
                   or state = STATE_WRITE_FILL2;
       updated_row <= row;
@@ -488,16 +486,16 @@ begin
    end process;
 
    -- Update ages.
-   process(oldest_age, ages, hit_way, is_hit, hit_age, oldest_way)
+   process(oldest_age, ages, hit_way, was_hit, hit_age, oldest_way)
       variable reset_bits : boolean;
    begin
       if REPLACEMENT = 3 then
          reset_bits := true;
          for i in 0 to ASSOCIATIVITY - 1 loop
             if ages(i)(0) = '0' then
-               if is_hit = '1' and unsigned(hit_way) /= i then
+               if was_hit = '1' and unsigned(hit_way) /= i then
                   reset_bits := false;
-               elsif is_hit = '0' and unsigned(oldest_way) /= i then
+               elsif was_hit = '0' and unsigned(oldest_way) /= i then
                   reset_bits := false;
                end if;
             end if;
@@ -506,7 +504,7 @@ begin
       for i in 0 to ASSOCIATIVITY - 1 loop
          updated_ages(i) <= ages(i);
          if REPLACEMENT = 0 then -- LRU
-            if is_hit = '1' then
+            if was_hit = '1' then
                if i = unsigned(hit_way) then
                   updated_ages(i) <= (others => '0');
                elsif unsigned(ages(i)) <= unsigned(hit_age) then
@@ -520,7 +518,7 @@ begin
                end if;
             end if;
          elsif REPLACEMENT = 1 then -- MRU
-            if is_hit = '1' then
+            if was_hit = '1' then
                if i = unsigned(hit_way) then
                   updated_ages(i) <= (others => '0');
                elsif unsigned(ages(i)) <= unsigned(hit_age) then
@@ -528,7 +526,7 @@ begin
                end if;
             end if;
          elsif REPLACEMENT = 2 then -- FIFO
-            if is_hit = '0' then
+            if was_hit = '0' then
                if unsigned(oldest_way) = i then
                   updated_ages(i) <= (others => '0');
                else
@@ -536,7 +534,7 @@ begin
                end if;
             end if;
          elsif REPLACEMENT = 3 then -- PRLU
-            if is_hit = '1' then
+            if was_hit = '1' then
                if unsigned(hit_way) = i then
                   updated_ages(i) <= "11";
                elsif reset_bits then
@@ -613,7 +611,7 @@ begin
       variable current_high   : high_bits_type;
    begin
       oldest_high    := oldest_addr(ADDR_WIDTH - 1 downto LINE_SIZE_BITS);
-      current_high   := addr(ADDR_WIDTH - 1 downto LINE_SIZE_BITS);
+      current_high   := addr(ADDR_WIDTH - 1 downto  LINE_SIZE_BITS);
       if LINE_SIZE > 1 then
          low_bits := next_transfer_count(LINE_SIZE_BITS - 1 downto 0);
          case next_state is
@@ -662,17 +660,17 @@ begin
    end generate;
 
    -- Drive dout.
-   process(state, min, words, current_offset)
+   process(state, rmin, words, current_offset)
    begin
       if LINE_SIZE = 1 then
          if state = STATE_READ_MISS2 then
-            dout <= min;
+            dout <= rmin;
          else
             dout <= words(0);
          end if;
       elsif state = STATE_READ_MISS2
          and unsigned(current_offset) = LINE_SIZE - 1 then
-         dout <= min;
+         dout <= rmin;
       else
          dout <= words(to_integer(unsigned(current_offset)));
       end if;
@@ -696,6 +694,8 @@ begin
          if TAG_BITS > 0 then
             current_tag <= addr(TAG_TOP downto TAG_BOTTOM);
          end if;
+         was_hit <= is_hit;
+         rmin <= min;
       end if;
    end process;
 
