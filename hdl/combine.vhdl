@@ -39,18 +39,19 @@ end combine;
 
 architecture combine_arch of combine is
 
-   signal bank0 : std_logic;
+   signal bank0   : std_logic;
+   signal b1_addr : std_logic_vector(ADDR_WIDTH - 1 downto 0);
 
 begin
 
-   bank0    <= '1' when re0 = '1' or we0 = '1' else '0';
-   maddr    <= addr0 when bank0 = '1'
-               else std_logic_vector(unsigned(addr1) + OFFSET);
+   b1_addr  <= addr1 or std_logic_vector(to_unsigned(OFFSET, ADDR_WIDTH));
+   bank0    <= re0 or we0;
+   maddr    <= addr0 when bank0 = '1' else std_logic_vector(b1_addr);
    mout     <= din0 when bank0 = '1' else din1;
    dout0    <= min;
    dout1    <= min;
-   mre      <= '1' when re0 = '1' or re1 = '1' else '0';
-   mwe      <= '1' when we0 = '1' or we1 = '1' else '0';
+   mre      <= re0 or re1;
+   mwe      <= we0 or we1;
    mmask    <= mask0 when bank0 = '1' else mask1;
    ready0   <= mready;
    ready1   <= mready;

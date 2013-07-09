@@ -45,6 +45,7 @@ architecture spm_arch of spm is
    signal rre     : std_logic;
    signal rwe     : std_logic;
    signal rmask   : std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
+   signal busy    : std_logic;
 
 begin
 
@@ -52,15 +53,15 @@ begin
    begin
       if clk'event and clk = '1' then
          if rst = '0' then
-            if rre = '1' then
-               for b in 0 to WORD_BYTES - 1 loop
-                  value(b * 8 + 7 downto b * 8) <= data(b)(raddr);
-               end loop;
-            elsif rwe = '1' then
+            if rwe = '1' then
                for b in 0 to WORD_BYTES - 1 loop
                   if rmask(b) = '1' then
                      data(b)(raddr) <= rin(b * 8 + 7 downto b * 8);
                   end if;
+               end loop;
+            elsif rre = '1' then
+               for b in 0 to WORD_BYTES - 1 loop
+                  value(b * 8 + 7 downto b * 8) <= data(b)(raddr);
                end loop;
             end if;
          end if;
@@ -71,19 +72,16 @@ begin
    begin
       if clk'event and clk = '1' then
          if rst = '1' then
-            rre <= '0';
-            rwe <= '0';
+            rre   <= '0';
+            rwe   <= '0';
+            busy  <= '0';
          else
-            if unsigned(addr) < SIZE then
-               raddr <= to_integer(unsigned(addr));
-               rre   <= re;
-               rwe   <= we;
-               rin   <= din;
-               rmask <= mask;
-            else
-               rre <= '0';
-               rwe <= '0';
-            end if;
+            raddr <= to_integer(unsigned(addr));
+            rin   <= din;
+            rmask <= mask;
+            rre   <= is_hit and re;
+            rwe   <= is_hit and we;
+            busy  <= re or we;
          end if;
       end if;
    end process;
@@ -91,11 +89,11 @@ begin
    is_hit <= '1' when unsigned(addr) < SIZE else '0';
 
    maddr <= addr;
-   mre   <= re when is_hit = '0' else '0';
-   mwe   <= we when is_hit = '0' else '0';
+   mre   <= re and not is_hit;
+   mwe   <= we and not is_hit;
    mmask <= mask;
    dout  <= value when is_hit = '1' else min;
    mout  <= din;
-   ready <= mready when rre = '0' and rwe = '0' else '0';
+   ready <= mready and not busy;
 
 end spm_arch;

@@ -213,11 +213,6 @@ begin
       hit_way        <= (others => '0');
       hit_line       <= lines(0);
       hit_age        <= ages(0);
-      if current_tag = tags(0) and valid(0) = '1' then
-         is_hit      <= '1';
-      else
-         is_hit      <= '0';
-      end if;
       for i in 1 to ASSOCIATIVITY - 1 loop
          case REPLACEMENT is
             when 0      => -- LRU
@@ -245,9 +240,14 @@ begin
             hit_way  <= std_logic_vector(to_unsigned(i, ASSOC_BITS + 1));
             hit_line <= lines(i);
             hit_age  <= ages(i);
-            is_hit   <= '1';
          end if;
       end loop;
+   end process;
+
+   process(clk)
+   begin
+      if clk'event and clk = '1' then
+      end if;
    end process;
 
    -- Determine the next state.
@@ -673,21 +673,33 @@ begin
 
    process(addr)
    begin
-      if OFFSET_TOP >= 0 then
-         current_offset <= "0" & addr(OFFSET_TOP downto OFFSET_BOTTOM);
-      else
-         current_offset <= "0";
-      end if;
       if INDEX_BITS > 0 then
          current_index <= addr(INDEX_TOP downto INDEX_BOTTOM);
       end if;
    end process;
 
+   -- Extract the tag and determine if this is a hit.
    process(clk)
+      variable temp : std_logic_vector(TAG_BITS - 1 downto 0);
    begin
       if clk'event and clk = '1' then
+         if OFFSET_TOP >= 0 then
+            current_offset <= "0" & addr(OFFSET_TOP downto OFFSET_BOTTOM);
+         else
+            current_offset <= "0";
+         end if;
          if TAG_BITS > 0 then
-            current_tag <= addr(TAG_TOP downto TAG_BOTTOM);
+            temp := addr(TAG_TOP downto TAG_BOTTOM);
+            if temp = tags(0) then
+               is_hit <= valid(0);
+            end if;
+            for i in 1 to ASSOCIATIVITY - 1 loop
+               if temp = tags(i) then
+                  is_hit <= valid(i);
+               end if;
+            end loop;
+         else
+            is_hit <= valid(0);
          end if;
       end if;
    end process;

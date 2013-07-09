@@ -79,10 +79,14 @@ begin
    process(clk)
    begin
       if clk'event and clk = '1' then
-         if ADDR_WIDTH > 32 then
-            nat_addr <= to_integer(unsigned(addr(30 downto 0)));
-         else
-            nat_addr <= to_integer(unsigned(addr));
+         if rst = '1' then
+            nat_addr <= 0;
+         elsif re = '1' or we = '1' then
+            if ADDR_WIDTH > 31 then
+               nat_addr <= to_integer(unsigned(addr(30 downto 0)));
+            else
+               nat_addr <= to_integer(unsigned(addr));
+            end if;
          end if;
       end if;
    end process;
