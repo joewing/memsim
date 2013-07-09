@@ -44,7 +44,7 @@ architecture combine_arch of combine is
 
 begin
 
-   b1_addr  <= addr1 or std_logic_vector(to_unsigned(OFFSET, ADDR_WIDTH));
+   b1_addr  <= std_logic_vector(unsigned(addr1) + OFFSET);
    bank0    <= re0 or we0;
    maddr    <= addr0 when bank0 = '1' else std_logic_vector(b1_addr);
    mout     <= din0 when bank0 = '1' else din1;
