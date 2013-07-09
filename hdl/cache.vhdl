@@ -681,16 +681,13 @@ begin
    -- Drive the ready bit.
    ready <= '1' when state = STATE_IDLE else '0';
 
-   process(addr)
-   begin
-      if INDEX_BITS > 0 then
-         current_index <= addr(INDEX_TOP downto INDEX_BOTTOM);
-      end if;
-   end process;
-
    process(clk)
    begin
       if clk'event and clk = '1' then
+         if INDEX_BITS > 0 then
+            current_index <= addr(INDEX_TOP downto INDEX_BOTTOM);
+            rindex <= to_integer(unsigned(addr(INDEX_TOP downto INDEX_BOTTOM)));
+         end if;
          if OFFSET_TOP >= 0 then
             current_offset <= "0" & addr(OFFSET_TOP downto OFFSET_BOTTOM);
          else
@@ -699,13 +696,6 @@ begin
          if TAG_BITS > 0 then
             current_tag <= addr(TAG_TOP downto TAG_BOTTOM);
          end if;
-      end if;
-   end process;
-
-   process(clk)
-   begin
-      if clk'event and clk = '1' and INDEX_BITS > 0 then
-         rindex <= to_integer(unsigned(current_index));
       end if;
    end process;
 
