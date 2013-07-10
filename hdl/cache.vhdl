@@ -363,37 +363,35 @@ begin
    end process;
 
    -- Drive transfer_done and inc_transfer_count.
-   process(clk)
+   process(transfer_count, state, current_offset, mask)
       variable upd      : transfer_type;
       variable inc1     : transfer_type;
       variable inc2     : transfer_type;
    begin
-      if clk'event and clk = '1' then
-         inc1 := std_logic_vector(unsigned(transfer_count) + 1);
-         inc2 := std_logic_vector(unsigned(transfer_count) + 2);
-         case next_state is
-            when STATE_WRITE_FILL1 | STATE_WRITE_FILL2 =>
-               if inc1 = current_offset and mask = FULL_MASK then
-                  upd := inc2;
-               else
-                  upd := inc1;
-               end if;
-            when others =>
+      inc1 := std_logic_vector(unsigned(transfer_count) + 1);
+      inc2 := std_logic_vector(unsigned(transfer_count) + 2);
+      case state is
+         when STATE_WRITE_FILL1 | STATE_WRITE_FILL2 =>
+            if inc1 = current_offset and mask = FULL_MASK then
+               upd := inc2;
+            else
                upd := inc1;
-         end case;
-         updated_transfer_count <= upd;
-         if unsigned(upd) = LINE_SIZE then
-            transfer_done <= '1';
-         else
-            transfer_done <= '0';
-         end if;
+            end if;
+         when others =>
+            upd := inc1;
+      end case;
+      updated_transfer_count <= upd;
+      if unsigned(upd) = LINE_SIZE then
+         transfer_done <= '1';
+      else
+         transfer_done <= '0';
       end if;
    end process;
 
    -- Update the current row.
    process(hit_way, oldest_way, state, next_state, current_tag, valid,
            dirty, tags, updated_ages, ages, min, din, current_offset,
-           transfer_count, row, was_hit, mask)
+           transfer_count, row, is_hit, mask)
       variable offset      : natural;
       variable line_top    : natural;
       variable line_bottom : natural;
@@ -411,7 +409,7 @@ begin
       variable byte_top    : natural;
       variable byte_bottom : natural;
    begin
-      if was_hit = '1' then
+      if is_hit = '1' then
          write_way := hit_way;
       else
          write_way := oldest_way;
@@ -421,7 +419,7 @@ begin
                or state = STATE_READ_MISS2
                or state = STATE_WRITE_FILL2;
       write_line :=  (state = STATE_WRITE2 and WRITE_POLICY = 0)
-                  or (state = STATE_WRITE2 and was_hit = '1')
+                  or (state = STATE_WRITE2 and is_hit = '1')
                   or state = STATE_WRITEBACK_WRITE2
                   or state = STATE_WRITE_FILL2;
       updated_row <= row;
@@ -686,13 +684,13 @@ begin
             current_index <= addr(INDEX_TOP downto INDEX_BOTTOM);
             rindex <= to_integer(unsigned(addr(INDEX_TOP downto INDEX_BOTTOM)));
          end if;
+         if TAG_BITS > 0 then
+            current_tag <= addr(TAG_TOP downto TAG_BOTTOM);
+         end if;
          if OFFSET_TOP >= 0 then
             current_offset <= "0" & addr(OFFSET_TOP downto OFFSET_BOTTOM);
          else
             current_offset <= "0";
-         end if;
-         if TAG_BITS > 0 then
-            current_tag <= addr(TAG_TOP downto TAG_BOTTOM);
          end if;
          was_hit <= is_hit;
          rmin <= min;

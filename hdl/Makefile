@@ -5,13 +5,14 @@ FILES= ram.vhdl spm.vhdl cache.vhdl split.vhdl combine.vhdl eor.vhdl \
 
 all: run-tb
 
-run-tb:
-	ghdl -a $(FILES)
+run-tb: compile
 	ghdl -e tb
-	ghdl -r tb --ieee-asserts=disable --stop-time=1ms
+	ghdl -r tb --ieee-asserts=disable --stop-time=5ms
 
-run-trace:
-	ghdl -a $(FILES)
+run-trace: compile
 	ghdl -e trace
 	ghdl -r trace --ieee-asserts=disable
+
+compile:
+	ghdl -a $(FILES)
 

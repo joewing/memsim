@@ -184,7 +184,7 @@ begin
          report "read failed" severity failure;
 
       -- Test some reads/writes.
-      for j in 2 to 10 loop
+      for j in 2 to 50 loop
          for i in 1 to j loop
             mem_addr <= std_logic_vector(to_unsigned(i, ADDR_WIDTH));
             mem_din  <= std_logic_vector(to_unsigned(i, WORD_WIDTH));
