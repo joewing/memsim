@@ -55,34 +55,35 @@ architecture trace_arch of trace is
       end case;
    end parse_number;
 
-   procedure cycle(signal clk : out std_logic) is
-   begin
-      wait for 10 ns;
-      clk <= '1';
-      wait for 10 ns;
-      clk <= '0';
-   end cycle;
-
-   procedure wait_ready(signal clk : out std_logic;
-                        signal rdy : in std_logic) is
-   begin
-      while rdy = '0' loop
-         cycle(clk);
-      end loop;
-   end wait_ready;
-
    procedure update(signal clk : out std_logic;
                     signal ena : out std_logic;
                     signal rdy : in std_logic) is
-      variable updated : boolean := false;
    begin
-      ena <= '1';
-      wait for 10 ns;
-      clk <= '1';
-      wait for 10 ns;
-      ena <= '0';
-      clk <= '0';
-      wait_ready(clk, rdy);
+      if rdy = '0' then
+         ena <= '1';
+         while rdy = '0' loop
+            clk <= '1';
+            wait for 10 ns;
+            clk <= '0';
+            wait for 10 ns;
+         end loop;
+         clk <= '1';
+         wait for 10 ns;
+         clk <= '0';
+         wait for 10 ns;
+         ena <= '0';
+      else
+         ena <= '1';
+         clk <= '1';
+         wait for 10 ns;
+         clk <= '0';
+         wait for 10 ns;
+         ena <= '0';
+         clk <= '1';
+         wait for 10 ns;
+         clk <= '0';
+         wait for 10 ns;
+      end if;
    end update;
 
    procedure run_action(signal clk     : out std_logic;
@@ -167,8 +168,17 @@ architecture trace_arch of trace is
             run_action(clk, r_act, addr, size, maddr, re, we, mask, rdy);
             run_action(clk, w_act, addr, size, maddr, re, we, mask, rdy);
          when 'I' =>
+            while rdy = '0' loop
+               clk <= '1';
+               wait for 10 ns;
+               clk <= '0';
+               wait for 10 ns;
+            end loop;
             for i in 1 to size loop
-               cycle(clk);
+               clk <= '1';
+               wait for 10 ns;
+               clk <= '0';
+               wait for 10 ns;
             end loop;
          when '?' => null;
          when others =>
@@ -188,6 +198,7 @@ architecture trace_arch of trace is
    signal cycle_count   : natural := 0;
    signal do_read       : std_logic;
    signal do_write      : std_logic;
+   signal next_addr     : std_logic_vector(ADDR_BITS - 1 downto 0);
 
 begin
 
@@ -209,7 +220,10 @@ begin
       rst      <= '1';
       do_read  <= '0';
       do_write <= '0';
-      cycle(clk);
+      clk      <= '1';
+      wait for 10 ns;
+      clk      <= '0';
+      wait for 10 ns;
       rst      <= '0';
 
       while not endfile(infile) loop
@@ -244,7 +258,7 @@ begin
                when STATE_SIZE =>
                   value := parse_number(ch);
                   if value < 0 then
-                     run_action(clk, action, address, size, mem_addr,
+                     run_action(clk, action, address, size, next_addr,
                                 do_read, do_write, mem_mask, mem_ready);
                      state := STATE_ACTION;
                      action := '?';
@@ -256,10 +270,17 @@ begin
          end loop;
       end loop;
 
-      run_action(clk, action, address, size, mem_addr,
+      run_action(clk, action, address, size, next_addr,
                  do_read, do_write, mem_mask, mem_ready);
 
-      report "cycles: " & natural'image(cycle_count);
+      while mem_ready = '0' loop
+         clk <= '1';
+         wait for 10 ns;
+         clk <= '0';
+         wait for 10 ns;
+      end loop;
+
+      report "cycles: " & natural'image(cycle_count - 1);
       wait;
 
    end process;
@@ -278,6 +299,15 @@ begin
    mem_din  <= (others => '0');
    mem_re   <= mem_ready when do_read = '1' else '0';
    mem_we   <= mem_ready when do_write = '1' else '0';
+
+   process(clk)
+   begin
+      if clk'event and clk = '1' then
+         if mem_ready = '1' then
+            mem_addr <= next_addr;
+         end if;
+      end if;
+   end process;
 
    mem1 : entity work.mem
       generic map (

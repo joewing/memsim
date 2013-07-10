@@ -11,8 +11,8 @@ function run()
    fi
 }
 
-for ((lsize=8; lsize<=64; lsize=lsize*2)) ; do
-   for ((lcount=1; lcount<=64; lcount=lcount*2)) ; do
+for ((lsize=8; lsize<=32; lsize=lsize*2)) ; do
+   for ((lcount=1; lcount<=16; lcount=lcount*2)) ; do
       for ((a=1; a<=$lcount; a=a*2)) ; do
          for p in 'lru' 'mru' 'fifo' 'plru' ; do
             for wb in 'true' 'false' ; do
