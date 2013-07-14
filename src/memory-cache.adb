@@ -6,6 +6,9 @@ with Random_Enum;
 
 package body Memory.Cache is
 
+   procedure Free is
+      new Ada.Unchecked_Deallocation(Cache_Data, Cache_Data_Pointer);
+
    function Create_Cache(mem           : access Memory_Type'Class;
                          line_count    : Positive := 1;
                          line_size     : Positive := 8;
@@ -215,6 +218,13 @@ package body Memory.Cache is
             mem.latency := 3 + Time_Type(mem.associativity) / 4;
       end case;
 
+      for i in mem.line_count .. mem.data.Last_Index loop
+         declare
+            dp : Cache_Data_Pointer := mem.data.Element(i);
+         begin
+            Free(dp);
+         end;
+      end loop;
       mem.data.Set_Length(Count_Type(mem.line_count));
       for i in line_count .. mem.line_count - 1 loop
          mem.data.Replace_Element(i, new Cache_Data);
@@ -569,9 +579,6 @@ package body Memory.Cache is
          mem.data.Replace_Element(i, ptr);
       end loop;
    end Adjust;
-
-   procedure Free is
-      new Ada.Unchecked_Deallocation(Cache_Data, Cache_Data_Pointer);
 
    procedure Finalize(mem : in out Cache_Type) is
    begin

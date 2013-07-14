@@ -224,6 +224,8 @@ package body Memory.Super is
                   Destroy(ptr);
                   ptr := next;
                   updated := True;
+               else
+                  updated := False;
                end if;
             end;
          elsif ptr.all in Container_Type'Class then

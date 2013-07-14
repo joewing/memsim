@@ -63,8 +63,10 @@ begin
    end if;
 
    -- Simplify the memory subsystem if desired.
+   Put_Line("-- Input: " & To_String(To_String(mem.all)));
    if simplify then
       mem := Simplify_Memory(mem);
+      Put_Line("-- Simplified: " & To_String(To_String(mem.all)));
    end if;
 
    -- Output the VHDL for the memory subsystem.
