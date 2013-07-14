@@ -66,7 +66,7 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
             Set_Parent(jp.all, op);
             Set_Bank(op.all, b1);
             Set_Memory(op.all, n);
-            Set_Value(op.all, Long_Integer(Get_Offset(sp.all) / wsize));
+            Set_Value(op.all, Long_Integer(Get_Offset(sp.all) * wsize));
             return Memory_Pointer(op);
          end;
       elsif b1.all in Join_Type'Class and not Needs_Split(b0) then
