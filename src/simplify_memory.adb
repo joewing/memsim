@@ -43,7 +43,7 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
       b0    : Memory_Pointer  := Get_Bank(sp.all, 0);
       b1    : Memory_Pointer  := Get_Bank(sp.all, 1);
       n     : Memory_Pointer  := Get_Memory(sp.all);
-      wsize : constant Address_Type := Address_Type(Get_Word_Size(sp.all));
+      abits : constant Natural := 8 * Get_Address_Size(sp.all);
    begin
       b0 := Simplify_Memory(b0);
       Set_Bank(sp.all, 0, b0);
@@ -60,13 +60,18 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
          declare
             op : constant Offset_Pointer  := Create_Offset;
             jp : constant Join_Pointer    := Find_Join(b1);
+            o  : constant Address_Type    := Get_Offset(sp.all);
          begin
             Set_Bank(sp.all, 1, null);
             Set_Memory(sp.all, null);
             Set_Parent(jp.all, op);
             Set_Bank(op.all, b1);
             Set_Memory(op.all, n);
-            Set_Value(op.all, Long_Integer(Get_Offset(sp.all) * wsize));
+            if (o and Address_Type(2) ** (abits - 1)) = 0 then
+               Set_Value(op.all, Long_Integer(o));
+            else
+               Set_Value(op.all, -Long_Integer(Address_Type(2) ** abits - o));
+            end if;
             return Memory_Pointer(op);
          end;
       elsif b1.all in Join_Type'Class and not Needs_Split(b0) then
