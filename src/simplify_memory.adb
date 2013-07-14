@@ -5,6 +5,7 @@ with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Split; use Memory.Split;
 with Memory.Join; use Memory.Join;
 with Memory.SPM; use Memory.SPM;
+with Util; use Util;
 
 function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
 
@@ -38,10 +39,11 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
    end Replace_Join;
 
    function Simplify_Split(ptr : Split_Pointer) return Memory_Pointer is
-      sp : Split_Pointer   := ptr;
-      b0 : Memory_Pointer  := Get_Bank(sp.all, 0);
-      b1 : Memory_Pointer  := Get_Bank(sp.all, 1);
-      n  : Memory_Pointer  := Get_Memory(sp.all);
+      sp    : Split_Pointer   := ptr;
+      b0    : Memory_Pointer  := Get_Bank(sp.all, 0);
+      b1    : Memory_Pointer  := Get_Bank(sp.all, 1);
+      n     : Memory_Pointer  := Get_Memory(sp.all);
+      wsize : constant Address_Type := Address_Type(Get_Word_Size(sp.all));
    begin
       b0 := Simplify_Memory(b0);
       Set_Bank(sp.all, 0, b0);
@@ -64,7 +66,7 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
             Set_Parent(jp.all, op);
             Set_Bank(op.all, b1);
             Set_Memory(op.all, n);
-            Set_Value(op.all, Long_Integer(Get_Offset(sp.all)));
+            Set_Value(op.all, Long_Integer(Get_Offset(sp.all) / wsize));
             return Memory_Pointer(op);
          end;
       elsif b1.all in Join_Type'Class and not Needs_Split(b0) then
