@@ -272,15 +272,24 @@ begin
          when STATE_READ1 =>
             next_state <= STATE_READ2;
          when STATE_READ2 =>
-            if is_hit = '1' then
-               next_state <= STATE_IDLE;
-            elsif DIRTY_BITS > 0 and oldest_dirty = '1' then
-               next_state           <= STATE_WRITEBACK_READ1;
-               next_transfer_count  <= (others => '0');
+            if WRITE_POLICY = 0 then 
+               if is_hit = '1' then
+                  next_state <= STATE_IDLE;
+               elsif DIRTY_BITS > 0 and oldest_dirty = '1' then
+                  next_state <= STATE_WRITEBACK_READ1;
+               else
+                  next_state <= STATE_READ_MISS1;
+               end if;
+            elsif WRITE_POLICY = 1 then
+               if is_hit = '1' then
+                  next_state <= STATE_IDLE;
+               else
+                  next_state <= STATE_READ_MISS1;
+               end if;
             else
-               next_state           <= STATE_READ_MISS1;
-               next_transfer_count  <= (others => '0');
+               report "invalid write policy" severity failure;
             end if;
+            next_transfer_count  <= (others => '0');
          when STATE_WRITE1 =>
             next_state <= STATE_WRITE2;
          when STATE_WRITE2 =>
@@ -289,13 +298,12 @@ begin
                   next_state <= STATE_IDLE;
                elsif oldest_dirty = '1' then
                   next_state           <= STATE_WRITEBACK_WRITE1;
-                  next_transfer_count  <= (others => '0');
                elsif LINE_SIZE > 1 or mask /= FULL_MASK then
                   next_state           <= STATE_WRITE_FILL1;
-                  next_transfer_count  <= (others => '0');
                else
                   next_state <= STATE_IDLE;
                end if;
+               next_transfer_count  <= (others => '0');
             elsif WRITE_POLICY = 1 then
                if mready = '1' then
                   next_state <= STATE_IDLE;
@@ -309,8 +317,8 @@ begin
             if transfer_done = '1' and mready = '1' then
                next_state <= STATE_IDLE;
             elsif mready = '1' then
-               next_transfer_count  <= updated_transfer_count;
-               next_state           <= STATE_READ_MISS1;
+               next_transfer_count <= updated_transfer_count;
+               next_state <= STATE_READ_MISS1;
             end if;
          when STATE_WRITE_FILL1 =>
             next_state <= STATE_WRITE_FILL2;
@@ -318,8 +326,8 @@ begin
             if transfer_done = '1' and mready = '1' then
                next_state <= STATE_IDLE;
             elsif mready = '1' then
-               next_transfer_count  <= updated_transfer_count;
-               next_state           <= STATE_WRITE_FILL1;
+               next_state <= STATE_WRITE_FILL1;
+               next_transfer_count <= updated_transfer_count;
             end if;
          when STATE_WRITEBACK_READ1 =>
             next_state <= STATE_WRITEBACK_READ2;
@@ -389,7 +397,7 @@ begin
    end process;
 
    -- Update the current row.
-   process(hit_way, oldest_way, state, next_state, current_tag, valid,
+   process(hit_way, oldest_way, state, current_tag, valid,
            dirty, tags, updated_ages, ages, min, din, current_offset,
            transfer_count, row, is_hit, mask)
       variable offset      : natural;
@@ -418,10 +426,17 @@ begin
                or state = STATE_WRITEBACK_READ1
                or state = STATE_READ_MISS2
                or state = STATE_WRITE_FILL2;
-      write_line :=  (state = STATE_WRITE2 and WRITE_POLICY = 0)
-                  or (state = STATE_WRITE2 and is_hit = '1')
-                  or state = STATE_WRITEBACK_WRITE2
-                  or state = STATE_WRITE_FILL2;
+      if WRITE_POLICY = 0 then
+         write_line :=  state = STATE_WRITE2
+                     or state = STATE_WRITEBACK_WRITE2
+                     or state = STATE_WRITE_FILL2;
+      elsif WRITE_POLICY = 1 then
+         write_line := (state = STATE_WRITE2 and is_hit = '1')
+                     or state = STATE_WRITEBACK_WRITE2
+                     or state = STATE_WRITE_FILL2;
+      else
+         report "invalid write policy" severity failure;
+      end if;
       updated_row <= row;
       for way in 0 to ASSOCIATIVITY - 1 loop
          offset      := way * WAY_BITS;
@@ -436,16 +451,14 @@ begin
          if way = unsigned(write_way) then
             if DIRTY_BITS > 0 then
                case state is
-                  when STATE_WRITE2 =>
-                     updated_row(dirty_start) <= '1';
-                  when STATE_WRITEBACK_WRITE2 =>
-                     updated_row(dirty_start) <= '1';
-                  when STATE_WRITE_FILL2 =>
+                  when STATE_WRITE2 |
+                       STATE_WRITEBACK_WRITE2 |
+                       STATE_WRITE_FILL2 =>
                      updated_row(dirty_start) <= '1';
                   when STATE_READ_MISS2 =>
                      updated_row(dirty_start) <= '0';
                   when others =>
-                     updated_row(dirty_start) <= dirty(way);
+                     null;
                end case;
             end if;
             if load_mem or write_line then
@@ -456,7 +469,7 @@ begin
             end if;
          end if;
          if AGE_BITS > 0 then
-            if next_state = STATE_IDLE then
+            if state = STATE_READ2 or state = STATE_WRITE2 then
                updated_row(age_top downto age_bottom)
                   <= updated_ages(way)(AGE_BITS - 1 downto 0);
             end if;
@@ -558,24 +571,41 @@ begin
       variable fill_ok     : boolean;
    begin
       if clk'event and clk = '1' then
-         write_hit := state = STATE_WRITE2 and next_state = STATE_IDLE and
-                      WRITE_POLICY = 0;
-         write_ok  := (state = STATE_WRITEBACK_WRITE2 and transfer_done = '1')
-                   or (state = STATE_WRITE_FILL2 and mready = '1');
-         fill_ok   := state = STATE_READ_MISS2 and mready = '1';
-         if rst = '1' then
-            row <= (others => '0');
-         else
-            if state = STATE_READ1 or state = STATE_WRITE1 then
+
+         -- Note that rindex is registered in STATE_IDLE.
+         case state is
+            when STATE_READ1 | STATE_WRITE1 =>
                row <= data(rindex);
-            elsif write_hit or write_ok or fill_ok or
-               (state /= STATE_IDLE and next_state = STATE_IDLE) then
-               row <= updated_row;
-            end if;
-            if state /= STATE_IDLE and next_state = STATE_IDLE then
-               data(rindex) <= updated_row;
-            end if;
+            when STATE_WRITE2 =>
+               if is_hit = '1' then
+                  row <= updated_row;
+               end if;
+            when STATE_READ2 =>
+               if is_hit = '1' then
+                  row <= updated_row;
+               end if;
+            when STATE_WRITEBACK_WRITE2 =>
+               if transfer_done = '1' then
+                  row <= updated_row;
+               end if;
+            when STATE_WRITE_FILL2 =>
+               if mready = '1' then
+                  row <= updated_row;
+               end if;
+            when STATE_READ_MISS2 =>
+               if mready = '1' then
+                  row <= updated_row;
+               end if;
+            when others =>
+               null;
+         end case;
+
+         -- We cannot write updated_row to data in STATE_IDLE
+         -- since rindex will be invalid.
+         if state /= STATE_IDLE then
+            data(rindex) <= updated_row;
          end if;
+
       end if;
    end process;
 
@@ -612,23 +642,34 @@ begin
       current_high   := addr(ADDR_WIDTH - 1 downto  LINE_SIZE_BITS);
       if LINE_SIZE > 1 then
          low_bits := next_transfer_count(LINE_SIZE_BITS - 1 downto 0);
-         case next_state is
-            when STATE_WRITE1             | STATE_WRITE2 =>
-               maddr <= addr;
-            when STATE_WRITEBACK_READ1    | STATE_WRITEBACK_READ2 |
-                 STATE_WRITEBACK_WRITE1   | STATE_WRITEBACK_WRITE2 =>
-               maddr <= oldest_high & low_bits;
-            when others =>
-               maddr <= current_high & low_bits;
-         end case;
+         if WRITE_POLICY = 0 then
+            case next_state is
+               when STATE_WRITEBACK_READ1    | STATE_WRITEBACK_READ2 |
+                    STATE_WRITEBACK_WRITE1   | STATE_WRITEBACK_WRITE2 =>
+                  maddr <= oldest_high & low_bits;
+               when others =>
+                  maddr <= current_high & low_bits;
+            end case;
+         else
+            case next_state is
+               when STATE_WRITE1             | STATE_WRITE2 =>
+                  maddr <= addr;
+               when others =>
+                  maddr <= current_high & low_bits;
+            end case;
+         end if;
       else
-         case next_state is
-            when STATE_WRITEBACK_READ1    | STATE_WRITEBACK_READ2 |
-                 STATE_WRITEBACK_WRITE1   | STATE_WRITEBACK_WRITE2 =>
-               maddr <= oldest_high;
-            when others =>
-               maddr <= current_high;
-         end case;
+         if WRITE_POLICY = 0 then
+            case next_state is
+               when STATE_WRITEBACK_READ1    | STATE_WRITEBACK_READ2 |
+                    STATE_WRITEBACK_WRITE1   | STATE_WRITEBACK_WRITE2 =>
+                  maddr <= oldest_high;
+               when others =>
+                  maddr <= current_high;
+            end case;
+         else
+            maddr <= current_high;
+         end if;
       end if;
    end process;
 
