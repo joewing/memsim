@@ -202,4 +202,9 @@ package body Memory.SPM is
       Line(code, "   );");
    end Generate;
 
+   function Get_Size(mem : SPM_Type) return Natural is
+   begin
+      return mem.size;
+   end Get_Size;
+
 end Memory.SPM;

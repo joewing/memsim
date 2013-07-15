@@ -43,7 +43,7 @@ package body Memory.Transform.EOR is
 
    function Is_Empty(mem : EOR_Type) return Boolean is
    begin
-      return mem.value = 0 or else Is_Empty(Transform_Type(mem));
+      return mem.value = 0;
    end Is_Empty;
 
    function Apply(mem      : EOR_Type;

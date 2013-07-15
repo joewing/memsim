@@ -48,6 +48,8 @@ package Memory.SPM is
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);
 
+   function Get_Size(mem : SPM_Type) return Natural;
+
 private
 
    type SPM_Type is new Container_Type with record

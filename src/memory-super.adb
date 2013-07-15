@@ -534,8 +534,8 @@ package body Memory.Super is
       diff  : constant Long_Integer := enew - eold;
    begin
 
-      if mem.threshold = 0 then
-         mem.threshold := enew;
+      if mem.steps = 0 then
+         mem.threshold := enew / 2;
       end if;
 
       if diff <= mem.threshold then
@@ -546,7 +546,7 @@ package body Memory.Super is
          mem.last := Clone(mem.current.all);
 
          -- Decrease the threshold.
-         mem.threshold := (mem.threshold * 1023) / 1024;
+         mem.threshold := mem.threshold - (mem.threshold + 1023) / 1024;
 
       else
 
@@ -555,7 +555,7 @@ package body Memory.Super is
          mem.current := Clone(mem.last.all);
 
          -- Increase the threshold.
-         mem.threshold := (mem.threshold * 1025) / 1024;
+         mem.threshold := mem.threshold + mem.threshold / 1024 + 1;
 
       end if;
 
@@ -601,10 +601,10 @@ package body Memory.Super is
       end if;
 
       -- If we get here, we have a better memory subsystem.
-      mem.iteration  := 0;
-      mem.best_value := value;
-      mem.best_cost  := simp_cost;
-      mem.best_name  := simp_name;
+      mem.iteration     := 0;
+      mem.best_value    := value;
+      mem.best_cost     := simp_cost;
+      mem.best_name     := simp_name;
       Destroy(simp_mem);
 
    end Track_Best;

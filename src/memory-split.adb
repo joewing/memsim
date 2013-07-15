@@ -26,7 +26,7 @@ package body Memory.Split is
    end Random_Split;
 
    function Clone(mem : Split_Type) return Memory_Pointer is
-      result   : constant Split_Pointer := new Split_Type'(mem);
+      result : constant Split_Pointer := new Split_Type'(mem);
    begin
       return Memory_Pointer(result);
    end Clone;
@@ -318,25 +318,14 @@ package body Memory.Split is
 
    procedure Adjust(mem : in out Split_Type) is
       ptr   : Memory_Pointer;
-      cp    : Container_Pointer;
       jp    : Join_Pointer;
    begin
       Adjust(Container_Type(mem));
       for i in mem.banks'Range loop
-         mem.banks(i).mem := Clone(mem.banks(i).mem.all);
-      end loop;
-      for i in mem.banks'Range loop
-         ptr := Memory_Pointer(mem.banks(i).mem);
-         loop
-            if ptr.all in Join_Type'Class then
-               jp := Join_Pointer(ptr);
-               Set_Parent(jp.all, mem'Unrestricted_Access);
-               exit;
-            else
-               cp := Container_Pointer(ptr);
-               ptr := Get_Memory(cp.all);
-            end if;
-         end loop;
+         ptr := Clone(mem.banks(i).mem.all);
+         mem.banks(i).mem := ptr;
+         jp  := Find_Join(ptr);
+         Set_Parent(jp.all, mem'Unrestricted_Access);
       end loop;
    end Adjust;
 
