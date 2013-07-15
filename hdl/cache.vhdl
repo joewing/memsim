@@ -257,11 +257,9 @@ begin
    end process;
 
    -- Determine the next state.
-   process(state, transfer_count, re, we, is_hit, oldest_dirty,
-           transfer_done, mready, updated_transfer_count)
+   process(state, re, we, is_hit, oldest_dirty, transfer_done, mready)
    begin
-      next_state           <= state;
-      next_transfer_count  <= transfer_count;
+      next_state <= state;
       case state is
          when STATE_IDLE =>
             if re = '1' then
@@ -289,7 +287,6 @@ begin
             else
                report "invalid write policy" severity failure;
             end if;
-            next_transfer_count  <= (others => '0');
          when STATE_WRITE1 =>
             next_state <= STATE_WRITE2;
          when STATE_WRITE2 =>
@@ -303,7 +300,6 @@ begin
                else
                   next_state <= STATE_IDLE;
                end if;
-               next_transfer_count  <= (others => '0');
             elsif WRITE_POLICY = 1 then
                if mready = '1' then
                   next_state <= STATE_IDLE;
@@ -317,7 +313,6 @@ begin
             if transfer_done = '1' and mready = '1' then
                next_state <= STATE_IDLE;
             elsif mready = '1' then
-               next_transfer_count <= updated_transfer_count;
                next_state <= STATE_READ_MISS1;
             end if;
          when STATE_WRITE_FILL1 =>
@@ -327,36 +322,74 @@ begin
                next_state <= STATE_IDLE;
             elsif mready = '1' then
                next_state <= STATE_WRITE_FILL1;
-               next_transfer_count <= updated_transfer_count;
             end if;
          when STATE_WRITEBACK_READ1 =>
             next_state <= STATE_WRITEBACK_READ2;
          when STATE_WRITEBACK_READ2 =>
             if transfer_done = '1' and mready = '1' then
                next_state           <= STATE_READ_MISS1;
-               next_transfer_count  <= (others => '0');
             elsif mready = '1' then
-               next_transfer_count  <= updated_transfer_count;
                next_state           <= STATE_WRITEBACK_READ1;
             end if;
          when STATE_WRITEBACK_WRITE1 =>
             next_state <= STATE_WRITEBACK_WRITE2;
          when STATE_WRITEBACK_WRITE2 =>
-            if transfer_done = '1' and mready = '1' then
-               if LINE_SIZE > 1 or mask /= FULL_MASK then
-                  next_state           <= STATE_WRITE_FILL1;
-                  next_transfer_count  <= (others => '0');
+            if mready = '1' then
+               if transfer_done = '1' and mready = '1' then
+                  if LINE_SIZE > 1 or mask /= FULL_MASK then
+                     next_state <= STATE_WRITE_FILL1;
+                  else
+                     next_state <= STATE_IDLE;
+                  end if;
                else
-                  next_state <= STATE_IDLE;
+                  next_state <= STATE_WRITEBACK_WRITE1;
                end if;
-            elsif mready = '1' then
-               next_transfer_count  <= updated_transfer_count;
-               next_state           <= STATE_WRITEBACK_WRITE1;
             end if;
       end case;
    end process;
 
-   -- Update the state.
+   -- Determine the next transfer count.
+   process(state, transfer_count, updated_transfer_count,
+           mready, transfer_done)
+   begin
+      next_transfer_count <= transfer_count;
+      case state is
+         when STATE_READ2 =>
+            next_transfer_count <= (others => '0');
+         when STATE_WRITE2 =>
+            if WRITE_POLICY = 0 then
+               next_transfer_count <= (others => '0');
+            end if;
+         when STATE_READ_MISS2 =>
+            if mready = '1' then
+               next_transfer_count <= updated_transfer_count;
+            end if;
+         when STATE_WRITE_FILL2 =>
+            if mready = '1' then
+               next_transfer_count <= updated_transfer_count;
+            end if;
+         when STATE_WRITEBACK_READ2 =>
+            if mready = '1' then
+               if transfer_done = '1' then
+                  next_transfer_count <= (others => '0');
+               else
+                  next_transfer_count <= updated_transfer_count;
+               end if;
+            end if;
+         when STATE_WRITEBACK_WRITE2 =>
+            if mready = '1' then
+               if transfer_done = '1' then
+                  next_transfer_count <= (others => '0');
+               else
+                  next_transfer_count <= updated_transfer_count;
+               end if;
+            end if;
+         when others =>
+            null;
+      end case;
+   end process;
+
+   -- Update the state and transfer count.
    process(clk)
    begin
       if clk'event and  clk = '1' then
@@ -589,13 +622,9 @@ begin
                   row <= updated_row;
                end if;
             when STATE_WRITE_FILL2 =>
-               if mready = '1' then
-                  row <= updated_row;
-               end if;
+               row <= updated_row;
             when STATE_READ_MISS2 =>
-               if mready = '1' then
-                  row <= updated_row;
-               end if;
+               row <= updated_row;
             when others =>
                null;
          end case;
