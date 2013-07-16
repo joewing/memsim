@@ -37,6 +37,7 @@ private
       mem         : Memory.Memory_Pointer;
       data        : Data_Vectors.Vector;
       spacing     : Time_Type := 0;
+      seed        : Integer   := 15;
    end record;
 
    function Check_Argument(arg   : String;

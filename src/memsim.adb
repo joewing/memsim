@@ -40,13 +40,13 @@ procedure MemSim is
 
    benchmark_map : constant Benchmark_Info_Array := (
       BM_Entry("hash",
-               "[size=1024][iterations=1000][spacing=0]",
+               "[size=1024][iterations=1000][spacing=0][seed=15]",
                Benchmark.Hash.Create_Hash'Access),
       BM_Entry("heap",
-               "[size=1024][spacing=0]",
+               "[size=1024][spacing=0][seed=15]",
                Benchmark.Heap.Create_Heap'Access),
       BM_Entry("mm",
-               "[size=256][iterations=1][spacing=0]",
+               "[size=256][iterations=1][spacing=0][seed=15]",
                Benchmark.MM.Create_MM'Access),
       BM_Entry("stride",
                "[size=1024][iterations=1000][stride=1][spacing=0]",

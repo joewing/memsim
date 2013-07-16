@@ -8,7 +8,7 @@ package body Benchmark is
    begin
       benchmark.mem := mem;
       loop
-         Random.Reset(benchmark.generator, 15);
+         Random.Reset(benchmark.generator, benchmark.seed);
          Reset(benchmark.mem.all);
          begin
             Run(benchmark);
@@ -27,6 +27,8 @@ package body Benchmark is
    begin
       if Check_Argument(arg, "spacing") then
          benchmark.spacing := Time_Type'Value(value);
+      elsif Check_Argument(arg, "seed") then
+         benchmark.seed := Integer'Value(value);
       else
          raise Invalid_Argument;
       end if;
