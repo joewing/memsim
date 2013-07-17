@@ -601,7 +601,17 @@ package body Memory.Super is
       end if;
 
       -- If we get here, we have a better memory subsystem.
-      mem.iteration     := 0;
+      if mem.best_value < Value_Type'Last then
+
+         -- Don't reset our count unless we are able to get at least
+         -- 0.1% better since the last reset.
+         mem.improvement   := mem.improvement + mem.best_value - value;
+         if mem.improvement > value / 1000 then
+            mem.iteration     := 0;
+            mem.improvement   := 0;
+         end if;
+
+      end if;
       mem.best_value    := value;
       mem.best_cost     := simp_cost;
       mem.best_name     := simp_name;

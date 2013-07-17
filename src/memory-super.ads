@@ -69,10 +69,11 @@ private
 
       last_value     : Value_Type            := Value_Type'Last;
       table          : Value_Maps.Map;
-      iteration      : Long_Integer          := 0;
       total          : Long_Integer          := 0;
       max_iterations : Long_Integer          := 1000;
       steps          : Long_Integer          := 0;
+      iteration      : Long_Integer          := 0;
+      improvement    : Value_Type            := 0;
 
       threshold      : Long_Integer          := 0;
 
