@@ -12,6 +12,7 @@ with Memory.Transform.EOR;    use Memory.Transform.EOR;
 with Memory.Prefetch;         use Memory.Prefetch;
 with Memory.Split;            use Memory.Split;
 with Memory.Join;             use Memory.Join;
+with Memory.Register;         use Memory.Register;
 with Applicative;             use Applicative;
 with Simplify_Memory;
 
