@@ -6,8 +6,8 @@ package body Test.Offset is
 
    procedure Run_Tests is
 
-      mem      : constant Monitor_Pointer := new Monitor_Type;
-      bank     : constant Monitor_Pointer := new Monitor_Type;
+      mem      : constant Monitor_Pointer := Create_Monitor(0, True);
+      bank     : constant Monitor_Pointer := Create_Monitor(0, False);
       offset   : Offset_Pointer           := Create_Offset;
       join     : constant Join_Pointer    := Create_Join(offset, 0);
 

@@ -47,6 +47,7 @@ package body Test.RAM is
       Check(To_String(other.all) = To_String(mem.all));
 
       Destroy(Memory_Pointer(mem));
+      Destroy(Memory_Pointer(other));
 
    end Run_Tests;
 

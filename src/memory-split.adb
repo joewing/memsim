@@ -335,10 +335,10 @@ package body Memory.Split is
 
    procedure Finalize(mem : in out Split_Type) is
    begin
-      Finalize(Container_Type(mem));
       for i in mem.banks'Range loop
          Destroy(Memory_Pointer(mem.banks(i).mem));
       end loop;
+      Finalize(Container_Type(mem));
    end Finalize;
 
    procedure Forward_Read(mem       : in out Split_Type;

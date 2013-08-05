@@ -111,9 +111,7 @@ package body Memory is
 
    procedure Destroy(mem : in out Memory_Pointer) is
    begin
-      if mem /= null then
-         Deallocate(mem);
-      end if;
+      Deallocate(mem);
    end Destroy;
 
    function Get_Time(mem : access Memory_Type'Class) return Time_Type is

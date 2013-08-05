@@ -14,10 +14,15 @@ with Test.SPM;
 
 package body Test is
 
-   function Create_Monitor(latency : Time_Type := 0) return Monitor_Pointer is
+   function Create_Monitor(latency  : Time_Type := 0;
+                           ram      : Boolean   := True)
+                           return Monitor_Pointer is
       result : constant Monitor_Pointer := new Monitor_Type;
    begin
       result.latency := latency;
+      if ram then
+         Set_Memory(result.all, Create_RAM(latency => 1, word_size => 8));
+      end if;
       return result;
    end Create_Monitor;
 
@@ -64,14 +69,6 @@ package body Test is
    begin
       Generate(other.all, sigs, code);
    end Generate;
-
-   procedure Initialize(mem : in out Monitor_Type) is
-      ram : constant RAM_Pointer := Create_RAM(latency   => 1,
-                                               word_size => 8);
-   begin
-      Initialize(Container_Type(mem));
-      Set_Memory(mem, ram);
-   end Initialize;
 
    procedure Run_Tests is
    begin

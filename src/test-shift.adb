@@ -6,8 +6,8 @@ package body Test.Shift is
 
    procedure Test_Positive is
 
-      mem   : constant Monitor_Pointer := new Monitor_Type;
-      bank  : constant Monitor_Pointer := Create_Monitor(1);
+      mem   : constant Monitor_Pointer := Create_Monitor(0);
+      bank  : constant Monitor_Pointer := Create_Monitor(1, False);
       shift : Shift_Pointer            := Create_Shift;
       join  : constant Join_Pointer    := Create_Join(shift, 0);
 
@@ -79,8 +79,8 @@ package body Test.Shift is
 
    procedure Test_Negative is
 
-      mem   : constant Monitor_Pointer := new Monitor_Type;
-      bank  : constant Monitor_Pointer := new Monitor_Type;
+      mem   : constant Monitor_Pointer := Create_Monitor(0, True);
+      bank  : constant Monitor_Pointer := Create_Monitor(0, False);
       shift : Shift_Pointer            := Create_Shift;
       join  : constant Join_Pointer    := Create_Join(shift, 0);
 
@@ -132,8 +132,8 @@ package body Test.Shift is
 
    procedure Test_Zero is
 
-      mem   : constant Monitor_Pointer := new Monitor_Type;
-      bank  : constant Monitor_Pointer := new Monitor_Type;
+      mem   : constant Monitor_Pointer := Create_Monitor(0, True);
+      bank  : constant Monitor_Pointer := Create_Monitor(0, False);
       shift : Shift_Pointer            := Create_Shift;
       join  : constant Join_Pointer    := Create_Join(shift, 0);
 

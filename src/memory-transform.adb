@@ -355,8 +355,8 @@ package body Memory.Transform is
 
    procedure Finalize(mem : in out Transform_Type) is
    begin
-      Finalize(Container_Type(mem));
       Destroy(Memory_Pointer(mem.bank));
+      Finalize(Container_Type(mem));
    end Finalize;
 
 end Memory.Transform;

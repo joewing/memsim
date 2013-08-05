@@ -6,10 +6,10 @@ package body Test.Split is
 
    procedure Run_Tests is
 
-      ram   : constant Monitor_Pointer := new Monitor_Type;
-      mon1  : constant Monitor_Pointer := new Monitor_Type;
-      mon2  : constant Monitor_Pointer := new Monitor_Type;
-      split : Split_Pointer := Create_Split;
+      ram   : constant Monitor_Pointer := Create_Monitor(0);
+      mon1  : constant Monitor_Pointer := Create_Monitor(0, False);
+      mon2  : constant Monitor_Pointer := Create_Monitor(0, False);
+      split : Split_Pointer            := Create_Split;
       join1 : constant Join_Pointer    := Create_Join(split, 0);
       join2 : constant Join_Pointer    := Create_Join(split, 1);
 

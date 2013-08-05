@@ -172,9 +172,8 @@ package body Memory.Container is
 
    procedure Finalize(mem : in out Container_Type) is
    begin
-      if mem.mem /= null then
-         Destroy(Memory_Pointer(mem.mem));
-      end if;
+      Destroy(Memory_Pointer(mem.mem));
+      Finalize(Memory_Type(mem));
    end Finalize;
 
 end Memory.Container;

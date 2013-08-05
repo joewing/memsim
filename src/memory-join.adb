@@ -72,6 +72,7 @@ package body Memory.Join is
 
    procedure Adjust(mem : in out Join_Type) is
    begin
+      Adjust(Memory_Type(mem));
       mem.parent := null;
    end Adjust;
 

@@ -5,9 +5,9 @@ with Memory.Join;             use Memory.Join;
 package body Test.Flip is
 
    procedure Run_Tests is
-      mem   : constant Monitor_Pointer := new Monitor_Type;
-      bank  : constant Monitor_Pointer := new Monitor_Type;
-      flip  : constant Flip_Pointer    := Create_Flip;
+      mem   : constant Monitor_Pointer := Create_Monitor(0);
+      bank  : constant Monitor_Pointer := Create_Monitor(0, False);
+      flip  : Flip_Pointer             := Create_Flip;
       join  : constant Join_Pointer    := Create_Join(flip, 0);
    begin
 
@@ -46,6 +46,8 @@ package body Test.Flip is
       Check(bank.last_size = 4);
       Check(Get_Time(flip.all) = 4);
       Check(Get_Writes(flip.all) = 1);
+
+      Destroy(Memory_Pointer(flip));
 
    end Run_Tests;
 

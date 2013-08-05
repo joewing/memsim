@@ -24,7 +24,9 @@ private
 
    type Monitor_Pointer is access all Monitor_Type;
 
-   function Create_Monitor(latency : Time_Type := 0) return Monitor_Pointer;
+   function Create_Monitor(latency : Time_Type  := 0;
+                           ram     : Boolean    := True)
+                           return Monitor_Pointer;
 
    overriding
    function Clone(mem : Monitor_Type) return Memory_Pointer;
@@ -47,9 +49,6 @@ private
    procedure Generate(mem  : in Monitor_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);
-
-   overriding
-   procedure Initialize(mem : in out Monitor_Type);
 
    procedure Check(cond    : in Boolean;
                    source  : in String := GNAT.Source_Info.File;
