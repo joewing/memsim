@@ -101,6 +101,54 @@ package body Memory.Register is
 
    end Insert_Registers;
 
+   function Remove_Registers(mem : Memory_Pointer) return Memory_Pointer is
+   begin
+      if mem = null then
+         return null;
+      elsif mem.all in Register_Type'Class then
+         declare
+            rp : Register_Pointer         := Register_Pointer(mem);
+            np : constant Memory_Pointer  := Get_Memory(rp.all);
+         begin
+            Set_Memory(rp.all, null);
+            Destroy(Memory_Pointer(rp));
+            return Remove_Registers(np);
+         end;
+      elsif mem.all in Split_Type'Class then
+         declare
+            sp : constant Split_Pointer   := Split_Pointer(mem);
+            b0 : constant Memory_Pointer  := Get_Bank(sp.all, 0);
+            b1 : constant Memory_Pointer  := Get_Bank(sp.all, 1);
+            np : constant Memory_Pointer  := Get_Memory(sp.all);
+         begin
+            Set_Bank(sp.all, 0, Remove_Registers(b0));
+            Set_Bank(sp.all, 1, Remove_Registers(b1));
+            Set_Memory(sp.all, Remove_Registers(np));
+            return mem;
+         end;
+      elsif mem.all in Transform_Type'Class then
+         declare
+            tp : constant Transform_Pointer  := Transform_Pointer(mem);
+            bp : constant Memory_Pointer     := Get_Bank(tp.all);
+            np : constant Memory_Pointer     := Get_Memory(tp.all);
+         begin
+            Set_Bank(tp.all, Remove_Registers(bp));
+            Set_Memory(tp.all, Remove_Registers(np));
+            return mem;
+         end;
+      elsif mem.all in Container_Type'Class then
+         declare
+            cp : constant Container_Pointer  := Container_Pointer(mem);
+            np : constant Memory_Pointer     := Get_Memory(cp.all);
+         begin
+            Set_Memory(cp.all, Remove_Registers(np));
+            return mem;
+         end;
+      else
+         return mem;
+      end if;
+   end Remove_Registers;
+
    function Create_Register(mem : access Memory_Type'Class)
                             return Register_Pointer is
       result : constant Register_Pointer := new Register_Type;

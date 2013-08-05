@@ -9,6 +9,8 @@ package Memory.Register is
 
    procedure Insert_Registers(mem : access Memory_Type'Class);
 
+   function Remove_Registers(mem : Memory_Pointer) return Memory_Pointer;
+
    function Create_Register(mem : access Memory_Type'Class)
                             return Register_Pointer;
 

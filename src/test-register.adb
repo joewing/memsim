@@ -53,6 +53,18 @@ package body Test.Register is
       Check(Get_Time(offset.all) = 24);
       Check(Get_Writes(offset.all) = 1);
 
+      offset := Offset_Pointer(Remove_Registers(Memory_Pointer(offset)));
+      Reset(offset.all);
+      Check(Get_Time(offset.all) = 0);
+
+      Read(offset.all, 0, 1);
+      Check(Get_Time(offset.all) = 11);
+      Check(Get_Time(ram.all) = 11);
+
+      Write(offset.all, 0, 1);
+      Check(Get_Time(offset.all) = 22);
+      Check(Get_Writes(offset.all) = 1);
+
       Destroy(Memory_Pointer(offset));
 
    end Test_Insert;
