@@ -561,8 +561,9 @@ package body Memory.Super is
       end if;
 
       mem.steps := mem.steps + 1;
-      Set_Memory(mem, mem.current);
+      Set_Memory(mem, Remove_Registers(mem.current));
       Randomize(mem);
+      Insert_Registers(mem.current);
 
    end Update_Memory;
 

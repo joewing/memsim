@@ -1,6 +1,7 @@
 
 with Device;
 with Memory.Split;      use Memory.Split;
+with Memory.Join;       use Memory.Join;
 with Memory.Transform;  use Memory.Transform;
 
 package body Memory.Register is
@@ -10,7 +11,7 @@ package body Memory.Register is
       max_path : constant Natural := Device.Get_Max_Path;
    begin
 
-      if Get_Max_Length(mem) <= max_path then
+      if Get_Path_Length(mem.all) <= max_path then
          return False;
       end if;
 
@@ -42,6 +43,10 @@ package body Memory.Register is
             return True;
 
          end;
+
+      elsif mem.all in Join_Type'Class then
+
+         return False;
 
       elsif mem.all in Transform_Type'Class then
 
