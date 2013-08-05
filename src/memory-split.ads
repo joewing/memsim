@@ -1,10 +1,9 @@
 
-with Memory.Container;  use Memory.Container;
-with Memory.Wrapper;    use Memory.Wrapper;
+with Memory.Wrapper; use Memory.Wrapper;
 
 package Memory.Split is
 
-   type Split_Type is new Container_Type and Wrapper_Type with private;
+   type Split_Type is new Wrapper_Type with private;
 
    type Split_Pointer is access all Split_Type'Class;
 
@@ -65,7 +64,7 @@ package Memory.Split is
    function Get_Writes(mem : Split_Type) return Long_Integer;
 
    overriding
-   function Is_Registered(mem : Split_Type) return Boolean;
+   function Get_Path_Length(mem : Split_Type) return Natural;
 
    overriding
    procedure Generate(mem  : in Split_Type;
@@ -98,6 +97,9 @@ package Memory.Split is
    overriding
    function Forward_Get_Time(mem : Split_Type) return Time_Type;
 
+   overriding
+   function Get_Join_Length(mem : Split_Type) return Natural;
+
 private
 
    type Split_Data is record
@@ -106,7 +108,7 @@ private
 
    type Split_Data_Array is array(0 .. 1) of Split_Data;
 
-   type Split_Type is new Container_Type and Wrapper_Type with record
+   type Split_Type is new Wrapper_Type with record
       banks    : Split_Data_Array;
       offset   : Address_Type;
    end record;

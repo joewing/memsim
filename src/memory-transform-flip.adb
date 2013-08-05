@@ -1,4 +1,6 @@
 
+with Memory.Container; use Memory.Container;
+
 package body Memory.Transform.Flip is
 
    function Create_Flip return Flip_Pointer is
@@ -59,5 +61,10 @@ package body Memory.Transform.Flip is
    begin
       return Get_Word_Size(mem);
    end Get_Alignment;
+
+   function Get_Transform_Length(mem : Flip_Type) return Natural is
+   begin
+      return 0;
+   end Get_Transform_Length;
 
 end Memory.Transform.Flip;

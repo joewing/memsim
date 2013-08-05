@@ -1,4 +1,6 @@
 
+with Memory.Container; use Memory.Container;
+
 package body Memory.Transform.Offset is
 
    function Create_Offset return Offset_Pointer is
@@ -105,5 +107,10 @@ package body Memory.Transform.Offset is
       end loop;
       return Positive(alignment);
    end Get_Alignment;
+
+   function Get_Transform_Length(mem : Offset_Type) return Natural is
+   begin
+      return 8 * Get_Address_Size(mem);
+   end Get_Transform_Length;
 
 end Memory.Transform.Offset;

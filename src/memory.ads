@@ -53,7 +53,7 @@ package Memory is
 
    function Get_Address_Size(mem : Memory_Type) return Positive;
 
-   function Is_Registered(mem : Memory_Type) return Boolean;
+   function Get_Path_Length(mem : Memory_Type) return Natural;
 
    procedure Generate(mem  : in Memory_Type;
                       sigs : in out Unbounded_String;
@@ -71,6 +71,9 @@ package Memory is
 
    procedure Advance(mem      : in out Memory_Type'Class;
                      cycles   : in Time_Type);
+
+   function Get_Max_Length(mem      : access Memory_Type'Class;
+                           result   : Natural := 0) return Natural;
 
 private
 

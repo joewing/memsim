@@ -1,6 +1,7 @@
 
-with Ada.Assertions; use Ada.Assertions;
-with Memory.Join;    use Memory.Join;
+with Ada.Assertions;    use Ada.Assertions;
+with Memory.Join;       use Memory.Join;
+with Memory.Container;  use Memory.Container;
 
 package body Memory.Split is
 
@@ -211,10 +212,13 @@ package body Memory.Split is
       return result;
    end Get_Writes;
 
-   function Is_Registered(mem : Split_Type) return Boolean is
+   function Get_Path_Length(mem : Split_Type) return Natural is
+      bank0 : constant Natural := Get_Path_Length(mem.banks(0).mem.all);
+      bank1 : constant Natural := Get_Path_Length(mem.banks(1).mem.all);
+      asize : constant Natural := 8 * Get_Address_Size(mem);
    begin
-      return False;
-   end Is_Registered;
+      return asize + Natural'Max(bank0, bank1);
+   end Get_Path_Length;
 
    procedure Generate(mem  : in Split_Type;
                       sigs : in out Unbounded_String;
@@ -372,5 +376,10 @@ package body Memory.Split is
    begin
       return Get_Time(Container_Type(mem));
    end Forward_Get_Time;
+
+   function Get_Join_Length(mem : Split_Type) return Natural is
+   begin
+      return 8 * Get_Address_Size(mem);
+   end Get_Join_Length;
 
 end Memory.Split;

@@ -114,6 +114,15 @@ package body Memory.Container is
       end if;
    end Do_Idle;
 
+   function Get_Path_Length(mem : Container_Type) return Natural is
+   begin
+      if mem.mem /= null then
+         return Get_Path_Length(mem.mem.all);
+      else
+         return 0;
+      end if;
+   end Get_Path_Length;
+
    procedure Show_Access_Stats(mem : in out Container_Type) is
    begin
       if mem.mem /= null then

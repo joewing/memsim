@@ -1,12 +1,11 @@
 
-with Memory.Container;  use Memory.Container;
 with Memory.Wrapper;    use Memory.Wrapper;
 with Applicative;       use Applicative;
 
 package Memory.Transform is
 
-   type Transform_Type is abstract new Container_Type
-      and Applicative_Type and Wrapper_Type with private;
+   type Transform_Type is abstract new Wrapper_Type and
+      Applicative_Type with private;
 
    type Transform_Pointer is access all Transform_Type'Class;
 
@@ -64,12 +63,21 @@ package Memory.Transform is
    function Forward_Get_Time(mem : Transform_Type) return Time_Type;
 
    overriding
+   function Get_Join_Length(mem : Transform_Type) return Natural;
+
+   overriding
    function To_String(mem : Transform_Type) return Unbounded_String;
 
    overriding
    procedure Generate(mem  : in Transform_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);
+
+   overriding
+   function Get_Path_Length(mem : Transform_Type) return Natural;
+
+   function Get_Transform_Length(mem : Transform_Type) return Natural
+      is abstract;
 
    function Is_Empty(mem : Transform_Type) return Boolean;
 
@@ -81,8 +89,7 @@ package Memory.Transform is
 
 private
 
-   type Transform_Type is abstract new Container_Type
-      and Applicative_Type and Wrapper_Type with
+   type Transform_Type is abstract new Wrapper_Type and Applicative_Type with
    record
       bank  : access Memory_Type'Class := null;
       value : Long_Integer := 0;

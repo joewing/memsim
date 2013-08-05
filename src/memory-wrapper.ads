@@ -1,7 +1,9 @@
 
+with Memory.Container; use Memory.Container;
+
 package Memory.Wrapper is
 
-   type Wrapper_Type is limited interface;
+   type Wrapper_Type is abstract new Container_Type with private;
 
    type Wrapper_Pointer is access all Wrapper_Type'Class;
 
@@ -19,8 +21,12 @@ package Memory.Wrapper is
                           source    : in Natural;
                           cycles    : in Time_Type) is abstract;
 
-   function Get_Word_Size(mem : Wrapper_Type) return Natural is abstract;
-
    function Forward_Get_Time(mem : Wrapper_Type) return Time_Type is abstract;
+
+   function Get_Join_Length(mem : Wrapper_Type) return Natural is abstract;
+
+private
+
+   type Wrapper_Type is abstract new Container_Type with null record;
 
 end Memory.Wrapper;

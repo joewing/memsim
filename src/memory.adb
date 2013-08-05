@@ -3,6 +3,10 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with Ada.Unchecked_Deallocation;
 
+with Memory.Container;  use Memory.Container;
+with Memory.Split;      use Memory.Split;
+with Memory.Transform;  use Memory.Transform;
+
 package body Memory is
 
    next_id : Natural := 0;
@@ -59,10 +63,48 @@ package body Memory is
       return 4;
    end Get_Address_Size;
 
-   function Is_Registered(mem : Memory_Type) return Boolean is
+   function Get_Path_Length(mem : Memory_Type) return Natural is
    begin
-      return True;
-   end Is_Registered;
+      return 0;
+   end Get_Path_Length;
+
+   -- Determine the max path length for a memory subsystem.
+   function Get_Max_Length(mem      : access Memory_Type'Class;
+                           result   : Natural := 0) return Natural is
+   begin
+      if mem = null then
+         return result;
+      elsif mem.all in Split_Type'Class then
+         declare
+            sp : constant Split_Pointer   := Split_Pointer(mem);
+            b0 : constant Memory_Pointer  := Get_Bank(sp.all, 0);
+            s0 : constant Natural         := Get_Max_Length(b0, result);
+            b1 : constant Memory_Pointer  := Get_Bank(sp.all, 1);
+            s1 : constant Natural         := Get_Max_Length(b1, result);
+            bm : constant Natural         := Natural'Max(s0, s1);
+         begin
+            return Natural'Max(bm, Get_Path_Length(mem.all));
+         end;
+      elsif mem.all in Transform_Type'Class then
+         declare
+            tp : constant Transform_Pointer  := Transform_Pointer(mem);
+            bp : constant Memory_Pointer     := Get_Bank(tp.all);
+            bs : constant Natural            := Get_Max_Length(bp, result);
+         begin
+            return Natural'Max(bs, Get_Path_Length(mem.all));
+         end;
+      elsif mem.all in Container_Type'Class then
+         declare
+            cp : constant Container_Pointer  := Container_Pointer(mem);
+            np : constant Memory_Pointer     := Get_Memory(cp.all);
+            a  : constant Natural := Get_Max_Length(np, result);
+         begin
+            return Natural'Max(a, Get_Path_Length(mem.all));
+         end;
+      else
+         return Natural'Max(result, Get_Path_Length(mem.all));
+      end if;
+   end Get_Max_Length;
 
    procedure Deallocate is
       new Ada.Unchecked_Deallocation(Memory_Type'Class, Memory_Pointer);

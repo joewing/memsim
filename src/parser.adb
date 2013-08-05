@@ -34,6 +34,9 @@ package body Parser is
    procedure Parse_RAM(parser : in out Parser_Type;
                        result : out Memory_Pointer) is separate;
 
+   procedure Parse_Register(parser  : in out Parser_Type;
+                            result  : out Memory_Pointer) is separate;
+
    procedure Parse_Shift(parser  : in out Parser_Type;
                          result  : out Memory_Pointer) is separate;
 
@@ -71,6 +74,7 @@ package body Parser is
       (To_Unbounded_String("perfect_prefetch"), Parse_Perfect_Prefetch'Access),
       (To_Unbounded_String("prefetch"),         Parse_Prefetch'Access),
       (To_Unbounded_String("ram"),              Parse_RAM'Access),
+      (To_Unbounded_String("register"),         Parse_Register'Access),
       (To_Unbounded_String("shift"),            Parse_Shift'Access),
       (To_Unbounded_String("split"),            Parse_Split'Access),
       (To_Unbounded_String("spm"),              Parse_SPM'Access),

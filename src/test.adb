@@ -2,14 +2,15 @@
 with Ada.Text_IO; use Ada.Text_IO;
 
 with Memory.RAM; use Memory.RAM;
-with Test.RAM;
 with Test.Cache;
 with Test.Flip;
-with Test.SPM;
 with Test.Offset;
+with Test.Prefetch;
+with Test.RAM;
+with Test.Register;
 with Test.Shift;
 with Test.Split;
-with Test.Prefetch;
+with Test.SPM;
 
 package body Test is
 
@@ -86,6 +87,7 @@ package body Test is
       Shift.Run_Tests;
       Split.Run_Tests;
       Prefetch.Run_Tests;
+      Register.Run_Tests;
 
       Put_Line("ran" & Natural'Image(count) & " tests");
       if failed > 1 then

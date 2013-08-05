@@ -41,6 +41,9 @@ package Memory.Join is
                       code : in out Unbounded_String);
 
    overriding
+   function Get_Path_Length(mem : Join_Type) return Natural;
+
+   overriding
    procedure Adjust(mem : in out Join_Type);
 
    procedure Set_Parent(mem      : in out Join_Type;

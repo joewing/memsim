@@ -63,6 +63,13 @@ package body Memory.Join is
       Declare_Signals(sigs, name, word_bits);
    end Generate;
 
+   function Get_Path_Length(mem : Join_Type) return Natural is
+      next  : constant Memory_Pointer  := Get_Memory(mem.parent.all);
+      jl    : constant Natural         := Get_Join_Length(mem.parent.all);
+   begin
+      return jl + Get_Path_Length(next.all);
+   end Get_Path_Length;
+
    procedure Adjust(mem : in out Join_Type) is
    begin
       mem.parent := null;

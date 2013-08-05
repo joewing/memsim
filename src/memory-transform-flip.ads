@@ -34,4 +34,7 @@ private
    overriding
    function Get_Alignment(mem : Flip_Type) return Positive;
 
+   overriding
+   function Get_Transform_Length(mem : Flip_Type) return Natural;
+
 end Memory.Transform.Flip;

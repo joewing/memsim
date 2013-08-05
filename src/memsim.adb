@@ -11,6 +11,7 @@ with Benchmark.Stride;
 with Benchmark.Hash;
 with Benchmark.MM;
 with Test;
+with Util;                    use Util;
 
 procedure MemSim is
 
@@ -62,6 +63,16 @@ begin
    if Argument_Count = 1 and then Argument(1) = "test" then
       Test.Run_Tests;
       return;
+   elsif Argument_Count = 2 and then Argument(2) = "show" then
+      mem := Parser.Parse(Argument(1));
+      if mem = null then
+         Put_Line("error: could not open memory: " & Argument(1));
+         return;
+      end if;
+      Put_Line("Max Path:" & Natural'Image(Get_Max_Length(mem)));
+      Put_Line("Cost:" & Cost_Type'Image(Get_Cost(mem.all)));
+      Destroy(mem);
+      return;
    elsif Argument_Count < 2 then
       Put_Line("usage: " & Command_Name & " <memory> <benchmark> [<options>]");
       Put_Line("benchmarks:");
@@ -69,6 +80,7 @@ begin
          Put_Line("   " & To_String(benchmark_map(i).name & " " &
                   To_String(benchmark_map(i).usage)));
       end loop;
+      Put_Line("   show");
       return;
    end if;
 

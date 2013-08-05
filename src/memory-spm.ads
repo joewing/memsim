@@ -35,7 +35,7 @@ package Memory.SPM is
                    size    : in Positive);
 
    overriding
-   function Is_Registered(mem : SPM_Type) return Boolean;
+   function Get_Path_Length(mem : SPM_Type) return Natural;
 
    overriding
    function To_String(mem : SPM_Type) return Unbounded_String;

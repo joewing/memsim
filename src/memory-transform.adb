@@ -1,5 +1,6 @@
 
-with Memory.Join; use Memory.Join;
+with Memory.Container;  use Memory.Container;
+with Memory.Join;       use Memory.Join;
 
 package body Memory.Transform is
 
@@ -149,6 +150,11 @@ package body Memory.Transform is
    begin
       return Get_Time(Container_Type(mem));
    end Forward_Get_Time;
+
+   function Get_Join_Length(mem : Transform_Type) return Natural is
+   begin
+      return Get_Transform_Length(Transform_Type'Class(mem));
+   end Get_Join_Length;
 
    function Get_Cost(mem : Transform_Type) return Cost_Type is
       result : Cost_Type := Get_Cost(Container_Type(mem));
@@ -313,6 +319,17 @@ package body Memory.Transform is
          Generate_Simple(mem, sigs, code);
       end if;
    end Generate;
+
+   function Get_Path_Length(mem : Transform_Type) return Natural is
+      len : Natural := Get_Transform_Length(Transform_Type'Class(mem));
+   begin
+      if mem.bank /= null then
+         len := len + Get_Path_Length(mem.bank.all);
+      else
+         len := len + Get_Path_Length(Container_Type(mem));
+      end if;
+      return len;
+   end Get_Path_Length;
 
    procedure Adjust(mem : in out Transform_Type) is
       jp    : Join_Pointer;

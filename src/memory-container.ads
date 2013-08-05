@@ -47,6 +47,9 @@ package Memory.Container is
                      cycles   : in Time_Type);
 
    overriding
+   function Get_Path_Length(mem : Container_Type) return Natural;
+
+   overriding
    procedure Show_Access_Stats(mem : in out Container_Type);
 
    overriding

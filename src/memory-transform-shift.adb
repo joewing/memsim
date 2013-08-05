@@ -1,4 +1,6 @@
 
+with Memory.Container; use Memory.Container;
+
 package body Memory.Transform.Shift is
 
    function Create_Shift return Shift_Pointer is
@@ -71,5 +73,10 @@ package body Memory.Transform.Shift is
    begin
       return Get_Word_Size(mem);
    end Get_Alignment;
+
+   function Get_Transform_Length(mem : Shift_Type) return Natural is
+   begin
+      return 0;
+   end Get_Transform_Length;
 
 end Memory.Transform.Shift;

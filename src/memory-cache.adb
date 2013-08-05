@@ -256,11 +256,6 @@ package body Memory.Cache is
 
       Advance(mem, mem.latency);
 
-      -- Add an extra cycle if we need to insert a register downstream.
-      if not Is_Registered(Get_Memory(mem).all) then
-         Advance(mem, 1);
-      end if;
-
       -- Update the age of all items in this set.
       age_sum := 0;
       for i in 0 .. mem.associativity - 1 loop

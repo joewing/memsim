@@ -160,10 +160,11 @@ package body Memory.SPM is
       return result;
    end Get_Cost;
 
-   function Is_Registered(mem : SPM_Type) return Boolean is
+   function Get_Path_Length(mem : SPM_Type) return Natural is
+      asize : constant Natural := 8 * Get_Address_Size(mem);
    begin
-      return False;
-   end Is_Registered;
+      return asize + Get_Path_Length(Container_Type(mem));
+   end Get_Path_Length;
 
    procedure Generate(mem  : in SPM_Type;
                       sigs : in out Unbounded_String;

@@ -1,4 +1,6 @@
 
+with Memory.Container; use Memory.Container;
+
 package body Memory.Transform.EOR is
 
    function Create_EOR return EOR_Pointer is
@@ -62,5 +64,10 @@ package body Memory.Transform.EOR is
       end loop;
       return 2 ** 16;
    end Get_Alignment;
+
+   function Get_Transform_Length(mem : EOR_Type) return Natural is
+   begin
+      return 1;
+   end Get_Transform_Length;
 
 end Memory.Transform.EOR;

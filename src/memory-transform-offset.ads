@@ -37,4 +37,7 @@ private
    overriding
    function Get_Alignment(mem : Offset_Type) return Positive;
 
+   overriding
+   function Get_Transform_Length(mem : Offset_Type) return Natural;
+
 end Memory.Transform.Offset;
