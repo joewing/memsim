@@ -1,0 +1,3 @@
+; Generate a super-optimized memory subsystem.
+(super (max_iterations 10000) (seed 3) (max_cost 16) (memory
+   (ram (latency 100)(burst 1)(word_size 8))))

@@ -1,11 +1,23 @@
 
 Memory Simulator
 ==============================================================================
+This is a memory simulator and memory subsystem optimizer.  It is capable
+of optimizing memory subsystems for a particular main memory system.  It
+can then generate synthesizable VHDL for implementation on FPGAs.
+
+Building
+------------------------------------------------------------------------------
+Assuming GNAT is installed (GNAT is part of GCC: http://gcc.gnu.org),
+simply run 'make'.
 
 Usage
 ------------------------------------------------------------------------------
+There are two main programs of interest: memsim and memgen.  memsim
+is the memory simulator and subsystem optimizer.  It takes a main memory
+specification and generate an optimized memory subsystem using memory
+traces or one of the built-in benchmarks.  memgen takes a memory
+subsystem specification as input and generates synthesizable VHDL.
 
-This is a memory simulator to determine how long memory access take.
 Running memsim with no arguments will show its usage:
 
 <pre>
@@ -16,9 +28,13 @@ benchmarks:
    mm [size=256][iterations=1][spacing=0][seed=15]
    stride [size=1024][iterations=1000][stride=1][spacing=0]
    trace [file=trace.txt][spacing=0]
+   show
 </pre>
 
-The &lt;memory&gt; parameter specifies a memory description file.
+The &lt;memory&gt; parameter specifies a memory description file.  This
+file contains the memory system to simulate.  If the special *super*
+component is used, the simulator will generate a superoptimized
+memory subsystem (see mem/opt.mem for an example).
 
 The &lt;benchmark&gt; parameter specifies the benchmark to use.
 The following benchmarks are available:
@@ -30,6 +46,7 @@ The following benchmarks are available:
    values.
  - *stride*: A benchmark to perform strided 4-byte memory accesses.
  - *trace*: A benchmark to execute a memory access trace.
+ - *show*: A benchmark that simply shows information about the memory.
 
 The optional arguments are shown above for each benchmark with defaults.
 The arguments are:
@@ -41,7 +58,7 @@ The arguments are:
  - *stride*: The stride size in 4-byte words for the *stride* benchmark.
  - *file*: The name of the file to open for the *trace* benchmark.
 
-For the trace benchmark, the trace file contains sequences of memory
+For the *trace* benchmark, the trace file contains sequences of memory
 access actions.  There are three types of actions: reads, writes, and
 idle time.  The format of a read is:
 
@@ -79,6 +96,10 @@ The basic memories are:
    following parameters:
    - word\_size: The size of a word in bytes (defaults to 8).
    - latency: The latency of an access (defaults to 1).
+   - word\_count: The total number of words
+     (defaults to 0, this is only for VHDL simulation).
+   - burst: The latency for accessing words after the first word
+     (defaults to 0, which disables burst behavior).
  - flash: A Flash memory simulator with a separate block write size and
    latency.  Takes the following parameters:
    - word\_size: The size of a word in bytes (defaults to 8).
@@ -88,16 +109,12 @@ The basic memories are:
 
 The following memory containers are available:
 
- - bank: Memory bank. Divide memory accesses based on address.  Banks take
-   a list for the banks.  Each bank must specify a memory, key, and mask.
-   The mask is a bit mask for the address and the key is the value that
-   the masked address is tested against.
  - cache: Cache.  The following parameters are available:
    - memory: The contained memory.
    - line\_count: The number of cache lines (1).
    - line\_size: The size of each cache line in bytes (8).
    - associativity: The set associativity of the cache (1).
-   - latency: The latency of a cache hit (1).
+   - latency: The latency (3).
    - policy: The replacement policy (lru, mru, fifo, or random,
      defaults is lru).
    - write\_back: Set if the cache should use write back instead of
@@ -112,16 +129,19 @@ The following memory containers are available:
    - stride: The stride size (defaults to 1).
  - spm: Scratchpad memory.  Takes the following parameters:
    - memory: The contained memory.
-   - size: The size of the scratchpad (defaults to 0).
+   - size: The size of the scratchpad in bytes (defaults to 0).
    - latency: The latency of a hit in the scratchpad.
  - stats: Access statistics logger.  Takes the following parameter:
    - memory: The contained memory.
- - super: Memory hierarchy optimizer.
+ - super: Memory subsystem superoptimizer.
    Takes the following parameters:
-   - memory: The contained memory.
+   - memory: The contained memory.  Basic memory components are not changed
+     by the superoptimizer, but any other components are only used as the
+     initial state.
    - optimize: The optimization target (time or writes, defaults to time).
    - max\_cost: The maximum cost in block RAMs (defaults to 0).
    - max\_iterations: The maximum iterations to run without improvement.
+   - seed: Random number seed (defaults to 15).
  - trace: Access trace logger.  Takes the following parameter:
    - memory: The contained memory.
  - offset: Address offset transform.  Takes the following parameters:
@@ -144,15 +164,16 @@ The following memory containers are available:
      If not present, addresses are transformed for the memory parameter.
    - memory: The contained memory.
 
-Building
-------------------------------------------------------------------------------
-Assuming GNAT is installed, simply run 'make'.
-
 Implementation
 ------------------------------------------------------------------------------
-
 memsim is implemented in Ada 2005.  There are two main package hierarchies:
 the *Memory* package to describe memories and the *Benchmark* package
 to describe benchmarks.  The *Parser* package (which uses the *Lexer*
-package) is used to build up memories.
+package) is used to build up memories.  In addition, the *Test* package
+contains unit tests for the various components.
+
+Testing
+------------------------------------------------------------------------------
+The memsim program includes a set of unit tests.  To execute the unit
+tests run './memsim test'.
 
