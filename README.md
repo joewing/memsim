@@ -7,14 +7,14 @@ can then generate synthesizable VHDL for implementation on FPGAs.
 
 Building
 ------------------------------------------------------------------------------
-Assuming GNAT is installed (GNAT is part of GCC: http://gcc.gnu.org),
-simply run 'make'.
+Assuming GNAT is installed, simply run 'make'.
+Note that GNAT is part of GCC: http://gcc.gnu.org.
 
 Usage
 ------------------------------------------------------------------------------
-There are two main programs of interest: memsim and memgen.  memsim
+There are two programs of interest: memsim and memgen.  memsim
 is the memory simulator and subsystem optimizer.  It takes a main memory
-specification and generate an optimized memory subsystem using memory
+specification and generates an optimized memory subsystem using memory
 traces or one of the built-in benchmarks.  memgen takes a memory
 subsystem specification as input and generates synthesizable VHDL.
 
