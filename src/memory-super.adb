@@ -470,11 +470,11 @@ package body Memory.Super is
       end if;
    end Permute_Memory;
 
-   procedure Randomize(mem : in out Super_Type) is
-      len   : constant Natural := Count_Memories(mem.current);
+   procedure Randomize(mem : in Super_Type; ptr : in out Memory_Pointer) is
+      len   : constant Natural := Count_Memories(ptr);
       pos   : Natural;
       rc    : Boolean;
-      cost  : constant Cost_Type := Get_Cost(mem.current.all);
+      cost  : constant Cost_Type := Get_Cost(ptr.all);
       left  : constant Cost_Type := mem.max_cost - cost;
    begin
 
@@ -484,28 +484,27 @@ package body Memory.Super is
       case Random(mem.generator.all) mod 32 is
          when 0      =>    -- Insert a component.
             pos := Random(mem.generator.all) mod (len + 1);
-            Insert_Memory(mem, mem.current, pos, left, False);
+            Insert_Memory(mem, ptr, pos, left, False);
          when 1 | 2  =>    -- Remove a component.
             if len = 0 then
-               Insert_Memory(mem, mem.current, 0, left, False);
+               Insert_Memory(mem, ptr, 0, left, False);
             else
                loop
                   pos := Random(mem.generator.all) mod len;
-                  Remove_Memory(mem.current, pos, rc);
+                  Remove_Memory(ptr, pos, rc);
                   exit when rc;
                end loop;
             end if;
          when others =>    -- Modify a component.
             if len = 0 then
-               Insert_Memory(mem, mem.current, 0, left, False);
+               Insert_Memory(mem, ptr, 0, left, False);
             else
                loop
                   pos := Random(mem.generator.all) mod len;
-                  exit when Permute_Memory(mem, mem.current, pos, left);
+                  exit when Permute_Memory(mem, ptr, pos, left);
                end loop;
             end if;
       end case;
-      Set_Memory(mem, mem.current);
 
       Assert(Get_Cost(mem) <= mem.max_cost, "Invalid randomize");
 
@@ -524,7 +523,7 @@ package body Memory.Super is
       result.current          := Clone(mem.all);
       result.generator        := new Distribution_Type;
       Set_Seed(result.generator.all, seed);
-      Set_Memory(result.all, result.current);
+      Set_Memory(result.all, Clone(mem.all));
       return result;
    end Create_Super;
 
@@ -533,6 +532,7 @@ package body Memory.Super is
       eold  : constant Long_Integer := Long_Integer(mem.last_value);
       enew  : constant Long_Integer := Long_Integer(value);
       diff  : constant Long_Integer := enew - eold;
+      temp  : Memory_Pointer;
    begin
 
       if mem.steps = 0 then
@@ -561,9 +561,15 @@ package body Memory.Super is
       end if;
 
       mem.steps := mem.steps + 1;
-      Set_Memory(mem, Remove_Registers(mem.current));
-      Randomize(mem);
-      Insert_Registers(mem.current);
+
+      temp := Get_Memory(mem);
+      Destroy(temp);
+      Set_Memory(mem, null);
+
+      Randomize(mem, mem.current);
+      temp := Simplify_Memory(Clone(mem.current.all));
+      Insert_Registers(temp);
+      Set_Memory(mem, temp);
 
    end Update_Memory;
 
@@ -580,14 +586,15 @@ package body Memory.Super is
          return;
       end if;
 
-      -- Value is at least as good; so simplify the memory.
-      simp_mem    := Simplify_Memory(Clone(mem.current.all));
+      -- Value is at least as good.
+      -- The current memory being used is the simplified memory with
+      -- registers inserted, so we use that.
+      simp_mem    := Get_Memory(mem);
       simp_cost   := Get_Cost(simp_mem.all);
 
       -- If the value is the same, we will only accept the memory if
       -- the cost is at least as good.
       if value = mem.best_value and cost > mem.best_cost then
-         Destroy(simp_mem);
          return;
       end if;
 
@@ -598,7 +605,6 @@ package body Memory.Super is
       -- only if the name is shorter.
       if value = mem.best_value and then cost = mem.best_cost and then
          Length(simp_name) > Length(mem.best_name) then
-         Destroy(simp_mem);
          return;
       end if;
 
@@ -617,7 +623,6 @@ package body Memory.Super is
       mem.best_value    := value;
       mem.best_cost     := simp_cost;
       mem.best_name     := simp_name;
-      Destroy(simp_mem);
 
    end Track_Best;
 
@@ -725,11 +730,10 @@ package body Memory.Super is
 
    procedure Finalize(mem : in out Super_Type) is
    begin
-      Set_Memory(mem, null);
-      Finalize(Container_Type(mem));
       Destroy(mem.generator);
       Destroy(mem.last);
       Destroy(mem.current);
+      Finalize(Container_Type(mem));
    end Finalize;
 
 end Memory.Super;
