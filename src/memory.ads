@@ -1,6 +1,7 @@
 
 with Ada.Finalization; use Ada.Finalization;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Containers.Vectors; use Ada.Containers;
 
 with Distribution; use Distribution;
 with Util; use Util;
@@ -15,8 +16,21 @@ package Memory is
    Prune_Error : exception;
 
    -- The base data type for memory components.
+   -- This type should be extended to create new main memories.
+   -- See Memory.Container to create components.
    type Memory_Type is abstract new Controlled with private;
    type Memory_Pointer is access all Memory_Type'Class;
+
+   -- Type to represent a port.
+   type Port_Type is record
+      id          : Natural;     -- Memory identifier for the port.
+      word_size   : Positive;    -- Size of a word in bytes.
+      addr_size   : Positive;    -- Size of an address in bytes.
+   end record;
+
+   -- Vector of ports.
+   package Port_Vectors is new Vectors(Natural, Port_Type);
+   subtype Port_Vector_Type is Port_Vectors.Vector;
 
    -- Clone this memory.
    -- This will allocate a new instance of the memory.
@@ -25,7 +39,7 @@ package Memory is
    -- Permute some aspect of the current memory component.
    procedure Permute(mem         : in out Memory_Type;
                      generator   : in Distribution_Type;
-                     max_cost    : in Cost_Type);
+                     max_cost    : in Cost_Type) is null;
 
    -- Determine if the evaulation is finished or if the benchmark
    -- needs to be re-run.
@@ -58,7 +72,7 @@ package Memory is
    procedure Show_Stats(mem : in out Memory_Type);
 
    -- Show access statistics (called from Show_Stats).
-   procedure Show_Access_Stats(mem : in out Memory_Type);
+   procedure Show_Access_Stats(mem : in out Memory_Type) is null;
 
    -- Get a string representation of the memory.
    function To_String(mem : Memory_Type) return Unbounded_String is abstract;
@@ -107,6 +121,9 @@ package Memory is
    function Get_Max_Length(mem      : access Memory_Type'Class;
                            result   : Natural := 0) return Natural;
 
+   -- Get a vector of end-points.
+   function Get_Ports(mem : Memory_Type) return Port_Vector_Type is abstract;
+
 private
 
    type Memory_Type is abstract new Controlled with record
@@ -119,6 +136,8 @@ private
 
    overriding
    procedure Adjust(mem : in out Memory_Type);
+
+   function Get_Port(mem : Memory_Type'Class) return Port_Type;
 
    procedure Declare_Signals(sigs      : in out Unbounded_String;
                              name      : in String;

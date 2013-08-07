@@ -163,6 +163,11 @@ package body Memory.Container is
       return Get_Word_Size(mem.mem.all);
    end Get_Word_Size;
 
+   function Get_Ports(mem : Container_Type) return Port_Vector_Type is
+   begin
+      return Get_Ports(mem.mem.all);
+   end Get_Ports;
+
    procedure Adjust(mem : in out Container_Type) is
    begin
       if mem.mem /= null then

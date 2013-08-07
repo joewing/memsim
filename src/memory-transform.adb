@@ -343,7 +343,7 @@ package body Memory.Transform is
          loop
             if ptr.all in Join_Type'Class then
                jp := Join_Pointer(ptr);
-               Set_Parent(jp.all, mem'Unrestricted_Access);
+               Set_Parent(jp.all, mem'Unchecked_Access);
                exit;
             else
                cp := Container_Pointer(ptr);

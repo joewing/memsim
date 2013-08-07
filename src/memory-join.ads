@@ -36,6 +36,9 @@ package Memory.Join is
    function Get_Word_Size(mem : Join_Type) return Positive;
 
    overriding
+   function Get_Ports(mem : Join_Type) return Port_Vector_Type;
+
+   overriding
    procedure Generate(mem  : in Join_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);

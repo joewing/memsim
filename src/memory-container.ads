@@ -65,6 +65,9 @@ package Memory.Container is
    function Get_Word_Size(mem : Container_Type) return Positive;
 
    overriding
+   function Get_Ports(mem : Container_Type) return Port_Vector_Type;
+
+   overriding
    procedure Adjust(mem : in out Container_Type);
 
    overriding

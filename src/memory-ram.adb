@@ -88,6 +88,14 @@ package body Memory.RAM is
       return mem.word_size;
    end Get_Word_Size;
 
+   function Get_Ports(mem : RAM_Type) return Port_Vector_Type is
+      result   : Port_Vector_Type;
+      port     : constant Port_Type := Get_Port(mem);
+   begin
+      result.Append(port);
+      return result;
+   end Get_Ports;
+
    procedure Generate(mem  : in RAM_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is

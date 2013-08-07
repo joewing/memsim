@@ -127,6 +127,20 @@ package body Memory.Dup is
       return result;
    end Get_Word_Size;
 
+   function Get_Ports(mem : Dup_Type) return Port_Vector_Type is
+      result : Port_Vector_Type;
+   begin
+      for i in mem.memories.First_Index .. mem.memories.Last_Index loop
+         declare
+            ptr  : constant Memory_Pointer := mem.memories.Element(i);
+            pvec : constant Port_Vector_Type := Get_Ports(ptr.all);
+         begin
+            result.Append(pvec);
+         end;
+      end loop;
+      return result;
+   end Get_Ports;
+
    procedure Generate(mem  : in Dup_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is

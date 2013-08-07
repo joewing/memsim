@@ -39,6 +39,9 @@ package Memory.RAM is
    function Get_Word_Size(mem : RAM_Type) return Positive;
 
    overriding
+   function Get_Ports(mem : RAM_Type) return Port_Vector_Type;
+
+   overriding
    procedure Generate(mem  : in RAM_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);

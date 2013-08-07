@@ -54,6 +54,13 @@ package body Memory.Join is
       return Get_Word_Size(mem.parent.all);
    end Get_Word_Size;
 
+   function Get_Ports(mem : Join_Type) return Port_Vector_Type is
+      result : Port_Vector_Type;
+   begin
+      Assert(False, "Memory.Join.Get_Ports should not be called");
+      return result;
+   end Get_Ports;
+
    procedure Generate(mem  : in Join_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String) is

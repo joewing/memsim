@@ -1,6 +1,4 @@
 
-with Ada.Containers.Vectors; use Ada.Containers;
-
 with Memory.Container; use Memory.Container;
 
 package Memory.Cache is

@@ -11,13 +11,6 @@ package body Memory is
 
    next_id : Natural := 0;
 
-   procedure Permute(mem         : in out Memory_Type;
-                     generator   : in Distribution_Type;
-                     max_cost    : in Cost_Type) is
-   begin
-      null;
-   end Permute;
-
    function Done(mem : Memory_Type) return Boolean is
    begin
       return True;
@@ -45,11 +38,6 @@ package body Memory is
       Put_Line("Cost:" & Cost_Type'Image(Get_Cost(Memory_Type'Class(mem))));
       Show_Access_Stats(Memory_Type'Class(mem));
    end Show_Stats;
-
-   procedure Show_Access_Stats(mem : in out Memory_Type) is
-   begin
-      null;
-   end Show_Access_Stats;
 
    procedure Advance(mem      : in out Memory_Type'Class;
                      cycles   : in Time_Type) is
@@ -145,6 +133,15 @@ package body Memory is
       mem.id := next_id;
       next_id := next_id + 1;
    end Adjust;
+
+   function Get_Port(mem : Memory_Type'Class) return Port_Type is
+      result : Port_Type;
+   begin
+      result.id         := Get_ID(mem);
+      result.word_size  := Get_Word_Size(mem);
+      result.addr_size  := Get_Address_Size(mem);
+      return result;
+   end Get_Port;
 
    procedure Line(dest  : in out Unbounded_String;
                   str   : in String := "") is

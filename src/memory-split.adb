@@ -329,7 +329,7 @@ package body Memory.Split is
          ptr := Clone(mem.banks(i).mem.all);
          mem.banks(i).mem := ptr;
          jp  := Find_Join(ptr);
-         Set_Parent(jp.all, mem'Unrestricted_Access);
+         Set_Parent(jp.all, mem'Unchecked_Access);
       end loop;
    end Adjust;
 

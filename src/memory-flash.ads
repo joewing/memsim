@@ -40,6 +40,9 @@ package Memory.Flash is
    function Get_Word_Size(mem : Flash_Type) return Positive;
 
    overriding
+   function Get_Ports(mem : Flash_Type) return Port_Vector_Type;
+
+   overriding
    procedure Generate(mem  : in Flash_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);

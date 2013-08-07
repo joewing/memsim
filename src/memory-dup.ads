@@ -1,6 +1,4 @@
 
-with Ada.Containers.Vectors; use Ada.Containers;
-
 package Memory.Dup is
 
    type Dup_Type is new Memory_Type with private;
@@ -51,6 +49,9 @@ package Memory.Dup is
    procedure Generate(mem  : in Dup_Type;
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);
+
+   overriding
+   function Get_Ports(mem : Dup_Type) return Port_Vector_Type;
 
    overriding
    procedure Adjust(mem : in out Dup_Type);
