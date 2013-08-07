@@ -7,12 +7,15 @@ with Memory;                  use Memory;
 with Memory.Container;        use Memory.Container;
 with Util;                    use Util;
 
+-- Base package for unit tests.
 package Test is
 
+   -- Run the unit tests.
    procedure Run_Tests;
 
 private
 
+   -- A memory for monitoring accesses.
    type Monitor_Type is new Container_Type with record
       last_addr   : Address_Type := Address_Type'Last;
       last_size   : Positive     := Positive'Last;
@@ -50,6 +53,8 @@ private
                       sigs : in out Unbounded_String;
                       code : in out Unbounded_String);
 
+   -- Assert a condition.
+   -- This function will report the file and line number for failures.
    procedure Check(cond    : in Boolean;
                    source  : in String := GNAT.Source_Info.File;
                    line    : in Natural := GNAT.Source_Info.Line);
