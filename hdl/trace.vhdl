@@ -195,6 +195,13 @@ architecture trace_arch of trace is
    signal mem_we        : std_logic;
    signal mem_mask      : std_logic_vector((WORD_BITS / 8) - 1 downto 0);
    signal mem_ready     : std_logic;
+   signal ram_addr      : std_logic_vector(ADDR_BITS - 1 downto 0);
+   signal ram_din       : std_logic_vector(WORD_BITS - 1 downto 0);
+   signal ram_dout      : std_logic_vector(WORD_BITS - 1 downto 0);
+   signal ram_re        : std_logic;
+   signal ram_we        : std_logic;
+   signal ram_mask      : std_logic_vector((WORD_BITS / 8) - 1 downto 0);
+   signal ram_ready     : std_logic;
    signal cycle_count   : natural := 0;
    signal do_read       : std_logic;
    signal do_write      : std_logic;
@@ -309,21 +316,48 @@ begin
       end if;
    end process;
 
+   ram1 : entity work.ram
+      generic map (
+         ADDR_WIDTH  => ADDR_BITS,
+         WORD_WIDTH  => WORD_BITS,
+         SIZE        => 65536,
+         LATENCY     => 10,
+         BURST       => 0
+      )
+      port map (
+         clk      => clk,
+         rst      => rst,
+         addr     => ram_addr,
+         din      => ram_din,
+         dout     => ram_dout,
+         re       => ram_re,
+         we       => ram_we,
+         mask     => ram_mask,
+         ready    => ram_ready
+      );
+
    mem1 : entity work.mem
       generic map (
          ADDR_WIDTH => ADDR_BITS,
          WORD_WIDTH => WORD_BITS
       )
       port map (
-         clk      => clk,
-         rst      => rst,
-         addr     => mem_addr,
-         din      => mem_din,
-         dout     => mem_dout,
-         re       => mem_re,
-         we       => mem_we,
-         mask     => mem_mask,
-         ready    => mem_ready
+         clk         => clk,
+         rst         => rst,
+         port0_addr  => ram_addr,
+         port0_din   => ram_dout,
+         port0_dout  => ram_din,
+         port0_re    => ram_re,
+         port0_we    => ram_we,
+         port0_mask  => ram_mask,
+         port0_ready => ram_ready,
+         addr        => mem_addr,
+         din         => mem_din,
+         dout        => mem_dout,
+         re          => mem_re,
+         we          => mem_we,
+         mask        => mem_mask,
+         ready       => mem_ready
       );
 
 end trace_arch;

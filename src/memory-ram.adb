@@ -135,6 +135,7 @@ package body Memory.RAM is
          Line(code, "   );");
       else
          -- No model; wire up a port.
+         Declare_Signals(sigs, pname, word_bits);
          Line(code, pname & "_addr <= " & name & "_addr;");
          Line(code, pname & "_din <= " & name & "_din;");
          Line(code, name & "_dout <= " & pname & "_dout;");

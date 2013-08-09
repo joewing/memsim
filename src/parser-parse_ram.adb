@@ -9,7 +9,7 @@ procedure Parse_RAM(parser : in out Parser_Type;
    latency     : Time_Type := 1;
    burst       : Time_Type := 0;
    word_size   : Positive  := 8;
-   word_count  : Natural   := 65536;
+   word_count  : Natural   := 0;
 
 begin
    while Get_Type(parser) = Open loop

@@ -23,6 +23,14 @@ architecture tb_arch of tb is
    signal mem_mask   : std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
    signal mem_ready  : std_logic;
 
+   signal ram_addr   : std_logic_vector(ADDR_WIDTH - 1 downto 0);
+   signal ram_din    : std_logic_vector(WORD_WIDTH - 1 downto 0);
+   signal ram_dout   : std_logic_vector(WORD_WIDTH - 1 downto 0);
+   signal ram_re     : std_logic;
+   signal ram_we     : std_logic;
+   signal ram_mask   : std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
+   signal ram_ready  : std_logic;
+
    procedure cycle(signal clk : out std_logic) is
    begin
       clk <= '1';
@@ -53,21 +61,48 @@ architecture tb_arch of tb is
 
 begin
 
+   ram1 : entity work.ram
+      generic map (
+         ADDR_WIDTH  => ADDR_WIDTH,
+         WORD_WIDTH  => WORD_WIDTH,
+         SIZE        => 65536,
+         LATENCY     => 10,
+         BURST       => 0
+      )
+      port map (
+         clk      => clk,
+         rst      => rst,
+         addr     => ram_addr,
+         din      => ram_din,
+         dout     => ram_dout,
+         re       => ram_re,
+         we       => ram_we,
+         mask     => ram_mask,
+         ready    => ram_ready
+      );
+
    mem1 : entity work.mem
       generic map (
          ADDR_WIDTH  => ADDR_WIDTH,
          WORD_WIDTH  => WORD_WIDTH
       )
       port map (
-         clk      => clk,
-         rst      => rst,
-         addr     => mem_addr,
-         din      => mem_din,
-         dout     => mem_dout,
-         re       => mem_re,
-         we       => mem_we,
-         mask     => mem_mask,
-         ready    => mem_ready
+         clk         => clk,
+         rst         => rst,
+         port0_addr  => ram_addr,
+         port0_din   => ram_dout,
+         port0_dout  => ram_din,
+         port0_re    => ram_re,
+         port0_we    => ram_we,
+         port0_mask  => ram_mask,
+         port0_ready => ram_ready,
+         addr        => mem_addr,
+         din         => mem_din,
+         dout        => mem_dout,
+         re          => mem_re,
+         we          => mem_we,
+         mask        => mem_mask,
+         ready       => mem_ready
       );
 
    process
