@@ -12,6 +12,33 @@ package body HDL_Generator is
       Append(dest, Ada.Characters.Latin_1.LF);
    end Line;
 
+   procedure Emit_Ports(dest : in out Unbounded_String;
+                        mem  : in Memory_Pointer) is
+      ports : constant Port_Vector_Type := Get_Ports(mem.all);
+   begin
+      for i in ports.First_Index .. ports.Last_Index loop
+         declare
+            port  : constant Port_Type := ports.Element(i);
+            name  : constant String := "p" & To_String(port.id);
+            wbits : constant Natural := 8 * port.word_size;
+            wbs   : constant String := To_String(wbits);
+         begin
+            Line(dest, "      " & name & "_addr : out " &
+                       "std_logic_vector(ADDR_WIDTH - 1 downto 0);");
+            Line(dest, "      " & name & "_din  : out  " &
+                       "std_logic_vector(" & wbs & " - 1 downto 0);");
+            Line(dest, "      " & name & "_dout : in " &
+                       "std_logic_vector(" & wbs & " - 1 downto 0);");
+            Line(dest, "      " & name & "_re : out std_logic;");
+            Line(dest, "      " & name & "_we : out std_logic;");
+            Line(dest, "      " & name & "_mask : out " &
+                       "std_logic_vector(" & To_String((wbits / 8) - 1) &
+                       " downto 0);");
+            Line(dest, "      " & name & "_ready : in std_logic;");
+         end;
+      end loop;
+   end Emit_Ports;
+
    function Generate(mem         : Memory_Pointer;
                      name        : String;
                      addr_bits   : Positive) return String is
@@ -46,6 +73,7 @@ package body HDL_Generator is
       Line(r, "   port (");
       Line(r, "      clk     : in  std_logic;");
       Line(r, "      rst     : in  std_logic;");
+      Emit_Ports(r, mem);
       Line(r, "      addr    : in  std_logic_vector(" &
               "ADDR_WIDTH - 1 downto 0);");
       Line(r, "      din     : in  std_logic_vector(" &
