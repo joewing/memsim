@@ -13,6 +13,7 @@ with Memory.Prefetch;         use Memory.Prefetch;
 with Memory.Split;            use Memory.Split;
 with Memory.Join;             use Memory.Join;
 with Memory.Register;         use Memory.Register;
+with Memory.Option;           use Memory.Option;
 with Applicative;             use Applicative;
 with Simplify_Memory;
 
@@ -154,6 +155,8 @@ package body Memory.Super is
             end;
          elsif ptr.all in Join_Type'Class then
             return 1;
+         elsif ptr.all in Option_Type'Class then
+            return 1;
          end if;
       end if;
       return 0;
@@ -239,12 +242,14 @@ package body Memory.Super is
                ptr := next;
                updated := True;
             end;
-         elsif ptr.all not in Join_Type'Class then
+         elsif ptr.all in Join_Type'Class then
+            updated := False;
+         elsif ptr.all in Option_Type'Class then
+            updated := False;
+         else
             Destroy(ptr);
             ptr := null;
             updated := True;
-         else
-            updated := False;
          end if;
       elsif ptr.all in Split_Type'Class then
          declare
@@ -489,11 +494,8 @@ package body Memory.Super is
             if len = 0 then
                Insert_Memory(mem, ptr, 0, left, False);
             else
-               loop
-                  pos := Random(mem.generator.all) mod len;
-                  Remove_Memory(ptr, pos, rc);
-                  exit when rc;
-               end loop;
+               pos := Random(mem.generator.all) mod len;
+               Remove_Memory(ptr, pos, rc);
             end if;
          when others =>    -- Modify a component.
             if len = 0 then

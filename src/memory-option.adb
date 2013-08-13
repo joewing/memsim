@@ -58,6 +58,11 @@ package body Memory.Option is
       Idle(mem.memories.Element(mem.index).all, cycles);
    end Idle;
 
+   function Get_Time(mem : Option_Type) return Time_Type is
+   begin
+      return Get_Time(mem.memories.Element(mem.index).all);
+   end Get_Time;
+
    function Get_Writes(mem : Option_Type) return Long_Integer is
    begin
       return Get_Writes(mem.memories.Element(mem.index).all);

@@ -11,14 +11,12 @@ procedure Parse_Option(parser : in out Parser_Type;
 begin
 
    while Get_Type(parser) = Open loop
-      Match(parser, Open);
       declare
          other : Memory_Pointer := null;
       begin
          Parse_Memory(parser, other);
          Add_Memory(mem.all, other);
       end;
-      Match(parser, Close);
    end loop;
    result := Memory_Pointer(mem);
 

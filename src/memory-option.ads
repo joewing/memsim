@@ -37,6 +37,9 @@ package Memory.Option is
                   cycles   : in Time_Type);
 
    overriding
+   function Get_Time(mem : Option_Type) return Time_Type;
+
+   overriding
    function Get_Writes(mem : Option_Type) return Long_Integer;
 
    overriding
