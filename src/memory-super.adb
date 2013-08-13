@@ -494,8 +494,11 @@ package body Memory.Super is
             if len = 0 then
                Insert_Memory(mem, ptr, 0, left, False);
             else
-               pos := Random(mem.generator.all) mod len;
-               Remove_Memory(ptr, pos, rc);
+               for i in 1 .. 10 loop
+                  pos := Random(mem.generator.all) mod len;
+                  Remove_Memory(ptr, pos, rc);
+                  exit when rc;
+               end loop;
             end if;
          when others =>    -- Modify a component.
             if len = 0 then
