@@ -506,7 +506,9 @@ package body Memory.Super is
             else
                loop
                   pos := Random(mem.generator.all) mod len;
-                  exit when Permute_Memory(mem, ptr, pos, left);
+                  if Permute_Memory(mem, ptr, pos, left) then
+                     exit when Get_Cost(ptr.all) <= mem.max_cost;
+                  end if;
                end loop;
             end if;
       end case;
