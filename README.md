@@ -89,8 +89,8 @@ For example, a simple cached memory would look as follows:
 
 See the *mem* subdirectory for more examples.
 
-There are two types of memories: containers and basic memories.
-The basic memories are:
+There are two types of memories: components and main memories.
+The main memories are:
 
  - ram: A RAM simulator with a fixed word size and latency.  Takes the
    following parameters:
@@ -106,8 +106,10 @@ The basic memories are:
    - block\_size: The size of a block in bytes (defaults to 256).
    - read\_latency: The latency of a read (defaults to 10).
    - write\_latency: The latency of a write (defaults to 1000).
+ - option: A list of main memories from which the superoptimizer can
+   select.
 
-The following memory containers are available:
+The following memory components are available:
 
  - cache: Cache.  The following parameters are available:
    - memory: The contained memory.
