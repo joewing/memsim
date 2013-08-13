@@ -25,6 +25,9 @@ package body Parser is
    procedure Parse_Offset(parser : in out Parser_Type;
                           result : out Memory_Pointer) is separate;
 
+   procedure Parse_Option(parser : in out Parser_Type;
+                          result : out Memory_Pointer) is separate;
+
    procedure Parse_Perfect_Prefetch(parser   : in out Parser_Type;
                                     result   : out Memory_Pointer) is separate;
 
@@ -71,6 +74,7 @@ package body Parser is
       (To_Unbounded_String("flip"),             Parse_Flip'Access),
       (To_Unbounded_String("join"),             Parse_Join'Access),
       (To_Unbounded_String("offset"),           Parse_Offset'Access),
+      (To_Unbounded_String("option"),           Parse_Option'Access),
       (To_Unbounded_String("perfect_prefetch"), Parse_Perfect_Prefetch'Access),
       (To_Unbounded_String("prefetch"),         Parse_Prefetch'Access),
       (To_Unbounded_String("ram"),              Parse_RAM'Access),
