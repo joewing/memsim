@@ -486,32 +486,41 @@ package body Memory.Super is
       -- Select an action to take.
       -- Here we give extra weight to modifying an existing subsystem
       -- rather than adding or removing components.
-      case Random(mem.generator.all) mod 32 is
-         when 0      =>    -- Insert a component.
-            pos := Random(mem.generator.all) mod (len + 1);
-            Insert_Memory(mem, ptr, pos, left, False);
-         when 1 | 2  =>    -- Remove a component.
-            if len = 0 then
-               Insert_Memory(mem, ptr, 0, left, False);
-            else
-               for i in 1 .. 10 loop
-                  pos := Random(mem.generator.all) mod len;
-                  Remove_Memory(ptr, pos, rc);
-                  exit when rc;
-               end loop;
+      if mem.permute_only then
+         loop
+            pos := Random(mem.generator.all) mod len;
+            if Permute_Memory(mem, ptr, pos, left) then
+               exit when Get_Cost(ptr.all) <= mem.max_cost;
             end if;
-         when others =>    -- Modify a component.
-            if len = 0 then
-               Insert_Memory(mem, ptr, 0, left, False);
-            else
-               loop
-                  pos := Random(mem.generator.all) mod len;
-                  if Permute_Memory(mem, ptr, pos, left) then
-                     exit when Get_Cost(ptr.all) <= mem.max_cost;
-                  end if;
-               end loop;
-            end if;
-      end case;
+         end loop;
+      else
+         case Random(mem.generator.all) mod 32 is
+            when 0      =>    -- Insert a component.
+               pos := Random(mem.generator.all) mod (len + 1);
+               Insert_Memory(mem, ptr, pos, left, False);
+            when 1 | 2  =>    -- Remove a component.
+               if len = 0 then
+                  Insert_Memory(mem, ptr, 0, left, False);
+               else
+                  for i in 1 .. 10 loop
+                     pos := Random(mem.generator.all) mod len;
+                     Remove_Memory(ptr, pos, rc);
+                     exit when rc;
+                  end loop;
+               end if;
+            when others =>    -- Modify a component.
+               if len = 0 then
+                  Insert_Memory(mem, ptr, 0, left, False);
+               else
+                  loop
+                     pos := Random(mem.generator.all) mod len;
+                     if Permute_Memory(mem, ptr, pos, left) then
+                        exit when Get_Cost(ptr.all) <= mem.max_cost;
+                     end if;
+                  end loop;
+               end if;
+         end case;
+      end if;
 
       Assert(Get_Cost(mem) <= mem.max_cost, "Invalid randomize");
 
@@ -520,7 +529,8 @@ package body Memory.Super is
    function Create_Super(mem              : not null access Memory_Type'Class;
                          max_cost         : Cost_Type;
                          seed             : Integer;
-                         max_iterations   : Long_Integer)
+                         max_iterations   : Long_Integer;
+                         permute_only     : Boolean)
                          return Super_Pointer is
       result : constant Super_Pointer := new Super_Type;
    begin
@@ -529,6 +539,7 @@ package body Memory.Super is
       result.last             := Memory_Pointer(mem);
       result.current          := Clone(mem.all);
       result.generator        := new Distribution_Type;
+      result.permute_only     := False;
       Set_Seed(result.generator.all, seed);
       Set_Memory(result.all, Clone(mem.all));
       return result;

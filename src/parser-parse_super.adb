@@ -11,6 +11,7 @@ procedure Parse_Super(parser  : in out Parser_Type;
    type Opt_Type is (Opt_Time, Opt_Writes, Opt_None);
 
    max_cost       : Cost_Type := 1e6;
+   permute_only   : Boolean := False;
    dram           : Memory_Pointer := null;
    seed           : Integer := 0;
    max_iterations : Long_Integer := 1000;
@@ -53,6 +54,15 @@ begin
                      Raise_Error(parser, "invalid optimization target: " &
                                  value);
                   end if;
+               elsif name = "permute_only" then
+                  if value = "true" then
+                     permute_only := True;
+                  elsif value = "false" then
+                     permute_only := False;
+                  else
+                     Raise_Error(parser, "invalid permute_only setting; " &
+                                 value);
+                  end if;
                else
                   Raise_Error(parser, "invalid attribute in super: " & name);
                end if;
@@ -66,17 +76,20 @@ begin
          result := Memory_Pointer(Super_Time.Create_Super(dram,
                                                           max_cost,
                                                           seed,
-                                                          max_iterations));
+                                                          max_iterations,
+                                                          permute_only));
       when Opt_Writes =>
          result := Memory_Pointer(Super_Writes.Create_Super(dram,
                                                             max_cost,
                                                             seed,
-                                                            max_iterations));
+                                                            max_iterations,
+                                                            permute_only));
       when Opt_None =>
          result := Memory_Pointer(Super_None.Create_Super(dram,
                                                           max_cost,
                                                           seed,
-                                                          max_iterations));
+                                                          max_iterations,
+                                                          permute_only));
    end case;
 exception
    when Data_Error | Constraint_Error =>

@@ -14,7 +14,8 @@ package Memory.Super is
    function Create_Super(mem              : not null access Memory_Type'Class;
                          max_cost         : Cost_Type;
                          seed             : Integer;
-                         max_iterations   : Long_Integer)
+                         max_iterations   : Long_Integer;
+                         permute_only     : Boolean)
                          return Super_Pointer;
    overriding
    function Done(mem : Super_Type) return Boolean;
@@ -55,6 +56,7 @@ private
 
    type Super_Type is new Container_Type with record
       max_cost       : Cost_Type             := 1e6;
+      permute_only   : Boolean               := False;
       generator      : Distribution_Pointer;
 
       total_length   : Natural               := 0;

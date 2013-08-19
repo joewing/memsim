@@ -144,6 +144,8 @@ The following memory components are available:
    - max\_cost: The maximum cost in block RAMs (defaults to 0).
    - max\_iterations: The maximum iterations to run without improvement.
    - seed: Random number seed (defaults to 15).
+   - permute\_only: Set to "true" to restrict the optimizer to permuting
+     an existing memory subsystem (defaults to "false").
  - trace: Access trace logger.  Takes the following parameter:
    - memory: The contained memory.
  - offset: Address offset transform.  Takes the following parameters:
