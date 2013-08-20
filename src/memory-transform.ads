@@ -22,7 +22,8 @@ package Memory.Transform is
    function Get_Value(mem : Transform_Type) return Long_Integer;
 
    overriding
-   procedure Reset(mem : in out Transform_Type);
+   procedure Reset(mem     : in out Transform_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out Transform_Type;

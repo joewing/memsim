@@ -37,7 +37,7 @@ package body Test.RAM is
       Check(Get_Time(mem.all) = 504);
       Check(Get_Writes(mem.all) = 1);
 
-      Reset(mem.all);
+      Reset(mem.all, 0);
       Check(Get_Time(mem.all) = 0);
 
       Check(To_String(mem.all) =

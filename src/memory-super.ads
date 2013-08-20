@@ -24,7 +24,8 @@ package Memory.Super is
    function Clone(mem : Super_Type) return Memory_Pointer;
 
    overriding
-   procedure Reset(mem : in out Super_Type);
+   procedure Reset(mem     : in out Super_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out Super_Type;

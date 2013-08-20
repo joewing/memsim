@@ -47,9 +47,10 @@ package body Memory.Prefetch is
       end if;
    end Permute;
 
-   procedure Reset(mem : in out Prefetch_Type) is
+   procedure Reset(mem     : in out Prefetch_Type;
+                   context : in Natural) is
    begin
-      Reset(Container_Type(mem));
+      Reset(Container_Type(mem), context);
       mem.pending := 0;
    end Reset;
 

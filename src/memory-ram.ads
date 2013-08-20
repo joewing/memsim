@@ -14,7 +14,8 @@ package Memory.RAM is
    function Clone(mem : RAM_Type) return Memory_Pointer;
 
    overriding
-   procedure Reset(mem : in out RAM_Type);
+   procedure Reset(mem     : in out RAM_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out RAM_Type;

@@ -36,7 +36,8 @@ package Memory.Cache is
                      max_cost    : in Cost_Type);
 
    overriding
-   procedure Reset(mem : in out Cache_Type);
+   procedure Reset(mem     : in out Cache_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out Cache_Type;

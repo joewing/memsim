@@ -20,7 +20,8 @@ package Memory.Option is
    function Done(mem : Option_Type) return Boolean;
 
    overriding
-   procedure Reset(mem : in out Option_Type);
+   procedure Reset(mem     : in out Option_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out Option_Type;

@@ -87,11 +87,12 @@ package body Memory.Transform is
       mem.bank := bank;
    end Set_Bank;
 
-   procedure Reset(mem : in out Transform_Type) is
+   procedure Reset(mem     : in out Transform_Type;
+                   context : in Natural) is
    begin
-      Reset(Container_Type(mem));
+      Reset(Container_Type(mem), context);
       if mem.bank /= null then
-         Reset(mem.bank.all);
+         Reset(mem.bank.all, context);
       end if;
    end Reset;
 

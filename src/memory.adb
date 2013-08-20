@@ -16,7 +16,8 @@ package body Memory is
       return True;
    end Done;
 
-   procedure Reset(mem : in out Memory_Type) is
+   procedure Reset(mem     : in out Memory_Type;
+                   context : in Natural) is
    begin
       mem.time := 0;
    end Reset;

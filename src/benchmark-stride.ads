@@ -8,8 +8,6 @@ package Benchmark.Stride is
    procedure Set_Argument(benchmark : in out Stride_Type;
                           arg       : in String);
 
-   procedure Run(benchmark : in out Stride_Type);
-
 private
 
    type Stride_Type is new Benchmark_Type with record
@@ -17,5 +15,8 @@ private
       stride      : Integer := 1;
       iterations  : Positive := 1000;
    end record;
+
+   overriding
+   procedure Run(benchmark : in out Stride_Type);
 
 end Benchmark.Stride;

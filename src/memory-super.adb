@@ -162,10 +162,11 @@ package body Memory.Super is
       return 0;
    end Count_Memories;
 
-   procedure Reset(mem : in out Super_Type) is
+   procedure Reset(mem     : in out Super_Type;
+                   context : in Natural) is
    begin
       mem.current_length := 0;
-      Reset(Container_Type(mem));
+      Reset(Container_Type(mem), context);
    end Reset;
 
    procedure Read(mem      : in out Super_Type;

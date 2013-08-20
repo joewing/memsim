@@ -42,7 +42,7 @@ package body Test.Register is
       Check(Get_Path_Length(offset.all) = 32);
       Check(Get_Max_Length(offset) = 64);
 
-      Reset(offset.all);
+      Reset(offset.all, 0);
       Check(Get_Time(offset.all) = 0);
 
       Read(offset.all, 0, 1);
@@ -54,7 +54,7 @@ package body Test.Register is
       Check(Get_Writes(offset.all) = 1);
 
       offset := Offset_Pointer(Remove_Registers(Memory_Pointer(offset)));
-      Reset(offset.all);
+      Reset(offset.all, 0);
       Check(Get_Time(offset.all) = 0);
 
       Read(offset.all, 0, 1);

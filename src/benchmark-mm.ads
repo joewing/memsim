@@ -8,13 +8,14 @@ package Benchmark.MM is
    procedure Set_Argument(benchmark : in out MM_Type;
                           arg       : in String);
 
-   procedure Run(benchmark : in out MM_Type);
-
 private
 
    type MM_Type is new Benchmark_Type with record
       size        : Positive := 256;
       iterations  : Positive := 1;
    end record;
+
+   overriding
+   procedure Run(benchmark : in out MM_Type);
 
 end Benchmark.MM;

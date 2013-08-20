@@ -14,7 +14,8 @@ package Memory.Container is
    function Done(mem : Container_Type) return Boolean;
 
    overriding
-   procedure Reset(mem : in out Container_Type);
+   procedure Reset(mem     : in out Container_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out Container_Type;

@@ -3,13 +3,20 @@ with Ada.Unchecked_Deallocation;
 
 package body Benchmark is
 
+   procedure Reset(benchmark : in out Benchmark_Type) is
+   begin
+      Reset(benchmark.mem.all, 0);
+   end Reset;
+
    procedure Run(benchmark : in out Benchmark_Type'Class;
                  mem       : in Memory.Memory_Pointer) is
    begin
+      benchmark.max_addr
+         := (Address_Type(2) ** (8 * Get_Address_Size(mem.all))) - 1;
       benchmark.mem := mem;
       loop
          Random.Reset(benchmark.generator, benchmark.seed);
-         Reset(benchmark.mem.all);
+         Reset(benchmark);
          begin
             Run(benchmark);
          exception
@@ -88,6 +95,9 @@ package body Benchmark is
                   address     : in Address_Type;
                   size        : in Positive) is
    begin
+      if address + Address_Type(size) > benchmark.max_addr then
+         raise Constraint_Error;
+      end if;
       Read(benchmark.mem.all, address, size);
    end Read;
 
@@ -95,6 +105,9 @@ package body Benchmark is
                    address    : in Address_Type;
                    size       : in Positive) is
    begin
+      if address + Address_Type(size) > benchmark.max_addr then
+         raise Constraint_Error;
+      end if;
       Write(benchmark.mem.all, address, size);
    end Write;
 

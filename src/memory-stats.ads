@@ -14,7 +14,8 @@ package Memory.Stats is
    function Clone(mem : Stats_Type) return Memory_Pointer;
 
    overriding
-   procedure Reset(mem : in out Stats_Type);
+   procedure Reset(mem     : in out Stats_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out Stats_Type;

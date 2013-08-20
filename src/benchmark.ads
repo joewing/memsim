@@ -43,9 +43,13 @@ private
       generator   : Random.Generator;
       mem         : Memory.Memory_Pointer;
       data        : Data_Vectors.Vector;
-      spacing     : Time_Type := 0;
-      seed        : Integer   := 15;
+      spacing     : Time_Type    := 0;
+      seed        : Integer      := 15;
+      max_addr    : Address_Type := 0;
    end record;
+
+   -- Reset the memory subsystem.
+   procedure Reset(benchmark : in out Benchmark_Type);
 
    -- The body of the benchmark.
    procedure Run(benchmark : in out Benchmark_Type) is null;

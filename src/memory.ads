@@ -46,7 +46,10 @@ package Memory is
    function Done(mem : Memory_Type) return Boolean;
 
    -- Reset the memory.  This should be called between benchmark runs.
-   procedure Reset(mem : in out Memory_Type);
+   -- context is the context being started.  This is used for
+   -- superoptimization of multiple traces.
+   procedure Reset(mem     : in out Memory_Type;
+                   context : in Natural);
 
    -- Simulate a memory read.
    procedure Read(mem      : in out Memory_Type;

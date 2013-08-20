@@ -31,10 +31,11 @@ package body Memory.Option is
       return Done(mem.memories.Element(mem.index).all);
    end Done;
 
-   procedure Reset(mem : in out Option_Type) is
+   procedure Reset(mem     : in out Option_Type;
+                   context : in Natural) is
    begin
       for i in mem.memories.First_Index .. mem.memories.Last_Index loop
-         Reset(mem.memories.Element(i).all);
+         Reset(mem.memories.Element(i).all, context);
       end loop;
    end Reset;
 

@@ -25,7 +25,8 @@ package Memory.Prefetch is
                      max_cost    : in Cost_Type);
 
    overriding
-   procedure Reset(mem : in out Prefetch_Type);
+   procedure Reset(mem     : in out Prefetch_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out Prefetch_Type;

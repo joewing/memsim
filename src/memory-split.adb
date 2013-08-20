@@ -70,11 +70,12 @@ package body Memory.Split is
       mem.offset := offset;
    end Set_Offset;
 
-   procedure Reset(mem : in out Split_Type) is
+   procedure Reset(mem     : in out Split_Type;
+                   context : in Natural) is
    begin
-      Reset(Container_Type(mem));
+      Reset(Container_Type(mem), context);
       for i in mem.banks'Range loop
-         Reset(mem.banks(i).mem.all);
+         Reset(mem.banks(i).mem.all, context);
       end loop;
    end Reset;
 

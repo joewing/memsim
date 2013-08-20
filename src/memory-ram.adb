@@ -20,9 +20,10 @@ package body Memory.RAM is
       return Memory_Pointer(result);
    end Clone;
 
-   procedure Reset(mem : in out RAM_Type) is
+   procedure Reset(mem     : in out RAM_Type;
+                   context : in Natural) is
    begin
-      Reset(Memory_Type(mem));
+      Reset(Memory_Type(mem), context);
       mem.writes := 0;
    end Reset;
 

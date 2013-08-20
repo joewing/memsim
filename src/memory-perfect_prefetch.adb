@@ -18,9 +18,10 @@ package body Memory.Perfect_Prefetch is
       return Memory_Pointer(result);
    end Clone;
 
-   procedure Reset(mem : in out Perfect_Prefetch_Type) is
+   procedure Reset(mem     : in out Perfect_Prefetch_Type;
+                   context : in Natural) is
    begin
-      Reset(Container_Type(mem));
+      Reset(Container_Type(mem), context);
       mem.pending := 0;
    end Reset;
 

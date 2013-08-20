@@ -375,10 +375,11 @@ package body Memory.Cache is
 
    end Get_Data;
 
-   procedure Reset(mem : in out Cache_Type) is
+   procedure Reset(mem     : in out Cache_Type;
+                   context : in Natural) is
       data : Cache_Data_Pointer;
    begin
-      Reset(Container_Type(mem));
+      Reset(Container_Type(mem), context);
       for i in 0 .. mem.line_count - 1 loop
          data := mem.data.Element(i);
          data.address   := Address_Type'Last;

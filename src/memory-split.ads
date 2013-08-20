@@ -35,7 +35,8 @@ package Memory.Split is
                         offset   : in Address_Type);
 
    overriding
-   procedure Reset(mem : in out Split_Type);
+   procedure Reset(mem     : in out Split_Type;
+                   context : in Natural);
 
    overriding
    procedure Read(mem      : in out Split_Type;

@@ -23,11 +23,12 @@ package body Memory.Container is
       end if;
    end Done;
 
-   procedure Reset(mem : in out Container_Type) is
+   procedure Reset(mem     : in out Container_Type;
+                   context : in Natural) is
    begin
-      Reset(Memory_Type(mem));
+      Reset(Memory_Type(mem), context);
       if mem.mem /= null then
-         Reset(mem.mem.all);
+         Reset(mem.mem.all, context);
       end if;
       mem.start_time := 0;
    end Reset;

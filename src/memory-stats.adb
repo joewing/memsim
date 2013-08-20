@@ -58,9 +58,10 @@ package body Memory.Stats is
       end if;
    end Process;
 
-   procedure Reset(mem : in out Stats_Type) is
+   procedure Reset(mem     : in out Stats_Type;
+                   context : in Natural) is
    begin
-      Reset(Container_Type(mem));
+      Reset(Container_Type(mem), context);
       mem.last_address  := 0;
       mem.last_stride   := 0;
       mem.reads         := 0;
