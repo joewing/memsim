@@ -1,5 +1,6 @@
 
 with Ada.Containers.Ordered_Maps;
+use Ada.Containers;
 with Memory.Container; use Memory.Container;
 
 generic
@@ -52,36 +53,40 @@ package Memory.Super is
 
 private
 
-   package Value_Maps is new Ada.Containers.Ordered_Maps(Unbounded_String,
-                                                         Value_Type);
+   package Value_Maps is new Ordered_Maps(Unbounded_String, Value_Type);
+
+   type Context_Type is record
+      index          : Natural      := 0;
+      value          : Value_Type   := Value_Type'Last;
+      last_value     : Value_Type   := Value_Type'Last;
+      total_length   : Long_Integer := 0;
+   end record;
+
+   type Context_Pointer is access all Context_Type;
+
+   package Context_Vectors is new Vectors(Natural, Context_Pointer);
 
    type Super_Type is new Container_Type with record
-      max_cost       : Cost_Type             := 1e6;
-      permute_only   : Boolean               := False;
-      generator      : Distribution_Pointer;
-
-      total_length   : Natural               := 0;
-      current_length : Natural               := 0;
-
-      best_name      : Unbounded_String      := Null_Unbounded_String;
-      best_cost      : Cost_Type             := Cost_Type'Last;
-      best_value     : Value_Type            := Value_Type'Last;
-
-      last           : Memory_Pointer        := null;
-      current        : Memory_Pointer        := null;
-
-      last_value     : Value_Type            := Value_Type'Last;
+      max_cost       : Cost_Type                := 1e6;
+      permute_only   : Boolean                  := False;
+      generator      : Distribution_Pointer     := null;
+      current_length : Long_Integer             := 0;
+      best_name      : Unbounded_String         := Null_Unbounded_String;
+      best_cost      : Cost_Type                := Cost_Type'Last;
+      best_value     : Value_Type               := Value_Type'Last;
+      last           : Memory_Pointer           := null;
+      current        : Memory_Pointer           := null;
+      contexts       : Context_Vectors.Vector;
+      context        : Context_Pointer          := null;
+      last_value     : Value_Type               := Value_Type'Last;
       table          : Value_Maps.Map;
-      total          : Long_Integer          := 0;
-      max_iterations : Long_Integer          := 1000;
-      steps          : Long_Integer          := 0;
-      iteration      : Long_Integer          := 0;
-      improvement    : Value_Type            := 0;
-
-      threshold      : Long_Integer          := 0;
-
-      has_idle       : Boolean               := False;
-
+      total          : Long_Integer             := 0;
+      max_iterations : Long_Integer             := 1000;
+      steps          : Long_Integer             := 0;
+      iteration      : Long_Integer             := 0;
+      improvement    : Value_Type               := 0;
+      threshold      : Long_Integer             := 0;
+      has_idle       : Boolean                  := False;
    end record;
 
 end Memory.Super;

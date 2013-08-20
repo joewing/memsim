@@ -16,6 +16,7 @@ with Memory.Register;         use Memory.Register;
 with Memory.Option;           use Memory.Option;
 with Applicative;             use Applicative;
 with Simplify_Memory;
+with Variance;
 
 package body Memory.Super is
 
@@ -165,7 +166,16 @@ package body Memory.Super is
    procedure Reset(mem     : in out Super_Type;
                    context : in Natural) is
    begin
+      for i in Natural(mem.contexts.Length) .. context loop
+         declare
+            cp : constant Context_Pointer := new Context_Type;
+         begin
+            cp.index := i;
+            mem.contexts.Append(cp);
+         end;
+      end loop;
       mem.current_length := 0;
+      mem.context := mem.contexts.Element(context);
       Reset(Container_Type(mem), context);
    end Reset;
 
@@ -178,7 +188,7 @@ package body Memory.Super is
       if mem.total = 0 then
          Insert(mem.generator.all, address, size);
       elsif Get_Value(mem'Access) >= mem.best_value * 2 then
-         if mem.current_length > mem.total_length / 4 then
+         if mem.current_length > mem.context.total_length / 4 then
             raise Prune_Error;
          end if;
       end if;
@@ -193,7 +203,7 @@ package body Memory.Super is
       if mem.total = 0 then
          Insert(mem.generator.all, address, size);
       elsif Get_Value(mem'Access) >= mem.best_value * 2 then
-         if mem.current_length > mem.total_length / 4 then
+         if mem.current_length > mem.context.total_length / 4 then
             raise Prune_Error;
          end if;
       end if;
@@ -561,6 +571,13 @@ package body Memory.Super is
       if diff <= mem.threshold then
 
          -- Keep the current memory.
+         for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
+            declare
+               cp : constant Context_Pointer := mem.contexts.Element(i);
+            begin
+               cp.last_value := cp.value;
+            end;
+         end loop;
          mem.last_value := value;
          Destroy(mem.last);
          mem.last := Clone(mem.current.all);
@@ -672,19 +689,24 @@ package body Memory.Super is
       end if;
    end Check_Cache;
 
+   package LF_Variance is new Variance(Long_Float);
+
    procedure Finish_Run(mem : in out Super_Type) is
-      cost  : constant Cost_Type := Get_Cost(mem);
-      value : Value_Type := Get_Value(mem'Access);
+      context  : constant Context_Pointer := mem.context;
+      cost     : constant Cost_Type := Get_Cost(mem);
+      value    : Value_Type := Get_Value(mem'Access);
+      total    : Long_Integer;
+      var      : LF_Variance.Variance_Type;
    begin
 
       -- Scale the result if necessary.
-      if mem.current_length > mem.total_length then
-         mem.total_length := mem.current_length;
+      if mem.current_length > context.total_length then
+         context.total_length := mem.current_length;
       end if;
-      if mem.current_length /= mem.total_length then
+      if mem.current_length /= context.total_length then
          Put_Line("Prune");
          declare
-            mult : constant Long_Float := Long_Float(mem.total_length) *
+            mult : constant Long_Float := Long_Float(context.total_length) /
                                           Long_Float(mem.current_length);
             fval : constant Long_Float := Long_Float(value) * mult;
          begin
@@ -698,6 +720,47 @@ package body Memory.Super is
             Put_Line("Prune overflow");
             value := mem.best_value + 1;
          end if;
+      end if;
+      context.value := value;
+
+      -- Return early if there are more contexts to process.
+      if context.index > 0 then
+         return;
+      end if;
+
+      -- Determine the average value scaled by context length.
+      total := 0;
+      for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
+         total := total + mem.contexts.Element(i).total_length;
+      end loop;
+      value := 0;
+      for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
+         declare
+            cp    : constant Context_Pointer := mem.contexts.Element(i);
+            scale : constant Long_Float      := Long_Float(cp.total_length)
+                                                / Long_Float(total);
+            diff  : Long_Float               := 0.0;
+            pdiff : Long_Float               := 0.0;
+         begin
+            if cp.last_value /= Value_Type'Last then
+               diff  := Long_Float(cp.value) - Long_Float(cp.last_value);
+               pdiff := diff / Long_Float(cp.total_length);
+               LF_Variance.Update(var, pdiff);
+               Put_Line(Natural'Image(i) & ": " &
+                        Value_Type'Image(cp.value) & " (" &
+                        Long_Float'Image(pdiff) & ")");
+            end if;
+            value := value + Value_Type(Long_Float(cp.value) * scale);
+         end;
+      end loop;
+      if mem.last_value /= Value_Type'Last then
+         Put_Line("Average Value:" & Value_Type'Image(value) & " (" &
+            Long_Float'Image(Long_Float(value) - Long_Float(mem.last_value)) &
+            ")");
+         Put_Line("Variance:" &
+                  Long_Float'Image(LF_Variance.Get_Variance(var)));
+      else
+         Put_Line("Average Value:" & Value_Type'Image(value));
       end if;
 
       -- Keep track of the best memory.
@@ -747,8 +810,18 @@ package body Memory.Super is
    procedure Destroy is new Ada.Unchecked_Deallocation(Distribution_Type,
                                                        Distribution_Pointer);
 
+   procedure Destroy is new Ada.Unchecked_Deallocation(Context_Type,
+                                                       Context_Pointer);
+
    procedure Finalize(mem : in out Super_Type) is
    begin
+      for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
+         declare
+            cp : Context_Pointer := mem.contexts.Element(i);
+         begin
+            Destroy(cp);
+         end;
+      end loop;
       Destroy(mem.generator);
       Destroy(mem.last);
       Destroy(mem.current);

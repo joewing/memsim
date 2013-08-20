@@ -136,9 +136,10 @@ package body Benchmark.Trace is
 
    procedure Reset(benchmark : in out Trace_Type) is
    begin
-      benchmark.context := benchmark.context + 1;
-      if benchmark.context >= Natural(benchmark.file_names.Length) then
-         benchmark.context := 0;
+      if benchmark.context = 0 then
+         benchmark.context := Natural(benchmark.file_names.Length) - 1;
+      else
+         benchmark.context := benchmark.context - 1;
       end if;
       Reset(benchmark.mem.all, benchmark.context);
    end Reset;
@@ -179,4 +180,3 @@ package body Benchmark.Trace is
    end Run;
 
 end Benchmark.Trace;
-
