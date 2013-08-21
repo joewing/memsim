@@ -19,16 +19,23 @@ package Benchmark is
    type Benchmark_Type is abstract new Limited_Controlled with private;
    type Benchmark_Pointer is access all Benchmark_Type'Class;
 
-   -- Run the benchmark using the specified memory subsystem.
-   procedure Run(benchmark : in out Benchmark_Type'Class;
-                 mem       : in Memory_Pointer);
-
    -- Set an argument to the benchmark.
    -- Benchmarks that have additional arguments should override this
    -- procedure and call it only if no benchmark-specific arguments were
    -- recognized.
    procedure Set_Argument(benchmark    : in out Benchmark_Type;
                           arg          : in String);
+
+   -- Set the memory for the benchmark to use.
+   procedure Set_Memory(benchmark   : in out Benchmark_Type'Class;
+                        mem         : in Memory_Pointer);
+
+   -- Reset the memory and random number generator.
+   procedure Reset(benchmark  : in out Benchmark_Type'Class;
+                   context    : in Natural);
+
+   -- The body of the benchmark.
+   procedure Run(benchmark : in out Benchmark_Type) is null;
 
    -- Destroy the benchmark.
    procedure Destroy(benchmark : in out Benchmark_Pointer);
@@ -47,12 +54,6 @@ private
       seed        : Integer      := 15;
       max_addr    : Address_Type := 0;
    end record;
-
-   -- Reset the memory subsystem.
-   procedure Reset(benchmark : in out Benchmark_Type);
-
-   -- The body of the benchmark.
-   procedure Run(benchmark : in out Benchmark_Type) is null;
 
    -- Check if argument in arg matches name.
    -- This will '=' and all folloing characters in arg.

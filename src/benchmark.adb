@@ -3,30 +3,20 @@ with Ada.Unchecked_Deallocation;
 
 package body Benchmark is
 
-   procedure Reset(benchmark : in out Benchmark_Type) is
-   begin
-      Reset(benchmark.mem.all, 0);
-   end Reset;
-
-   procedure Run(benchmark : in out Benchmark_Type'Class;
-                 mem       : in Memory.Memory_Pointer) is
+   procedure Set_Memory(benchmark   : in out Benchmark_Type'Class;
+                        mem         : in Memory_Pointer) is
    begin
       benchmark.max_addr
          := (Address_Type(2) ** (8 * Get_Address_Size(mem.all))) - 1;
       benchmark.mem := mem;
-      loop
-         Random.Reset(benchmark.generator, benchmark.seed);
-         Reset(benchmark);
-         begin
-            Run(benchmark);
-         exception
-            when Prune_Error =>
-               null;
-         end;
-         Show_Stats(benchmark.mem.all);
-         exit when Done(benchmark.mem.all);
-      end loop;
-   end Run;
+   end Set_Memory;
+
+   procedure Reset(benchmark  : in out Benchmark_Type'Class;
+                   context    : in Natural) is
+   begin
+      Random.Reset(benchmark.generator, benchmark.seed);
+      Reset(benchmark.mem.all, context);
+   end Reset;
 
    procedure Set_Argument(benchmark : in out Benchmark_Type;
                           arg       : in String) is

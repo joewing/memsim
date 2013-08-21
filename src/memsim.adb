@@ -5,6 +5,7 @@ with Ada.Text_IO;             use Ada.Text_IO;
 with Memory;                  use Memory;
 with Parser;
 with Benchmark;               use Benchmark;
+with Benchmark_Runner;        use Benchmark_Runner;
 with Benchmark.Heap;
 with Benchmark.Trace;
 with Benchmark.Stride;
@@ -15,8 +16,8 @@ with Util;                    use Util;
 
 procedure MemSim is
 
-   mem   : Memory_Pointer := null;
-   bm    : Benchmark.Benchmark_Pointer := null;
+   mem      : Memory_Pointer := null;
+   runner   : Runner_Type;
 
    type Benchmark_Constructor_Type is
       access function return Benchmark.Benchmark_Pointer;
@@ -84,45 +85,56 @@ begin
       return;
    end if;
 
-   declare
+   -- Parse the memory file.
+   Parse_Memory: declare
       memory_file : constant String := Argument(1);
-      bm_name     : constant String := Argument(2);
    begin
-
-      -- Parse the memory file.
       mem := Parser.Parse(memory_file);
       if mem = null then
          Put_Line("error: could not open memory: " & memory_file);
          return;
       end if;
+   end Parse_Memory;
 
-      -- Create the benchmark.
-      for i in benchmark_map'First .. benchmark_map'Last loop
-         if benchmark_map(i).name = bm_name then
-            bm := benchmark_map(i).constructor.all;
-            exit;
-         end if;
-      end loop;
-      if bm = null then
-         Put_Line("error: invalid benchmark: " & Argument(2));
-         return;
-      end if;
+   -- Parse benchmarks.
+   Parse_Benchmarks: declare
+      bp : Benchmark_Pointer := null;
+   begin
+      for i in 2 .. Argument_Count loop
 
-   end;
+         -- If this is a benchmark name, create a new benchmark.
+         for b in benchmark_map'First .. benchmark_map'Last loop
+            if benchmark_map(b).name = Argument(i) then
+               bp := benchmark_map(b).constructor.all;
+               Register_Benchmark(runner, bp);
+               goto Parsed_Argument;
+            end if;
+         end loop;
 
-   -- Set benchmark arguments.
-   for i in 3 .. Argument_Count loop
-      begin
-         Benchmark.Set_Argument(bm.all, Argument(i));
-      exception
-         when Benchmark.Invalid_Argument =>
-            Put_Line("error: invalid argument " & Argument(i));
+         -- If we get here, this argument is not a benchmark.
+         -- First we need to make sure we actually have a benchmark.
+         if bp = null then
+            Put_Line("error: invalid benchmark: " & Argument(i));
             return;
-      end;
-   end loop;
+         end if;
 
-   Benchmark.Run(bm.all, mem);
-   Destroy(bm);
+         -- If we get here, this is an argument to the current benchmark.
+         begin
+            Benchmark.Set_Argument(bp.all, Argument(i));
+         exception
+            when Benchmark.Invalid_Argument =>
+               Put_Line("error: invalid argument: " & Argument(i));
+               return;
+         end;
+
+      <<Parsed_Argument>>
+
+         null;
+
+      end loop;
+   end Parse_Benchmarks;
+
+   Run(runner, mem);
    Destroy(mem);
 
 end MemSim;

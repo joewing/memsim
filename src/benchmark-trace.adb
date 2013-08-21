@@ -125,7 +125,7 @@ package body Benchmark.Trace is
       value : constant String := Extract_Argument(arg);
    begin
       if Check_Argument(arg, "file") then
-         benchmark.file_names.Append(To_Unbounded_String(value));
+         benchmark.file_name := To_Unbounded_String(value);
       else
          Set_Argument(Benchmark_Type(benchmark), arg);
       end if;
@@ -134,29 +134,14 @@ package body Benchmark.Trace is
          raise Invalid_Argument;
    end Set_Argument;
 
-   procedure Reset(benchmark : in out Trace_Type) is
-   begin
-      if benchmark.context = 0 then
-         benchmark.context := Natural(benchmark.file_names.Length) - 1;
-      else
-         benchmark.context := benchmark.context - 1;
-      end if;
-      Reset(benchmark.mem.all, benchmark.context);
-   end Reset;
-
    procedure Run(benchmark : in out Trace_Type) is
-      name     : Unbounded_String;
       file     : Stream_IO.File_Type;
       mdata    : Memory_Access;
       state    : Parse_State_Type := State_Action;
    begin
-      if benchmark.file_names.Length = 0 then
-         benchmark.file_names.Append(To_Unbounded_String("trace.txt"));
-      end if;
-      name := benchmark.file_names.Element(benchmark.context);
       Stream_IO.Open(File => file,
                      Mode => Stream_IO.In_File,
-                     Name => To_String(name));
+                     Name => To_String(benchmark.file_name));
       loop
          Stream_IO.Read(file, benchmark.buffer, benchmark.last);
          exit when benchmark.last < benchmark.buffer'First;
@@ -170,7 +155,7 @@ package body Benchmark.Trace is
       Stream_IO.Close(file);
    exception
       when ex: Device_Error =>
-         Put_Line("error: could not read " & To_String(name) &
+         Put_Line("error: could not read " & To_String(benchmark.file_name) &
                   ": " & Exception_Name(ex) & ": " & Exception_Message(ex));
          Stream_IO.Close(file);
          raise;

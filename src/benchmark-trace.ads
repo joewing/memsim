@@ -24,25 +24,18 @@ package Benchmark.Trace is
    procedure Set_Argument(benchmark : in out Trace_Type;
                           arg       : in String);
 
+   overriding
+   procedure Run(benchmark : in out Trace_Type);
+
 private
 
    Buffer_Size    : constant := 2 ** 24;
 
-   package File_Vectors is new Vectors(Natural, Unbounded_String);
-
    type Trace_Type is new Benchmark_Type with record
-      file_names  : File_Vectors.Vector;
+      file_name   : Unbounded_String := To_Unbounded_String("trace.txt");
       buffer      : Stream_Element_Array(1 .. Buffer_Size);
       pos         : Stream_Element_Offset := Stream_Element_Offset'Last;
       last        : Stream_Element_Offset := Stream_Element_Offset'First;
-      context     : Natural := 0;
    end record;
-
-   overriding
-   procedure Reset(benchmark : in out Trace_Type);
-
-   overriding
-   procedure Run(benchmark : in out Trace_Type);
-
 
 end Benchmark.Trace;
