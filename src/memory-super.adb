@@ -560,10 +560,10 @@ package body Memory.Super is
       return result;
    end Create_Super;
 
-   procedure Update_Memory(mem   : in out Super_Type;
-                           value : in Value_Type) is
+   procedure Update_Memory(mem      : in out Super_Type;
+                           result   : in Result_Type) is
       eold  : constant Long_Integer := Long_Integer(mem.last_value);
-      enew  : constant Long_Integer := Long_Integer(value);
+      enew  : constant Long_Integer := Long_Integer(result.value);
       diff  : constant Long_Integer := enew - eold;
       temp  : Memory_Pointer;
    begin
@@ -575,6 +575,14 @@ package body Memory.Super is
       if diff <= mem.threshold then
 
          -- Keep the current memory.
+         for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
+            declare
+               cp : constant Context_Pointer := mem.contexts.Element(i);
+            begin
+               cp.last_value := result.context_values.Element(i);
+            end;
+         end loop;
+         mem.last_value := result.value;
          Destroy(mem.last);
          mem.last := Clone(mem.current.all);
 
@@ -659,17 +667,17 @@ package body Memory.Super is
    end Track_Best;
 
    procedure Cache_Result(mem    : in out Super_Type;
-                          value  : in Value_Type) is
+                          result : in Result_Type) is
       simp_mem    : Memory_Pointer;
       simp_name   : Unbounded_String;
    begin
       simp_mem    := Simplify_Memory(Clone(mem.current.all));
       simp_name   := To_String(simp_mem.all);
-      mem.table.Insert(simp_name, value);
+      mem.table.Insert(simp_name, result);
       Destroy(simp_mem);
    end Cache_Result;
 
-   function Check_Cache(mem : Super_Type) return Value_Type is
+   function Check_Cache(mem : Super_Type) return Result_Type is
       simp_mem    : Memory_Pointer;
       simp_name   : Unbounded_String;
       cursor      : Value_Maps.Cursor;
@@ -679,7 +687,12 @@ package body Memory.Super is
       Destroy(simp_mem);
       cursor      := mem.table.Find(simp_name);
       if Value_Maps."="(cursor, Value_Maps.No_Element) then
-         return 0;
+         declare
+            result : Result_Type;
+         begin
+            result.value := 0;
+            return result;
+         end;
       else
          return Value_Maps.Element(cursor);
       end if;
@@ -695,6 +708,7 @@ package body Memory.Super is
       count    : Long_Float;
       total    : Long_Integer;
       var      : LF_Variance.Variance_Type;
+      result   : Result_Type;
    begin
 
       -- Scale the result if necessary.
@@ -776,7 +790,11 @@ package body Memory.Super is
       Put_Line("Best Cost:   " & Cost_Type'Image(mem.best_cost));
 
       -- Keep track of the result of running with this memory.
-      Cache_Result(mem, value);
+      for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
+         result.context_values.Append(mem.contexts.Element(i).value);
+      end loop;
+      result.value := value;
+      Cache_Result(mem, result);
 
       -- Keep track of the number of iterations.
       mem.iteration  := mem.iteration + 1;
@@ -788,19 +806,11 @@ package body Memory.Super is
                   ", steps " & To_String(mem.steps + 1) &
                   ", threshold " & To_String(mem.threshold) & ")");
 
-         for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
-            declare
-               cp : constant Context_Pointer := mem.contexts.Element(i);
-            begin
-               cp.last_value := cp.value;
-            end;
-         end loop;
-         mem.last_value := value;
-
          -- Generate new memories until we find a new one.
          loop
-            Update_Memory(mem, value);
-            value := Check_Cache(mem);
+            Update_Memory(mem, result);
+            result := Check_Cache(mem);
+            value := result.value;
             exit when value = 0;
          end loop;
          Put_Line(To_String(To_String(mem)));

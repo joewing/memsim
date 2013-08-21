@@ -56,7 +56,14 @@ package Memory.Super is
 
 private
 
-   package Value_Maps is new Ordered_Maps(Unbounded_String, Value_Type);
+   package Value_Vectors is new Vectors(Natural, Value_Type);
+
+   type Result_Type is record
+      value          : Value_Type;
+      context_values : Value_Vectors.Vector;
+   end record;
+
+   package Value_Maps is new Ordered_Maps(Unbounded_String, Result_Type);
 
    type Context_Type is record
       index          : Natural      := 0;
