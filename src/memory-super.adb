@@ -575,14 +575,6 @@ package body Memory.Super is
       if diff <= mem.threshold then
 
          -- Keep the current memory.
-         for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
-            declare
-               cp : constant Context_Pointer := mem.contexts.Element(i);
-            begin
-               cp.last_value := cp.value;
-            end;
-         end loop;
-         mem.last_value := value;
          Destroy(mem.last);
          mem.last := Clone(mem.current.all);
 
@@ -734,7 +726,8 @@ package body Memory.Super is
          return;
       end if;
 
-      -- Determine the average value scaled by context length.
+      -- We now have data for all benchmarks.
+      -- Determine the average value (geometric mean).
       count := 0.0;
       sum   := 0.0;
       total := 0;
@@ -758,6 +751,8 @@ package body Memory.Super is
          end;
       end loop;
       value := Value_Type(LF_Math.Exp(sum / count));
+
+      -- Report the average.
       if mem.last_value /= Value_Type'Last then
          declare
             diff  : constant Long_Float := Long_Float(value)
@@ -792,6 +787,15 @@ package body Memory.Super is
                   " (evaluation " & To_String(mem.total + 1) &
                   ", steps " & To_String(mem.steps + 1) &
                   ", threshold " & To_String(mem.threshold) & ")");
+
+         for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
+            declare
+               cp : constant Context_Pointer := mem.contexts.Element(i);
+            begin
+               cp.last_value := cp.value;
+            end;
+         end loop;
+         mem.last_value := value;
 
          -- Generate new memories until we find a new one.
          loop
