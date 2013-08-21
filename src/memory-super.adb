@@ -2,6 +2,7 @@
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Assertions;          use Ada.Assertions;
 with Ada.Unchecked_Deallocation;
+with Ada.Numerics.Generic_Elementary_Functions;
 with Memory.Cache;            use Memory.Cache;
 with Memory.SPM;              use Memory.SPM;
 with Memory.Transform;        use Memory.Transform;
@@ -19,6 +20,9 @@ with Simplify_Memory;
 with Variance;
 
 package body Memory.Super is
+
+   package LF_Math is
+      new Ada.Numerics.Generic_Elementary_Functions(Long_Float);
 
    function Create_Memory(mem       : Super_Type;
                           next      : access Memory_Type'Class;
@@ -695,6 +699,8 @@ package body Memory.Super is
       context  : constant Context_Pointer := mem.context;
       cost     : constant Cost_Type := Get_Cost(mem);
       value    : Value_Type := Get_Value(mem'Access);
+      sum      : Long_Float;
+      count    : Long_Float;
       total    : Long_Integer;
       var      : LF_Variance.Variance_Type;
    begin
@@ -729,16 +735,12 @@ package body Memory.Super is
       end if;
 
       -- Determine the average value scaled by context length.
+      count := 0.0;
+      sum   := 0.0;
       total := 0;
-      for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
-         total := total + mem.contexts.Element(i).total_length;
-      end loop;
-      value := 0;
       for i in mem.contexts.First_Index .. mem.contexts.Last_Index loop
          declare
             cp    : constant Context_Pointer := mem.contexts.Element(i);
-            scale : constant Long_Float      := Long_Float(cp.total_length)
-                                                / Long_Float(total);
             diff  : Long_Float               := 0.0;
             pdiff : Long_Float               := 0.0;
          begin
@@ -748,12 +750,14 @@ package body Memory.Super is
                LF_Variance.Update(var, pdiff);
                Put_Line(To_String(i) & ": " &
                         Value_Type'Image(cp.value) & " (delta: " &
-                        To_String(pdiff) & ", scale: " &
-                        To_String(scale) & ")");
+                        To_String(pdiff) & ")");
             end if;
-            value := value + Value_Type(Long_Float(cp.value) * scale);
+            sum   := sum + LF_Math.Log(Long_Float(cp.value));
+            count := count + 1.0;
+            total := total + cp.total_length;
          end;
       end loop;
+      value := Value_Type(LF_Math.Exp(sum / count));
       if mem.last_value /= Value_Type'Last then
          declare
             diff  : constant Long_Float := Long_Float(value)
