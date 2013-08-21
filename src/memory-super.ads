@@ -43,6 +43,9 @@ package Memory.Super is
                   cycles   : in Time_Type);
 
    overriding
+   procedure Show_Stats(mem : in out Super_Type);
+
+   overriding
    procedure Show_Access_Stats(mem : in out Super_Type);
 
    overriding

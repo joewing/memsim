@@ -26,4 +26,7 @@ package Util is
    -- Convert a Long_Integer to a string (without spaces).
    function To_String(i : Long_Integer) return String;
 
+   -- Convert a Long_Float to a string (without spaces).
+   function To_String(f : Long_Float) return String;
+
 end Util;

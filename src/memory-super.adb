@@ -746,22 +746,29 @@ package body Memory.Super is
                diff  := Long_Float(cp.value) - Long_Float(cp.last_value);
                pdiff := diff / Long_Float(cp.total_length);
                LF_Variance.Update(var, pdiff);
-               Put_Line(Natural'Image(i) & ": " &
-                        Value_Type'Image(cp.value) & " (" &
-                        Long_Float'Image(pdiff) & ")");
+               Put_Line(To_String(i) & ": " &
+                        Value_Type'Image(cp.value) & " (delta: " &
+                        To_String(pdiff) & ", scale: " &
+                        To_String(scale) & ")");
             end if;
             value := value + Value_Type(Long_Float(cp.value) * scale);
          end;
       end loop;
       if mem.last_value /= Value_Type'Last then
-         Put_Line("Average Value:" & Value_Type'Image(value) & " (" &
-            Long_Float'Image(Long_Float(value) - Long_Float(mem.last_value)) &
-            ")");
-         Put_Line("Variance:" &
-                  Long_Float'Image(LF_Variance.Get_Variance(var)));
+         declare
+            diff  : constant Long_Float := Long_Float(value)
+                                          - Long_Float(mem.last_value);
+            pdiff : constant Long_Float := diff / Long_Float(total);
+            v     : constant Long_Float := LF_Variance.Get_Variance(var);
+         begin
+            Put_Line("Average:" & Value_Type'Image(value) &
+                     " (delta: " & To_String(pdiff) & ")");
+            Put_Line("Variance: " & To_String(v));
+         end;
       else
-         Put_Line("Average Value:" & Value_Type'Image(value));
+         Put_Line("Average:" & Value_Type'Image(value));
       end if;
+      Put_Line("Cost:" & Cost_Type'Image(cost));
 
       -- Keep track of the best memory.
       Track_Best(mem, cost, value);
@@ -793,6 +800,11 @@ package body Memory.Super is
       end if;
 
    end Finish_Run;
+
+   procedure Show_Stats(mem : in out Super_Type) is
+   begin
+      Show_Access_Stats(mem);
+   end Show_Stats;
 
    procedure Show_Access_Stats(mem : in out Super_Type) is
    begin

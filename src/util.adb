@@ -48,4 +48,14 @@ package body Util is
       end if;
    end To_String;
 
+   function To_String(f : Long_Float) return String is
+      str : constant String := Long_Float'Image(f);
+   begin
+      if str(str'First) = ' ' then
+         return str(str'First + 1 .. str'Last);
+      else
+         return str;
+      end if;
+   end To_String;
+
 end Util;

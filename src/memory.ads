@@ -157,4 +157,6 @@ private
 
    function To_String(i : Long_Integer) return String renames Util.To_String;
 
+   function To_String(f : Long_Float) return String renames Util.To_String;
+
 end Memory;
