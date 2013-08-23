@@ -1,29 +1,13 @@
 
-package body Benchmark.MM is
+package body Benchmark.Matrix.MM is
 
    function Create_MM return Benchmark_Pointer is
    begin
       return new MM_Type;
    end Create_MM;
 
-   procedure Set_Argument(benchmark : in out MM_Type;
-                          arg       : in String) is
-      value : constant String := Extract_Argument(arg);
-   begin
-      if Check_Argument(arg, "size") then
-         benchmark.size := Positive'Value(value);
-      elsif Check_Argument(arg, "iterations") then
-         benchmark.iterations := Positive'Value(value);
-      else
-         Set_Argument(Benchmark_Type(benchmark), arg);
-      end if;
-   exception
-      when others =>
-         raise Invalid_Argument;
-   end Set_Argument;
-
-   procedure Run(benchmark : in out MM_Type) is
-      size  : constant Address_Type := Address_Type(benchmark.size);
+   procedure Run(benchmark : in MM_Type) is
+      size  : constant Address_Type := Get_Size(benchmark);
       msize : constant Address_Type := size * size * 4;
       srca  : constant Address_Type := 0 * msize;
       srcb  : constant Address_Type := 1 * msize;
@@ -47,4 +31,4 @@ package body Benchmark.MM is
       end loop;
    end Run;
 
-end Benchmark.MM;
+end Benchmark.Matrix.MM;

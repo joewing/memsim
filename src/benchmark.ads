@@ -35,7 +35,7 @@ package Benchmark is
                    context    : in Natural);
 
    -- The body of the benchmark.
-   procedure Run(benchmark : in out Benchmark_Type) is null;
+   procedure Run(benchmark : in Benchmark_Type) is abstract;
 
    -- Destroy the benchmark.
    procedure Destroy(benchmark : in out Benchmark_Pointer);
@@ -46,14 +46,22 @@ private
 
    package Data_Vectors is new Vectors(Natural, Integer);
 
+   type Data_Pointer is access all Data_Vectors.Vector;
+
    type Benchmark_Type is abstract new Limited_Controlled with record
       generator   : Random.Generator;
       mem         : Memory.Memory_Pointer;
-      data        : Data_Vectors.Vector;
+      data        : Data_Pointer := null;
       spacing     : Time_Type    := 0;
       seed        : Integer      := 15;
       max_addr    : Address_Type := 0;
    end record;
+
+   overriding
+   procedure Initialize(benchmark : in out Benchmark_Type);
+
+   overriding
+   procedure Finalize(benchmark : in out Benchmark_Type);
 
    -- Check if argument in arg matches name.
    -- This will '=' and all folloing characters in arg.
@@ -71,7 +79,7 @@ private
                        address   : Natural) return Integer;
 
    -- Simulate a memory write and set an integer to be stored at the address.
-   procedure Write_Value(benchmark  : in out Benchmark_Type'Class;
+   procedure Write_Value(benchmark  : in Benchmark_Type'Class;
                          address    : in Natural;
                          value      : in Integer);
 

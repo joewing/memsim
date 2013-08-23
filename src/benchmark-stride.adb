@@ -24,7 +24,7 @@ package body Benchmark.Stride is
          raise Invalid_Argument;
    end Set_Argument;
 
-   procedure Run(benchmark : in out Stride_Type) is
+   procedure Run(benchmark : in Stride_Type) is
    begin
       for i in 1 .. benchmark.iterations loop
          for offset in 0 .. Address_Type(benchmark.size - 1) loop

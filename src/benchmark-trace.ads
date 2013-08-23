@@ -1,6 +1,5 @@
 
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Streams;           use Ada.Streams;
 
 package Benchmark.Trace is
 
@@ -25,17 +24,12 @@ package Benchmark.Trace is
                           arg       : in String);
 
    overriding
-   procedure Run(benchmark : in out Trace_Type);
+   procedure Run(benchmark : in Trace_Type);
 
 private
 
-   Buffer_Size    : constant := 2 ** 24;
-
    type Trace_Type is new Benchmark_Type with record
       file_name   : Unbounded_String := To_Unbounded_String("trace.txt");
-      buffer      : Stream_Element_Array(1 .. Buffer_Size);
-      pos         : Stream_Element_Offset := Stream_Element_Offset'Last;
-      last        : Stream_Element_Offset := Stream_Element_Offset'First;
    end record;
 
 end Benchmark.Trace;

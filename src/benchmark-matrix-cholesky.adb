@@ -1,26 +1,12 @@
 
-package body Benchmark.Cholesky is
+package body Benchmark.Matrix.Cholesky is
 
    function Create_Cholesky return Benchmark_Pointer is
    begin
       return new Cholesky_Type;
    end Create_Cholesky;
 
-   procedure Set_Argument(benchmark : in out Cholesky_Type;
-                          arg       : in String) is
-      value : constant String := Extract_Argument(arg);
-   begin
-      if Check_Argument(arg, "size") then
-         benchmark.size := Positive'Value(value);
-      else
-         Set_Argument(Benchmark_Type(benchmark), arg);
-      end if;
-   exception
-      when others =>
-         raise Invalid_Argument;
-   end Set_Argument;
-
-   procedure Run(benchmark : in out Cholesky_Type) is
+   procedure Run(benchmark : in Cholesky_Type) is
       addr : Natural;
    begin
       for i in 0 .. benchmark.size - 1 loop
@@ -45,4 +31,4 @@ package body Benchmark.Cholesky is
       end loop;
    end Run;
 
-end Benchmark.Cholesky;
+end Benchmark.Matrix.Cholesky;

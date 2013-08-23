@@ -16,6 +16,7 @@ package body Benchmark is
    begin
       Random.Reset(benchmark.generator, benchmark.seed);
       Reset(benchmark.mem.all, context);
+      benchmark.data.all.Clear;
    end Reset;
 
    procedure Set_Argument(benchmark : in out Benchmark_Type;
@@ -69,7 +70,7 @@ package body Benchmark is
       return benchmark.data.Element(address);
    end Read_Value;
 
-   procedure Write_Value(benchmark  : in out Benchmark_Type'Class;
+   procedure Write_Value(benchmark  : in Benchmark_Type'Class;
                          address    : in Natural;
                          value      : in Integer) is
    begin
@@ -109,12 +110,25 @@ package body Benchmark is
       end if;
    end Idle;
 
-   procedure Deallocate is
+   procedure Free is
       new Ada.Unchecked_Deallocation(Benchmark_Type'Class, Benchmark_Pointer);
+
+   procedure Free is
+      new Ada.Unchecked_Deallocation(Data_Vectors.Vector, Data_Pointer);
+
+   procedure Initialize(benchmark : in out Benchmark_Type) is
+   begin
+      benchmark.data := new Data_Vectors.Vector;
+   end Initialize;
+
+   procedure Finalize(benchmark : in out Benchmark_Type) is
+   begin
+      Free(benchmark.data);
+   end Finalize;
 
    procedure Destroy(benchmark : in out Benchmark_Pointer) is
    begin
-      Deallocate(benchmark);
+      Free(benchmark);
    end Destroy;
 
 end Benchmark;

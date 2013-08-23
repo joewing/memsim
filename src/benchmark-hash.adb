@@ -22,7 +22,7 @@ package body Benchmark.Hash is
          raise Invalid_Argument;
    end Set_Argument;
 
-   procedure Run(benchmark : in out Hash_Type) is
+   procedure Run(benchmark : in Hash_Type) is
    begin
       for i in 1 .. benchmark.iterations loop
          declare

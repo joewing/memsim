@@ -10,8 +10,9 @@ with Benchmark.Heap;
 with Benchmark.Trace;
 with Benchmark.Stride;
 with Benchmark.Hash;
-with Benchmark.MM;
-with Benchmark.Cholesky;
+with Benchmark.Matrix.MM;
+with Benchmark.Matrix.Cholesky;
+with Benchmark.Matrix.LU;
 with Test;
 with Util;                    use Util;
 
@@ -43,17 +44,20 @@ procedure MemSim is
 
    benchmark_map : constant Benchmark_Info_Array := (
       BM_Entry("cholesky",
-               "[size=64][spacing=0]",
-               Benchmark.Cholesky.Create_Cholesky'Access),
+               "[size=256][iterations=1][spacing=0]",
+               Benchmark.Matrix.Cholesky.Create_Cholesky'Access),
       BM_Entry("hash",
                "[size=1024][iterations=1000][spacing=0][seed=15]",
                Benchmark.Hash.Create_Hash'Access),
       BM_Entry("heap",
                "[size=1024][spacing=0][seed=15]",
                Benchmark.Heap.Create_Heap'Access),
+      BM_Entry("lu",
+               "[size=256][iterations=1][spacing=0]",
+               Benchmark.Matrix.LU.Create_LU'Access),
       BM_Entry("mm",
                "[size=256][iterations=1][spacing=0][seed=15]",
-               Benchmark.MM.Create_MM'Access),
+               Benchmark.Matrix.MM.Create_MM'Access),
       BM_Entry("stride",
                "[size=1024][iterations=1000][stride=1][spacing=0]",
                Benchmark.Stride.Create_Stride'Access),

@@ -5,8 +5,12 @@ package Benchmark.Stride is
 
    function Create_Stride return Benchmark_Pointer;
 
+   overriding
    procedure Set_Argument(benchmark : in out Stride_Type;
                           arg       : in String);
+
+   overriding
+   procedure Run(benchmark : in Stride_Type);
 
 private
 
@@ -15,8 +19,5 @@ private
       stride      : Integer := 1;
       iterations  : Positive := 1000;
    end record;
-
-   overriding
-   procedure Run(benchmark : in out Stride_Type);
 
 end Benchmark.Stride;

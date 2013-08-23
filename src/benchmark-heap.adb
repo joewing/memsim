@@ -6,7 +6,7 @@ package body Benchmark.Heap is
       return new Heap_Type;
    end Create_Heap;
 
-   procedure Insert(benchmark : in out Heap_Type;
+   procedure Insert(benchmark : in Heap_Type;
                     value     : in Integer) is
 
       size  : constant Integer := Read_Value(benchmark, 0) + 1;
@@ -32,7 +32,7 @@ package body Benchmark.Heap is
 
    end Insert;
 
-   procedure Remove(benchmark : in out Heap_Type;
+   procedure Remove(benchmark : in Heap_Type;
                     value     : out Integer) is
 
       size        : constant Integer := Read_Value(benchmark, 0);
@@ -104,7 +104,7 @@ package body Benchmark.Heap is
          raise Invalid_Argument;
    end Set_Argument;
 
-   procedure Run(benchmark : in out Heap_Type) is
+   procedure Run(benchmark : in Heap_Type) is
    begin
       Write_Value(benchmark, 0, 0);
       for i in 1 .. benchmark.size loop
@@ -115,6 +115,7 @@ package body Benchmark.Heap is
             value : Integer;
          begin
             Remove(benchmark, value);
+            pragma Unreferenced(value);
          end;
       end loop;
    end Run;

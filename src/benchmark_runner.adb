@@ -34,8 +34,8 @@ package body Benchmark_Runner is
    end Run;
 
    procedure Finalize(runner : in out Runner_Type) is
-      first : constant Natural := runner.benchmarks.First_Index;
-      last  : constant Natural := runner.benchmarks.Last_Index;
+      first : constant Integer := runner.benchmarks.First_Index;
+      last  : constant Integer := runner.benchmarks.Last_Index;
       bp    : Benchmark_Pointer;
    begin
       for i in first .. last loop
