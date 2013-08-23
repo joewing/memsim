@@ -569,7 +569,7 @@ package body Memory.Super is
    begin
 
       if mem.steps = 0 then
-         mem.threshold := enew / 2;
+         mem.threshold := 1024;
       end if;
 
       if diff <= mem.threshold then
@@ -596,7 +596,7 @@ package body Memory.Super is
          mem.current := Clone(mem.last.all);
 
          -- Increase the threshold.
-         mem.threshold := mem.threshold + mem.threshold / 1024 + 1;
+         mem.threshold := mem.threshold + mem.threshold / 2 + 1;
 
       end if;
 
