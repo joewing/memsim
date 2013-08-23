@@ -17,13 +17,13 @@ private
       iterations  : Positive     := 1;
    end record;
 
-   function Get_Size(benchmark : Matrix_Type) return Address_Type;
+   function Get_Size(benchmark : Matrix_Type'Class) return Address_Type;
 
-   procedure Read(benchmark   : in Matrix_Type;
+   procedure Read(benchmark   : in Matrix_Type'Class;
                   offset      : in Address_Type;
                   x, y        : in Natural);
 
-   procedure Write(benchmark  : in Matrix_Type;
+   procedure Write(benchmark  : in Matrix_Type'Class;
                    offset     : in Address_Type;
                    x, y       : in Natural);
 

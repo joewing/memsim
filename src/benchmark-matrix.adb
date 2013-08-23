@@ -17,13 +17,13 @@ package body Benchmark.Matrix is
          raise Invalid_Argument;
    end Set_Argument;
 
-   function Get_Size(benchmark : Matrix_Type) return Address_Type is
+   function Get_Size(benchmark : Matrix_Type'Class) return Address_Type is
       size : constant Address_Type := Address_Type(benchmark.size);
    begin
       return size * size * 4;
    end Get_Size;
 
-   procedure Read(benchmark   : in Matrix_Type;
+   procedure Read(benchmark   : in Matrix_Type'Class;
                   offset      : in Address_Type;
                   x, y        : in Natural) is
       addr : Address_Type := offset;
@@ -32,7 +32,7 @@ package body Benchmark.Matrix is
       Read(Benchmark_Type(benchmark), addr, 4);
    end Read;
 
-   procedure Write(benchmark  : in Matrix_Type;
+   procedure Write(benchmark  : in Matrix_Type'Class;
                    offset     : in Address_Type;
                    x, y       : in Natural) is
       addr : Address_Type := offset;
