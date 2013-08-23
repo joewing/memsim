@@ -193,7 +193,9 @@ package body Memory.Super is
          Insert(mem.generator.all, address, size);
       elsif Get_Value(mem'Access) >= mem.best_value * 2 then
          if mem.current_length > mem.context.total_length / 4 then
-            raise Prune_Error;
+            if mem.contexts.Length = 1 then
+               raise Prune_Error;
+            end if;
          end if;
       end if;
    end Read;
@@ -208,7 +210,9 @@ package body Memory.Super is
          Insert(mem.generator.all, address, size);
       elsif Get_Value(mem'Access) >= mem.best_value * 2 then
          if mem.current_length > mem.context.total_length / 4 then
-            raise Prune_Error;
+            if mem.contexts.Length = 1 then
+               raise Prune_Error;
+            end if;
          end if;
       end if;
    end Write;

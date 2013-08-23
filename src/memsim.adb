@@ -13,6 +13,7 @@ with Benchmark.Hash;
 with Benchmark.Matrix.MM;
 with Benchmark.Matrix.Cholesky;
 with Benchmark.Matrix.LU;
+with Benchmark.Tree;
 with Test;
 with Util;                    use Util;
 
@@ -63,7 +64,10 @@ procedure MemSim is
                Benchmark.Stride.Create_Stride'Access),
       BM_Entry("trace",
                "[file=trace.txt][spacing=0]",
-               Benchmark.Trace.Create_Trace'Access)
+               Benchmark.Trace.Create_Trace'Access),
+      BM_Entry("tree",
+               "[size=1024][iterations=10000][spacing=0]",
+               Benchmark.Tree.Create_Tree'Access)
    );
 
 begin
