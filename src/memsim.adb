@@ -11,6 +11,7 @@ with Benchmark.Trace;
 with Benchmark.Stride;
 with Benchmark.Hash;
 with Benchmark.MM;
+with Benchmark.Cholesky;
 with Test;
 with Util;                    use Util;
 
@@ -41,6 +42,9 @@ procedure MemSim is
    end BM_Entry;
 
    benchmark_map : constant Benchmark_Info_Array := (
+      BM_Entry("cholesky",
+               "[size=64][spacing=0]",
+               Benchmark.Cholesky.Create_Cholesky'Access),
       BM_Entry("hash",
                "[size=1024][iterations=1000][spacing=0][seed=15]",
                Benchmark.Hash.Create_Hash'Access),
