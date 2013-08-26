@@ -11,13 +11,15 @@ package body Device is
       array (Device_Type) of Device_Property_Type;
 
    properties : constant Device_Property_Array_Type := (
+      ASIC        => (1, 1, 64),
       Virtex_4    => (36, 512, 64),
       Virtex_5    => (72, 512, 64),
       Virtex_6    => (72, 512, 64),
       Virtex_7    => (72, 512, 64)
    );
 
-   device : Device_Type := Virtex_7;
+--   device : Device_Type := Virtex_7;
+   device : Device_Type := ASIC;
 
    procedure Set_Device(d : in Device_Type) is
    begin

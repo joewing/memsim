@@ -600,7 +600,7 @@ package body Memory.Super is
          mem.current := Clone(mem.last.all);
 
          -- Increase the threshold.
-         mem.threshold := mem.threshold + mem.threshold / 2 + 1;
+         mem.threshold := mem.threshold + mem.threshold / 128 + 1;
 
       end if;
 

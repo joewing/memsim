@@ -4,6 +4,7 @@ package Device is
 
    -- Supported devices.
    type Device_Type is (
+      ASIC,
       Virtex_4,
       Virtex_5,
       Virtex_6,
