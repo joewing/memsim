@@ -4,22 +4,38 @@ package body Memory.DRAM is
    function Create_DRAM(cas_cycles     : Time_Type;
                         rcd_cycles     : Time_Type;
                         rp_cycles      : Time_Type;
+                        multiplier     : Time_Type;
                         word_size      : Positive;
-                        page_words     : Positive;
-                        row_count      : Positive;
+                        page_size      : Positive;
+                        page_count     : Positive;
+                        width          : Positive;
                         open_page_mode : Boolean) return DRAM_Pointer is
-      result : constant DRAM_Pointer := new DRAM_Type;
+      result : DRAM_Pointer;
    begin
-      result.bank_size        := word_size * page_words * row_count;
-      result.page_size        := word_size * page_words;
+
+      -- Make sure this is a valid memory.
+      if page_size mod word_size /= 0 then
+         return null;
+      end if;
+      if word_size mod width /= 0 then
+         return null;
+      end if;
+
+      result := new DRAM_Type;
+
+      result.bank_size        := page_size * page_count;
       result.cas_cycles       := cas_cycles;
       result.rcd_cycles       := rcd_cycles;
       result.rp_cycles        := rp_cycles;
+      result.multiplier       := multiplier;
       result.word_size        := word_size;
-      result.page_words       := page_words;
-      result.row_count        := row_count;
+      result.page_size        := page_size;
+      result.page_count       := page_count;
+      result.width            := width;
       result.open_page_mode   := open_page_mode;
+
       return result;
+
    end Create_DRAM;
 
    function Clone(mem : DRAM_Type) return Memory_Pointer is
@@ -69,17 +85,18 @@ package body Memory.DRAM is
 
          if not mem.open_page_mode then
             -- Closed page mode.
-            cycles := cycles + mem.rcd_cycles;  -- Open the page.
-            cycles := cycles + mem.cas_cycles;  -- Access the column.
-            extra  := extra  + mem.rp_cycles;   -- Precharge (next access).
+            -- Open, access, close.
+            cycles := cycles + mem.rcd_cycles * mem.multiplier;
+            cycles := cycles + mem.cas_cycles * mem.multiplier;
+            extra  := extra  + mem.rp_cycles * mem.multiplier;
          elsif bank.page = page_index then
             -- The correct page is open.
-            cycles := cycles + mem.cas_cycles;
+            cycles := cycles + mem.cas_cycles * mem.multiplier;
          else
             -- The wrong page is open.
-            cycles := cycles + mem.rp_cycles;   -- Precharge.
-            cycles := cycles + mem.rcd_cycles;  -- Open the page.
-            cycles := cycles + mem.cas_cycles;  -- Access the column.
+            cycles := cycles + mem.rp_cycles * mem.multiplier;
+            cycles := cycles + mem.rcd_cycles * mem.multiplier;
+            cycles := cycles + mem.cas_cycles * mem.multiplier;
          end if;
          bank.pending   := now + cycles + extra;
          bank.page      := page_index;
@@ -126,12 +143,14 @@ package body Memory.DRAM is
       result : Unbounded_String;
    begin
       Append(result, "(dram ");
+      Append(result, "(multiplier " & To_String(mem.multiplier) & ")");
       Append(result, "(cas_cycles " & To_String(mem.cas_cycles) & ")");
       Append(result, "(rcd_cycles " & To_String(mem.rcd_cycles) & ")");
       Append(result, "(rp_cycles " & To_String(mem.rp_cycles) & ")");
       Append(result, "(word_size " & To_String(mem.word_size) & ")");
-      Append(result, "(page_words " & To_String(mem.page_words) & ")");
-      Append(result, "(row_count " & To_String(mem.row_count) & ")");
+      Append(result, "(page_size " & To_String(mem.page_size) & ")");
+      Append(result, "(page_count " & To_String(mem.page_count) & ")");
+      Append(result, "(width " & To_String(mem.width) & ")");
       if mem.open_page_mode then
          Append(result, "(open_page true)");
       else

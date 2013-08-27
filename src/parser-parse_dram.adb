@@ -1,18 +1,22 @@
 
 
-with Memory.DRAM;
-with Util; use Util;
+with Memory.DRAM; use type Memory.DRAM.DRAM_Pointer;
+with Util;        use Util;
 
 separate (Parser)
 procedure Parse_DRAM(parser   : in out Parser_Type;
                      result   : out Memory_Pointer) is
 
+   ptr         : DRAM.DRAM_Pointer := null;
+
    cas_cycles  : Time_Type := 5;
    rcd_cycles  : Time_Type := 5;
    rp_cycles   : Time_Type := 5;
    word_size   : Positive  := 8;
-   page_words  : Positive  := 1024 / 8;
-   row_count   : Positive  := 16384;
+   page_size   : Positive  := 1024;
+   page_count  : Positive  := 16384;
+   width       : Positive  := 2;
+   multiplier  : Time_Type := 1;
    open_page   : Boolean   := True;
 
 begin
@@ -35,10 +39,14 @@ begin
                rp_cycles := Time_Type'Value(value);
             elsif name = "word_size" then
                word_size := Positive'Value(value);
-            elsif name = "page_words" then
-               page_words := Positive'Value(value);
-            elsif name = "row_count" then
-               row_count := Positive'Value(value);
+            elsif name = "page_size" then
+               page_size := Positive'Value(value);
+            elsif name = "page_count" then
+               page_count := Positive'Value(value);
+            elsif name = "width" then
+               width := Positive'Value(value);
+            elsif name = "multiplier" then
+               multiplier := Time_Type'Value(value);
             elsif name = "open_page" then
                open_page := Parse_Boolean(value);
             else
@@ -49,13 +57,20 @@ begin
       Match(parser, Close);
    end loop;
 
-   result := Memory_Pointer(DRAM.Create_DRAM(cas_cycles,
-                                             rcd_cycles,
-                                             rp_cycles,
-                                             word_size,
-                                             page_words,
-                                             row_count,
-                                             open_page));
+   ptr := DRAM.Create_DRAM(cas_cycles,
+                           rcd_cycles,
+                           rp_cycles,
+                           multiplier,
+                           word_size,
+                           page_size,
+                           page_count,
+                           width,
+                           open_page);
+   if DRAM."="(ptr, null) then
+      Raise_Error(parser, "invalid dram configuration");
+   end if;
+
+   result := Memory_Pointer(ptr);
 
 exception
 

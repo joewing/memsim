@@ -5,13 +5,16 @@ package Memory.DRAM is
 
    type DRAM_Pointer is access all DRAM_Type'Class;
 
-   function Create_DRAM(cas_cycles     : Time_Type;
-                        rcd_cycles     : Time_Type;
-                        rp_cycles      : Time_Type;
-                        word_size      : Positive;
-                        page_words     : Positive;
-                        row_count      : Positive;
-                        open_page_mode : Boolean) return DRAM_Pointer;
+   function Create_DRAM(cas_cycles     : Time_Type;   -- CAS latency
+                        rcd_cycles     : Time_Type;   -- RCD latency
+                        rp_cycles      : Time_Type;   -- Precharge latency
+                        multiplier     : Time_Type;   -- Clock multiplier
+                        word_size      : Positive;    -- Word size in bytes
+                        page_size      : Positive;    -- Page size in bytes
+                        page_count     : Positive;    -- Pages per bank
+                        width          : Positive;    -- Channel width in bytes
+                        open_page_mode : Boolean)     -- Open or closed page
+                        return DRAM_Pointer;
 
    overriding
    function Clone(mem : DRAM_Type) return Memory_Pointer;
@@ -66,13 +69,14 @@ private
    type DRAM_Type is new Memory_Type with record
       banks          : Bank_Vectors.Vector;
       bank_size      : Positive;
-      page_size      : Positive;
       cas_cycles     : Time_Type;
       rcd_cycles     : Time_Type;
       rp_cycles      : Time_Type;
+      multiplier     : Time_Type;
       word_size      : Positive;
-      page_words     : Positive;
-      row_count      : Positive;
+      page_size      : Positive;
+      page_count     : Positive;
+      width          : Positive;
       open_page_mode : Boolean;
       writes         : Long_Integer := 0;
    end record;
