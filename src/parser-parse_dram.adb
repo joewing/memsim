@@ -66,7 +66,7 @@ begin
                            page_count,
                            width,
                            open_page);
-   if DRAM."="(ptr, null) then
+   if ptr = null then
       Raise_Error(parser, "invalid dram configuration");
    end if;
 
