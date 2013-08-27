@@ -72,6 +72,7 @@ private
       cas_cycles     : Time_Type;
       rcd_cycles     : Time_Type;
       rp_cycles      : Time_Type;
+      access_cycles  : Time_Type;
       multiplier     : Time_Type;
       word_size      : Positive;
       page_size      : Positive;

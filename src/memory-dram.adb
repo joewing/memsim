@@ -28,6 +28,7 @@ package body Memory.DRAM is
       result.rcd_cycles       := rcd_cycles;
       result.rp_cycles        := rp_cycles;
       result.multiplier       := multiplier;
+      result.access_cycles    := Time_Type(word_size / width);
       result.word_size        := word_size;
       result.page_size        := page_size;
       result.page_count       := page_count;
@@ -88,18 +89,19 @@ package body Memory.DRAM is
             -- Closed page mode.
             -- Open, access, close.
             cycles := cycles + mem.cas_cycles * mem.multiplier;
-            if last then
-               cycles := cycles + mem.rcd_cycles * mem.multiplier;
-               extra  := extra  + mem.rp_cycles * mem.multiplier;
-            end if;
+            cycles := cycles + mem.rcd_cycles * mem.multiplier;
+            cycles := cycles + mem.access_cycles * mem.multiplier;
+            extra  := extra  + mem.rp_cycles * mem.multiplier;
          elsif bank.page = page_index then
             -- The correct page is open.
             cycles := cycles + mem.cas_cycles * mem.multiplier;
+            cycles := cycles + mem.access_cycles * mem.multiplier;
          else
             -- The wrong page is open.
             cycles := cycles + mem.rp_cycles * mem.multiplier;
             cycles := cycles + mem.rcd_cycles * mem.multiplier;
             cycles := cycles + mem.cas_cycles * mem.multiplier;
+            cycles := cycles + mem.access_cycles * mem.multiplier;
          end if;
          bank.pending   := now + cycles + extra;
          bank.page      := page_index;
@@ -112,12 +114,12 @@ package body Memory.DRAM is
                      start : in Address_Type;
                      size  : in Positive) is
       last  : constant Address_Type := start + Address_Type(size);
-      width : constant Address_Type := Address_Type(mem.width);
+      wsize : constant Address_Type := Address_Type(mem.word_size);
       temp  : Address_Type := start;
       next  : Address_Type;
    begin
       while temp < last loop
-         next := temp - (temp mod width) + width;
+         next := temp - (temp mod wsize) + wsize;
          Process(mem, temp, next >= last);
          temp := next;
       end loop;
