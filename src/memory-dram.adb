@@ -64,7 +64,8 @@ package body Memory.DRAM is
    end Get_Page;
 
    procedure Process(mem      : in out DRAM_Type;
-                     address  : in Address_Type) is
+                     address  : in Address_Type;
+                     last     : in Boolean) is
       bank_index  : constant Natural := Get_Bank(mem, address);
       page_index  : constant Address_Type := Get_Page(mem, address);
       now         : constant Time_Type    := Get_Time(mem);
@@ -86,9 +87,11 @@ package body Memory.DRAM is
          if not mem.open_page_mode then
             -- Closed page mode.
             -- Open, access, close.
-            cycles := cycles + mem.rcd_cycles * mem.multiplier;
             cycles := cycles + mem.cas_cycles * mem.multiplier;
-            extra  := extra  + mem.rp_cycles * mem.multiplier;
+            if last then
+               cycles := cycles + mem.rcd_cycles * mem.multiplier;
+               extra  := extra  + mem.rp_cycles * mem.multiplier;
+            end if;
          elsif bank.page = page_index then
             -- The correct page is open.
             cycles := cycles + mem.cas_cycles * mem.multiplier;
@@ -109,12 +112,14 @@ package body Memory.DRAM is
                      start : in Address_Type;
                      size  : in Positive) is
       last  : constant Address_Type := start + Address_Type(size);
-      wsize : constant Address_Type := Address_Type(mem.word_size);
+      width : constant Address_Type := Address_Type(mem.width);
       temp  : Address_Type := start;
+      next  : Address_Type;
    begin
       while temp < last loop
-         Process(mem, temp);
-         temp := temp - (temp mod wsize) + wsize;
+         next := temp - (temp mod width) + width;
+         Process(mem, temp, next >= last);
+         temp := next;
       end loop;
    end Process;
 
