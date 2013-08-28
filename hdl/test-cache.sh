@@ -1,6 +1,6 @@
 #!/bin/bash
 
-MEM="(ram (word_size 8)(word_count 65536)(latency 10)(burst 0))"
+MEM="(ram (word_size 8)(latency 10)(burst 0))"
 
 function run()
 {

@@ -591,7 +591,8 @@ package body Memory.Super is
          mem.last := Clone(mem.current.all);
 
          -- Decrease the threshold.
-         mem.threshold := mem.threshold - (mem.threshold + 1023) / 1024;
+         mem.threshold  := mem.threshold - (mem.threshold + 1023) / 1024;
+         mem.age        := 0;
 
       else
 
@@ -600,7 +601,9 @@ package body Memory.Super is
          mem.current := Clone(mem.last.all);
 
          -- Increase the threshold.
-         mem.threshold := mem.threshold + mem.threshold / 128 + 1;
+         mem.threshold  := mem.threshold + (mem.age * mem.threshold) / 2048;
+         mem.threshold  := mem.threshold + 1;
+         mem.age        := mem.age + 1;
 
       end if;
 
@@ -808,7 +811,8 @@ package body Memory.Super is
          Put_Line("Iteration:" & Long_Integer'Image(mem.iteration + 1) &
                   " (evaluation " & To_String(mem.total + 1) &
                   ", steps " & To_String(mem.steps + 1) &
-                  ", threshold " & To_String(mem.threshold) & ")");
+                  ", threshold " & To_String(mem.threshold) &
+                  ", age " & To_String(mem.age) & ")");
 
          -- Generate new memories until we find a new one.
          loop

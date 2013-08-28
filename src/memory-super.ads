@@ -97,6 +97,7 @@ private
       improvement    : Value_Type               := 0;
       threshold      : Long_Integer             := 0;
       has_idle       : Boolean                  := False;
+      age            : Long_Integer             := 0;
    end record;
 
 end Memory.Super;
