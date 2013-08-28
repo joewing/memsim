@@ -39,7 +39,7 @@ package body Memory.Transform.Flip is
    function Apply(mem      : Flip_Type;
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type is
-      addr_bits   : constant Positive := 8 * Get_Address_Size(mem);
+      addr_bits   : constant Positive := Get_Address_Bits(mem);
       word_bytes  : constant Natural := Get_Word_Size(mem);
       src_mask    : Address_Type;
       dest_mask   : Address_Type;

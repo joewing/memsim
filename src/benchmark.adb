@@ -7,7 +7,7 @@ package body Benchmark is
                         mem         : in Memory_Pointer) is
    begin
       benchmark.max_addr
-         := (Address_Type(2) ** (8 * Get_Address_Size(mem.all))) - 1;
+         := (Address_Type(2) ** Get_Address_Bits(mem.all)) - 1;
       benchmark.mem := mem;
    end Set_Memory;
 

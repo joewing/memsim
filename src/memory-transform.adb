@@ -10,7 +10,7 @@ package body Memory.Transform is
                      dir      : in Boolean;
                      is_read  : in Boolean) is
 
-      abits    : constant Positive := 8 * Get_Address_Size(mem);
+      abits    : constant Positive := Get_Address_Bits(mem);
       mask     : constant Address_Type := Address_Type(2) ** abits - 1;
       start    : Address_Type := address;
       trans    : Address_Type := Apply(Transform_Type'Class(mem), start, dir);

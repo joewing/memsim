@@ -216,7 +216,7 @@ package body Memory.Split is
    function Get_Path_Length(mem : Split_Type) return Natural is
       bank0 : constant Natural := Get_Path_Length(mem.banks(0).mem.all);
       bank1 : constant Natural := Get_Path_Length(mem.banks(1).mem.all);
-      asize : constant Natural := 8 * Get_Address_Size(mem);
+      asize : constant Natural := Get_Address_Bits(mem);
    begin
       return asize + Natural'Max(bank0, bank1);
    end Get_Path_Length;
@@ -380,7 +380,7 @@ package body Memory.Split is
 
    function Get_Join_Length(mem : Split_Type) return Natural is
    begin
-      return 8 * Get_Address_Size(mem);
+      return Get_Address_Bits(mem);
    end Get_Join_Length;
 
 end Memory.Split;

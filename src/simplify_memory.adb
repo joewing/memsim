@@ -53,7 +53,7 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
       b1    : Memory_Pointer        := Get_Bank(sp.all, 1);
       n     : Memory_Pointer        := Get_Memory(sp.all);
       o     : constant Address_Type := Get_Offset(sp.all);
-      abits : constant Natural      := 8 * Get_Address_Size(sp.all);
+      abits : constant Natural      := Get_Address_Bits(sp.all);
    begin
       b0 := Simplify_Memory(b0);
       Set_Bank(sp.all, 0, b0);

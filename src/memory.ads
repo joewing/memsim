@@ -25,7 +25,7 @@ package Memory is
    type Port_Type is record
       id          : Natural;     -- Memory identifier for the port.
       word_size   : Positive;    -- Size of a word in bytes.
-      addr_size   : Positive;    -- Size of an address in bytes.
+      addr_bits   : Positive;    -- Size of an address in bits.
    end record;
 
    -- Vector of ports.
@@ -86,8 +86,8 @@ package Memory is
    -- Get the word size in bytes.
    function Get_Word_Size(mem : Memory_Type) return Positive is abstract;
 
-   -- Get the address size in bytes.
-   function Get_Address_Size(mem : Memory_Type) return Positive;
+   -- Get the address size in bits.
+   function Get_Address_Bits(mem : Memory_Type) return Positive;
 
    -- Get the length of the longest path in levels of logic.
    -- This is an estimate used to insert registers.

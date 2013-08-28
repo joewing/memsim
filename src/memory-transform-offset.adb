@@ -110,7 +110,7 @@ package body Memory.Transform.Offset is
 
    function Get_Transform_Length(mem : Offset_Type) return Natural is
    begin
-      return 8 * Get_Address_Size(mem);
+      return Get_Address_Bits(mem);
    end Get_Transform_Length;
 
 end Memory.Transform.Offset;

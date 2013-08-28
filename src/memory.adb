@@ -46,11 +46,11 @@ package body Memory is
       mem.time := mem.time + cycles;
    end Advance;
 
-   function Get_Address_Size(mem : Memory_Type) return Positive is
+   function Get_Address_Bits(mem : Memory_Type) return Positive is
    begin
       -- TODO: Make this configurable.
-      return 4;
-   end Get_Address_Size;
+      return 32;
+   end Get_Address_Bits;
 
    function Get_Path_Length(mem : Memory_Type) return Natural is
    begin
@@ -140,7 +140,7 @@ package body Memory is
    begin
       result.id         := Get_ID(mem);
       result.word_size  := Get_Word_Size(mem);
-      result.addr_size  := Get_Address_Size(mem);
+      result.addr_bits  := Get_Address_Bits(mem);
       return result;
    end Get_Port;
 
