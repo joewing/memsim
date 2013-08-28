@@ -88,7 +88,7 @@ package body Benchmark is
                   size        : in Positive) is
    begin
       if address + Address_Type(size) > benchmark.max_addr then
-         raise Constraint_Error;
+         raise Invalid_Address;
       end if;
       Read(benchmark.mem.all, address, size);
    end Read;
@@ -98,7 +98,7 @@ package body Benchmark is
                    size       : in Positive) is
    begin
       if address + Address_Type(size) > benchmark.max_addr then
-         raise Constraint_Error;
+         raise Invalid_Address;
       end if;
       Write(benchmark.mem.all, address, size);
    end Write;

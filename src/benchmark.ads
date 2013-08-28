@@ -15,6 +15,10 @@ package Benchmark is
    -- provided to a benchmark.
    Invalid_Argument : exception;
 
+   -- An exception that is raised when an address is out of the
+   -- range of valid addresses.
+   Invalid_Address : exception;
+
    -- The base data type for benchmarks.
    type Benchmark_Type is abstract new Limited_Controlled with private;
    type Benchmark_Pointer is access all Benchmark_Type'Class;

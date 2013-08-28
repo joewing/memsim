@@ -1,4 +1,6 @@
 
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Benchmark_Runner is
 
    procedure Register_Benchmark(runner    : in out Runner_Type;
@@ -31,6 +33,9 @@ package body Benchmark_Runner is
          end loop;
          exit when Done(mem.all);
       end loop;
+   exception
+      when Invalid_Address =>
+         Put_Line("error: invalid address");
    end Run;
 
    procedure Finalize(runner : in out Runner_Type) is
