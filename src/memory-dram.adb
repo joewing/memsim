@@ -121,7 +121,8 @@ package body Memory.DRAM is
       temp  : Address_Type := start;
       next  : Address_Type;
    begin
-      Assert(start < Address_Type(2) ** Get_Address_Bits);
+      Assert(start < Address_Type(2) ** Get_Address_Bits,
+             "invalid address in Memory.DRAM.Process");
       while temp < last loop
          next := temp - (temp mod wsize) + wsize;
          Process(mem, temp, next >= last);

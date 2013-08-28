@@ -89,7 +89,7 @@ package body Memory.Split is
       temp_addr   : Address_Type;
       temp_size   : Positive;
    begin
-      Assert(address <= last, "invalid address in Do_Process");
+      Assert(address <= last, "invalid address in Memory.Split.Do_Process");
       if address < mem.offset then
          if last <= mem.offset then
             temp_size := size;
@@ -129,12 +129,15 @@ package body Memory.Split is
       last : constant Address_Type := address + Address_Type(size - 1);
       temp : Positive;
    begin
-      if address > last then
+      if address > last or else
+         last >= Address_Type(2) ** Get_Address_Bits then
 
-         temp := Positive(Address_Type'Last - address + 1);
+         temp := Positive(Address_Type(2) ** Get_Address_Bits - address);
          Do_Process(mem, address, temp, is_read);
 
-         Do_Process(mem, 0, Positive(last + 1), is_read);
+         Do_Process(mem, 0,
+                    Positive(last - Address_Type(2) ** Get_Address_Bits + 1),
+                    is_read);
 
       else
          Do_Process(mem, address, size, is_read);
@@ -145,7 +148,7 @@ package body Memory.Split is
                   address  : in Address_Type;
                   size     : in Positive) is
    begin
-      Assert(Get_Memory(mem) /= null, "Read");
+      Assert(Get_Memory(mem) /= null, "Memory.Split.Read");
       Process(mem, address, size, True);
    end Read;
 
@@ -153,7 +156,7 @@ package body Memory.Split is
                    address : in Address_Type;
                    size    : in Positive) is
    begin
-      Assert(Get_Memory(mem) /= null, "Write");
+      Assert(Get_Memory(mem) /= null, "Memory.Split.Write");
       Process(mem, address, size, False);
    end Write;
 

@@ -66,12 +66,12 @@ package body Test.Split is
       Check(mon2.reads = 2);
       Check(ram.reads = 4);
 
-      Read(split.all, Address_Type(0) - 4, 8);
+      Read(split.all, Address_Type(2) ** 32 - 4, 8);
       Check(mon1.reads = 3);
       Check(mon2.reads = 3);
       Check(ram.reads = 6);
 
-      Read(split.all, Address_Type'Last, 1);
+      Read(split.all, Address_Type(2) ** 32 - 1, 1);
       Check(mon1.reads = 3);
       Check(mon2.reads = 4);
       Check(ram.reads = 7);
@@ -86,7 +86,7 @@ package body Test.Split is
       Check(mon2.reads = 5);
       Check(ram.reads = 10);
 
-      Read(split.all, Address_Type'Last, 2);
+      Read(split.all, Address_Type(2) ** 32 - 1, 2);
       Check(mon1.reads = 6);
       Check(mon2.reads = 6);
       Check(ram.reads = 12);

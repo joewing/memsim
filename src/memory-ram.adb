@@ -38,7 +38,8 @@ package body Memory.RAM is
       count    : constant Natural      := (size + mem.word_size + offset - 1) /
                                           mem.word_size;
    begin
-      Assert(address < Address_Type(2) ** Get_Address_Bits);
+      Assert(address < Address_Type(2) ** Get_Address_Bits,
+             "invalid address in Memory.RAM.Read");
       if mem.burst = 0 then
          Advance(mem, mem.latency * Time_Type(count));
       else
@@ -55,7 +56,8 @@ package body Memory.RAM is
       count    : constant Natural      := (size + mem.word_size + offset - 1) /
                                           mem.word_size;
    begin
-      Assert(address < Address_Type(2) ** Get_Address_Bits);
+      Assert(address < Address_Type(2) ** Get_Address_Bits,
+             "invalid address in Memory.RAM.Write");
       if mem.burst = 0 then
          Advance(mem, mem.latency * Time_Type(count));
       else

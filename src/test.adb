@@ -2,6 +2,7 @@
 with Ada.Text_IO; use Ada.Text_IO;
 
 with Memory.RAM; use Memory.RAM;
+with Device;
 with Test.Cache;
 with Test.Flip;
 with Test.Offset;
@@ -75,6 +76,9 @@ package body Test is
 
       count    := 0;
       failed   := 0;
+
+      Device.Set_Device("virtex7");
+      Device.Set_Address_Bits(32);
 
       RAM.Run_Tests;
       Cache.Run_Tests;
