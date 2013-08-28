@@ -13,10 +13,11 @@ package body Memory.Transform.Shift is
    function Random_Shift(next       : access Memory_Type'Class;
                          generator  : Distribution_Type;
                          max_cost   : Cost_Type) return Memory_Pointer is
-      result : constant Shift_Pointer := Create_Shift;
+      result   : constant Shift_Pointer := Create_Shift;
+      abits    : constant Positive := Get_Address_Bits;
    begin
       Set_Memory(result.all, next);
-      result.value := Long_Integer((Random(generator) mod 32)) + 1;
+      result.value := Long_Integer((Random(generator) mod abits)) + 1;
       return Memory_Pointer(result);
    end Random_Shift;
 
@@ -29,8 +30,9 @@ package body Memory.Transform.Shift is
    procedure Permute(mem         : in out Shift_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
+      abits : constant Positive := Get_Address_Bits;
    begin
-      mem.value := Long_Integer((Random(generator) mod 32)) + 1;
+      mem.value := Long_Integer((Random(generator) mod abits)) + 1;
    end Permute;
 
    function Get_Name(mem : Shift_Type) return String is
