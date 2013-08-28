@@ -37,6 +37,17 @@ package body Memory.Cache is
 
    function Random_Boolean is new Random_Enum(Boolean);
 
+   -- Set the latency based on associativity.
+   procedure Update_Latency(mem : in out Cache_Type'Class) is
+   begin
+      case mem.policy is
+         when PLRU   =>
+            mem.latency := 3 + Time_Type(mem.associativity) / 8;
+         when others =>
+            mem.latency := 3 + Time_Type(mem.associativity) / 4;
+      end case;
+   end Update_Latency;
+
    function Random_Cache(next       : access Memory_Type'Class;
                          generator  : Distribution_Type;
                          max_cost   : Cost_Type)
@@ -127,6 +138,8 @@ package body Memory.Cache is
 
       end loop;
 
+      Update_Latency(result.all);
+
       -- No point in creating a worthless cache.
       Assert(Get_Cost(result.all) <= max_cost, "Invalid cache");
       if result.line_size = 1 and result.line_count = 1 then
@@ -210,14 +223,7 @@ package body Memory.Cache is
          param := (param + 1) mod param_count;
       end loop;
 
-      -- Update the latency based on the associativity and policy.
-      case mem.policy is
-         when PLRU   =>
-            mem.latency := 3 + Time_Type(mem.associativity) / 8;
-         when others =>
-            mem.latency := 3 + Time_Type(mem.associativity) / 4;
-      end case;
-
+      Update_Latency(mem);
       for i in mem.line_count .. mem.data.Last_Index loop
          declare
             dp : Cache_Data_Pointer := mem.data.Element(i);
