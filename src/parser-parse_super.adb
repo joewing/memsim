@@ -16,6 +16,7 @@ procedure Parse_Super(parser  : in out Parser_Type;
    seed           : Integer := 0;
    max_iterations : Long_Integer := 1000;
    opt            : Opt_Type := Opt_Time;
+   sp             : Memory_Pointer := null;
 
 begin
 
@@ -71,26 +72,28 @@ begin
       end;
       Match(parser, Close);
    end loop;
+
    case opt is
       when Opt_Time =>
-         result := Memory_Pointer(Super_Time.Create_Super(dram,
-                                                          max_cost,
-                                                          seed,
-                                                          max_iterations,
-                                                          permute_only));
+         sp := Memory_Pointer(Super_Time.Create_Super(dram, max_cost, seed,
+                                                      max_iterations,
+                                                      permute_only));
       when Opt_Writes =>
-         result := Memory_Pointer(Super_Writes.Create_Super(dram,
-                                                            max_cost,
-                                                            seed,
-                                                            max_iterations,
-                                                            permute_only));
+         sp := Memory_Pointer(Super_Writes.Create_Super(dram, max_cost, seed,
+                                                        max_iterations,
+                                                        permute_only));
       when Opt_None =>
-         result := Memory_Pointer(Super_None.Create_Super(dram,
-                                                          max_cost,
-                                                          seed,
-                                                          max_iterations,
-                                                          permute_only));
+         sp := Memory_Pointer(Super_None.Create_Super(dram, max_cost, seed,
+                                                      max_iterations,
+                                                      permute_only));
    end case;
+
+   if sp = null then
+      Raise_Error(parser, "invalid initial memory");
+   else
+      result := sp;
+   end if;
+
 exception
    when Data_Error | Constraint_Error =>
       if dram /= null then

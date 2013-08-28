@@ -551,8 +551,12 @@ package body Memory.Super is
                          max_iterations   : Long_Integer;
                          permute_only     : Boolean)
                          return Super_Pointer is
-      result : constant Super_Pointer := new Super_Type;
+      result : Super_Pointer;
    begin
+      if Get_Cost(mem.all) > max_cost then
+         return null;
+      end if;
+      result := new Super_Type;
       result.max_cost         := max_cost;
       result.max_iterations   := max_iterations;
       result.last             := Memory_Pointer(mem);
