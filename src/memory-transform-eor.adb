@@ -1,4 +1,5 @@
 
+with Device;
 with Memory.Container; use Memory.Container;
 
 package body Memory.Transform.EOR is
@@ -13,7 +14,7 @@ package body Memory.Transform.EOR is
                        generator : Distribution_Type;
                        max_cost  : Cost_Type) return Memory_Pointer is
       result   : constant EOR_Pointer := Create_EOR;
-      abits    : constant Positive := Integer'Size - 1;
+      abits    : constant Positive := Device.Get_Address_Bits - 1;
       rand     : constant Positive := Random(generator);
       bit      : constant Long_Integer := Long_Integer(2) ** (rand mod abits);
    begin
@@ -31,7 +32,7 @@ package body Memory.Transform.EOR is
    procedure Permute(mem         : in out EOR_Type;
                      generator   : in Distribution_Type;
                      max_cost    : in Cost_Type) is
-      abits    : constant Positive := Integer'Size - 1;
+      abits    : constant Positive := Device.Get_Address_Bits - 1;
       rand     : constant Positive := Random(generator);
       bit      : constant Long_Integer := Long_Integer(2) ** (rand mod abits);
    begin
