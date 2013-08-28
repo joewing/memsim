@@ -1,4 +1,7 @@
 
+with Ada.Assertions; use Ada.Assertions;
+with Device;         use Device;
+
 package body Memory.DRAM is
 
    function Create_DRAM(cas_cycles     : Time_Type;
@@ -118,6 +121,7 @@ package body Memory.DRAM is
       temp  : Address_Type := start;
       next  : Address_Type;
    begin
+      Assert(start < Address_Type(2) ** Get_Address_Bits);
       while temp < last loop
          next := temp - (temp mod wsize) + wsize;
          Process(mem, temp, next >= last);
