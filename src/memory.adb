@@ -3,6 +3,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
 with Ada.Unchecked_Deallocation;
 
+with Device;            use Device;
 with Memory.Container;  use Memory.Container;
 with Memory.Split;      use Memory.Split;
 with Memory.Transform;  use Memory.Transform;
@@ -45,12 +46,6 @@ package body Memory is
    begin
       mem.time := mem.time + cycles;
    end Advance;
-
-   function Get_Address_Bits(mem : Memory_Type) return Positive is
-   begin
-      -- TODO: Make this configurable.
-      return 32;
-   end Get_Address_Bits;
 
    function Get_Path_Length(mem : Memory_Type) return Natural is
    begin
@@ -140,7 +135,7 @@ package body Memory is
    begin
       result.id         := Get_ID(mem);
       result.word_size  := Get_Word_Size(mem);
-      result.addr_bits  := Get_Address_Bits(mem);
+      result.addr_bits  := Get_Address_Bits;
       return result;
    end Get_Port;
 

@@ -1,5 +1,6 @@
 
 with Ada.Assertions;    use Ada.Assertions;
+with Device;            use Device;
 with Memory.Join;       use Memory.Join;
 with Memory.Container;  use Memory.Container;
 
@@ -216,7 +217,7 @@ package body Memory.Split is
    function Get_Path_Length(mem : Split_Type) return Natural is
       bank0 : constant Natural := Get_Path_Length(mem.banks(0).mem.all);
       bank1 : constant Natural := Get_Path_Length(mem.banks(1).mem.all);
-      asize : constant Natural := Get_Address_Bits(mem);
+      asize : constant Natural := Get_Address_Bits;
    begin
       return asize + Natural'Max(bank0, bank1);
    end Get_Path_Length;
@@ -380,7 +381,7 @@ package body Memory.Split is
 
    function Get_Join_Length(mem : Split_Type) return Natural is
    begin
-      return Get_Address_Bits(mem);
+      return Get_Address_Bits;
    end Get_Join_Length;
 
 end Memory.Split;

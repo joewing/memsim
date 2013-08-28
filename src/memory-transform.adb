@@ -1,4 +1,5 @@
 
+with Device;            use Device;
 with Memory.Container;  use Memory.Container;
 with Memory.Join;       use Memory.Join;
 
@@ -10,7 +11,7 @@ package body Memory.Transform is
                      dir      : in Boolean;
                      is_read  : in Boolean) is
 
-      abits    : constant Positive := Get_Address_Bits(mem);
+      abits    : constant Positive := Get_Address_Bits;
       mask     : constant Address_Type := Address_Type(2) ** abits - 1;
       start    : Address_Type := address;
       trans    : Address_Type := Apply(Transform_Type'Class(mem), start, dir);

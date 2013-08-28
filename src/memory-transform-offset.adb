@@ -1,5 +1,6 @@
 
-with Memory.Container; use Memory.Container;
+with Device;            use Device;
+with Memory.Container;  use Memory.Container;
 
 package body Memory.Transform.Offset is
 
@@ -110,7 +111,7 @@ package body Memory.Transform.Offset is
 
    function Get_Transform_Length(mem : Offset_Type) return Natural is
    begin
-      return Get_Address_Bits(mem);
+      return Get_Address_Bits;
    end Get_Transform_Length;
 
 end Memory.Transform.Offset;

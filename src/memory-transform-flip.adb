@@ -1,5 +1,6 @@
 
-with Memory.Container; use Memory.Container;
+with Device;            use Device;
+with Memory.Container;  use Memory.Container;
 
 package body Memory.Transform.Flip is
 
@@ -39,7 +40,7 @@ package body Memory.Transform.Flip is
    function Apply(mem      : Flip_Type;
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type is
-      addr_bits   : constant Positive := Get_Address_Bits(mem);
+      addr_bits   : constant Positive := Get_Address_Bits;
       word_bytes  : constant Natural := Get_Word_Size(mem);
       src_mask    : Address_Type;
       dest_mask   : Address_Type;

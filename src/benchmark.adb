@@ -1,5 +1,6 @@
 
 with Ada.Unchecked_Deallocation;
+with Device; use Device;
 
 package body Benchmark is
 
@@ -7,7 +8,7 @@ package body Benchmark is
                         mem         : in Memory_Pointer) is
    begin
       benchmark.max_addr
-         := (Address_Type(2) ** Get_Address_Bits(mem.all)) - 1;
+         := (Address_Type(2) ** Get_Address_Bits) - 1;
       benchmark.mem := mem;
    end Set_Memory;
 

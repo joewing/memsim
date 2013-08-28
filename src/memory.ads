@@ -86,9 +86,6 @@ package Memory is
    -- Get the word size in bytes.
    function Get_Word_Size(mem : Memory_Type) return Positive is abstract;
 
-   -- Get the address size in bits.
-   function Get_Address_Bits(mem : Memory_Type) return Positive;
-
    -- Get the length of the longest path in levels of logic.
    -- This is an estimate used to insert registers.
    function Get_Path_Length(mem : Memory_Type) return Natural;

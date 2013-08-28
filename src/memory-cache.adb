@@ -1,6 +1,7 @@
 
 with Ada.Unchecked_Deallocation;
 with Ada.Assertions; use Ada.Assertions;
+with Device;         use Device;
 with BRAM;
 with Random_Enum;
 
@@ -462,7 +463,7 @@ package body Memory.Cache is
       line_bits   : constant Natural   := lsize * 8;
 
       -- Bits to store a tag.
-      addr_bits   : constant Positive  := Get_Address_Bits(mem);
+      addr_bits   : constant Positive  := Get_Address_Bits;
       wsize       : constant Positive  := Get_Word_Size(mem);
       index_bits  : constant Natural   := Log2(lines - 1);
       line_words  : constant Natural   := (lsize + wsize - 1) / wsize;

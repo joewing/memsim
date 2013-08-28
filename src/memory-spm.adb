@@ -1,5 +1,6 @@
 
 with BRAM;
+with Device; use Device;
 
 package body Memory.SPM is
 
@@ -161,7 +162,7 @@ package body Memory.SPM is
    end Get_Cost;
 
    function Get_Path_Length(mem : SPM_Type) return Natural is
-      asize : constant Natural := Get_Address_Bits(mem);
+      asize : constant Natural := Get_Address_Bits;
    begin
       return asize + Get_Path_Length(Container_Type(mem));
    end Get_Path_Length;

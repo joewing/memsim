@@ -1,5 +1,6 @@
 
-with Memory.Container; use Memory.Container;
+with Device;            use Device;
+with Memory.Container;  use Memory.Container;
 
 package body Memory.Transform.Shift is
 
@@ -40,7 +41,7 @@ package body Memory.Transform.Shift is
    function Apply(mem      : Shift_Type;
                   address  : Address_Type;
                   dir      : Boolean) return Address_Type is
-      abits    : constant Integer      := Get_Address_Bits(mem);
+      abits    : constant Integer      := Get_Address_Bits;
       wsize    : constant Address_Type := Address_Type(Get_Word_Size(mem));
       wbits    : constant Natural      := Log2(Natural(wsize)) - 1;
       caddr    : constant Address_Type := address mod wsize;

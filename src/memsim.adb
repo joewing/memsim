@@ -4,6 +4,7 @@ with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 with Ada.Text_IO;             use Ada.Text_IO;
 with Memory;                  use Memory;
 with Parser;
+with Device;
 with Benchmark;               use Benchmark;
 with Benchmark_Runner;        use Benchmark_Runner;
 with Benchmark.Heap;
@@ -21,6 +22,7 @@ procedure MemSim is
 
    mem      : Memory_Pointer := null;
    runner   : Runner_Type;
+   arg      : Positive := 1;
 
    type Benchmark_Constructor_Type is
       access function return Benchmark.Benchmark_Pointer;
@@ -70,36 +72,70 @@ procedure MemSim is
                Benchmark.Tree.Create_Tree'Access)
    );
 
-begin
-
-   -- Make sure we have enough arguments.
-   if Argument_Count = 1 and then Argument(1) = "test" then
-      Test.Run_Tests;
-      return;
-   elsif Argument_Count = 2 and then Argument(2) = "show" then
-      mem := Parser.Parse(Argument(1));
-      if mem = null then
-         Put_Line("error: could not open memory: " & Argument(1));
-         return;
-      end if;
-      Put_Line("Max Path:" & Natural'Image(Get_Max_Length(mem)));
-      Put_Line("Cost:" & Cost_Type'Image(Get_Cost(mem.all)));
-      Destroy(mem);
-      return;
-   elsif Argument_Count < 2 then
-      Put_Line("usage: " & Command_Name & " <memory> <benchmark> [<options>]");
+   procedure Show_Usage is
+   begin
+      Put_Line("usage: " & Command_Name & " [options] " &
+               "<memory> {<benchmark> [<options>]}");
+      Put_Line("options:");
+      Put_Line("   -addr_bits <n>   Number of address bits");
+      Put_Line("   -device <d>      Device type (asic, virtex6, ...)");
       Put_Line("benchmarks:");
       for i in benchmark_map'First .. benchmark_map'Last loop
          Put_Line("   " & To_String(benchmark_map(i).name & " " &
                   To_String(benchmark_map(i).usage)));
       end loop;
       Put_Line("   show");
+   end Show_Usage;
+
+begin
+
+   -- Run the tests if requested.
+   if Argument_Count = 1 and then Argument(1) = "test" then
+      Test.Run_Tests;
+      return;
+   end if;
+
+   -- Parse options.
+   Parse_Options: while arg < Argument_Count loop
+      begin
+         if Argument(arg) = "-addr_bits" then
+            Device.Set_Address_Bits(Positive'Value(Argument(arg + 1)));
+            arg := arg + 2;
+         elsif Argument(arg) = "-device" then
+            Device.Set_Device(Argument(arg + 1));
+            arg := arg + 2;
+         else
+            exit Parse_Options;
+         end if;
+      exception
+         when others =>
+            Put_Line("error: invalid option value");
+            return;
+      end;
+   end loop Parse_Options;
+
+   -- Check if we are to show the memory.
+   if arg + 1 = Argument_Count and then Argument(arg + 1) = "show" then
+      mem := Parser.Parse(Argument(arg));
+      if mem = null then
+         Put_Line("error: could not open memory: " & Argument(arg));
+         return;
+      end if;
+      Put_Line("Max Path:" & Natural'Image(Get_Max_Length(mem)));
+      Put_Line("Cost:" & Cost_Type'Image(Get_Cost(mem.all)));
+      Destroy(mem);
+      return;
+   end if;
+
+   -- Make sure we have enough arguments to specify a memory and benchmark.
+   if arg >= Argument_Count then
+      Show_Usage;
       return;
    end if;
 
    -- Parse the memory file.
    Parse_Memory: declare
-      memory_file : constant String := Argument(1);
+      memory_file : constant String := Argument(arg);
    begin
       mem := Parser.Parse(memory_file);
       if mem = null then
@@ -107,12 +143,13 @@ begin
          return;
       end if;
    end Parse_Memory;
+   arg := arg + 1;
 
    -- Parse benchmarks.
    Parse_Benchmarks: declare
       bp : Benchmark_Pointer := null;
    begin
-      for i in 2 .. Argument_Count loop
+      for i in arg .. Argument_Count loop
 
          -- If this is a benchmark name, create a new benchmark.
          for b in benchmark_map'First .. benchmark_map'Last loop

@@ -1,15 +1,16 @@
 
-with Ada.Assertions; use Ada.Assertions;
-with Memory.Container; use Memory.Container;
-with Memory.Transform; use Memory.Transform;
+with Ada.Assertions;          use Ada.Assertions;
+with Device;                  use Device;
+with Memory.Container;        use Memory.Container;
+with Memory.Transform;        use Memory.Transform;
 with Memory.Transform.Offset; use Memory.Transform.Offset;
 with Memory.Transform.EOR;    use Memory.Transform.EOR;
 with Memory.Transform.Shift;  use Memory.Transform.Shift;
 with Memory.Transform.Flip;   use Memory.Transform.Flip;
-with Memory.Split; use Memory.Split;
-with Memory.Join; use Memory.Join;
-with Memory.SPM; use Memory.SPM;
-with Util; use Util;
+with Memory.Split;            use Memory.Split;
+with Memory.Join;             use Memory.Join;
+with Memory.SPM;              use Memory.SPM;
+with Util;                    use Util;
 
 function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
 
@@ -53,7 +54,7 @@ function Simplify_Memory(mem : Memory_Pointer) return Memory_Pointer is
       b1    : Memory_Pointer        := Get_Bank(sp.all, 1);
       n     : Memory_Pointer        := Get_Memory(sp.all);
       o     : constant Address_Type := Get_Offset(sp.all);
-      abits : constant Natural      := Get_Address_Bits(sp.all);
+      abits : constant Natural      := Get_Address_Bits;
    begin
       b0 := Simplify_Memory(b0);
       Set_Bank(sp.all, 0, b0);
