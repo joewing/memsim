@@ -21,7 +21,10 @@ subsystem specification as input and generates synthesizable VHDL.
 Running memsim with no arguments will show its usage:
 
 <pre>
-usage: ./memsim &lt;memory&gt; &lt;benchmark&gt; [&lt;options&gt;]
+usage: ./memsim [&lt;options&gt;] &lt;memory&gt; { &lt;benchmark&gt; [&lt;options&gt;] }
+options:
+   -addr\_bits The number of bits in an address
+   -device     The device type
 benchmarks:
    hash [size=1024][iterations=1000][spacing=0][seed=15]
    heap [size=1024][spacing=0][seed=15]
