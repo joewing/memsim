@@ -126,19 +126,15 @@ package body Memory.Split is
                      address  : in Address_Type;
                      size     : in Positive;
                      is_read  : in Boolean) is
-      last : constant Address_Type := address + Address_Type(size - 1);
-      temp : Positive;
+      abits : constant Positive := Get_Address_Bits;
+      max   : constant Address_Type := Address_Type(2) ** abits;
+      amask : constant Address_Type := max - 1;
+      last  : constant Address_Type
+               := (address + Address_Type(size - 1)) and amask;
    begin
-      if address > last or else
-         last >= Address_Type(2) ** Get_Address_Bits then
-
-         temp := Positive(Address_Type(2) ** Get_Address_Bits - address);
-         Do_Process(mem, address, temp, is_read);
-
-         Do_Process(mem, 0,
-                    Positive(last - Address_Type(2) ** Get_Address_Bits + 1),
-                    is_read);
-
+      if address > last then
+         Do_Process(mem, address, Positive(max - address), is_read);
+         Do_Process(mem, 0, Positive(last + 1), is_read);
       else
          Do_Process(mem, address, size, is_read);
       end if;
