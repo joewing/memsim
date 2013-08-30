@@ -36,6 +36,7 @@ package body Test is
                   address  : in Address_Type;
                   size     : in Positive) is
    begin
+      Check(address < Address_Type(2) ** 32);
       Read(Container_Type(mem), address, size);
       mem.last_addr  := address;
       mem.last_size  := size;
@@ -48,6 +49,7 @@ package body Test is
                    address : in Address_Type;
                    size    : in Positive) is
    begin
+      Check(address < Address_Type(2) ** 32);
       Write(Container_Type(mem), address, size);
       mem.last_addr  := address;
       mem.last_size  := size;
