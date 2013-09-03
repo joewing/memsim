@@ -1,1 +1,4 @@
 memsim
+*.ali
+*.o
+b~*.ad[bs]
