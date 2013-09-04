@@ -346,10 +346,12 @@ package body Memory.Split is
                           source    : in Natural;
                           address   : in Address_Type;
                           size      : in Positive) is
-      out_addr : Address_Type := address;
+      abits    : constant Positive     := Get_Address_Bits;
+      mask     : constant Address_Type := Address_Type(2) ** abits - 1;
+      out_addr : Address_Type          := address;
    begin
       if source = 1 then
-         out_addr := address + mem.offset;
+         out_addr := (address + mem.offset) and mask;
       end if;
       Read(Container_Type(mem), out_addr, size);
    end Forward_Read;
@@ -358,10 +360,12 @@ package body Memory.Split is
                            source   : in Natural;
                            address  : in Address_Type;
                            size     : in Positive) is
-      out_addr : Address_Type := address;
+      abits    : constant Positive     := Get_Address_Bits;
+      mask     : constant Address_Type := Address_Type(2) ** abits - 1;
+      out_addr : Address_Type          := address;
    begin
       if source = 1 then
-         out_addr := address + mem.offset;
+         out_addr := (address + mem.offset) and mask;
       end if;
       Write(Container_Type(mem), out_addr, size);
    end Forward_Write;

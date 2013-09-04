@@ -56,10 +56,10 @@ package body Test.Offset is
       Check(mem.writes = 2);
 
       Read(offset.all, Address_Type(2) ** 32 - 6, 8);
-      Check(bank.last_addr = 0);
-      Check(mem.last_addr = 0);
-      Check(bank.reads = 4);
-      Check(mem.reads = 4);
+      Check(bank.last_addr = Address_Type(2) ** 32 - 3);
+      Check(mem.last_addr = Address_Type(2) ** 32 - 6);
+      Check(bank.reads = 3);
+      Check(mem.reads = 3);
       Check(bank.writes = 2);
       Check(mem.writes = 2);
 

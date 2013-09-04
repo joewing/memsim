@@ -38,8 +38,7 @@ package body Memory.Transform is
          while total + nsize < size loop
             temp := Apply(Transform_Type'Class(mem), start + nsize, dir);
             temp := temp and mask;
-            exit when last + incr /= temp;
-            last := temp;
+            exit when ((last + nsize) and mask) /= temp;
             nsize := Address_Type'Min(size - total, nsize + incr);
          end loop;
 

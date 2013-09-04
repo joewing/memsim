@@ -101,12 +101,14 @@ package body Memory.Transform.Offset is
    end Is_Empty;
 
    function Get_Alignment(mem : Offset_Type) return Positive is
-      alignment   : Long_Integer := 1;
+      alignment   : Positive := 1;
+      wsize       : constant Positive := Get_Word_Size(mem);
    begin
-      while (mem.value mod alignment) = 0 and alignment < 2 ** 16 loop
+      while (mem.value mod Long_Integer(alignment)) = 0 and
+         alignment < wsize loop
          alignment := alignment * 2;
       end loop;
-      return Positive(alignment);
+      return alignment;
    end Get_Alignment;
 
    function Get_Transform_Length(mem : Offset_Type) return Natural is
