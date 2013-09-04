@@ -12,6 +12,7 @@ procedure Parse_DRAM(parser   : in out Parser_Type;
    cas_cycles  : Time_Type := 5;
    rcd_cycles  : Time_Type := 5;
    rp_cycles   : Time_Type := 5;
+   wb_cycles   : Time_Type := 0;
    word_size   : Positive  := 8;
    page_size   : Positive  := 1024;
    page_count  : Positive  := 16384;
@@ -37,6 +38,8 @@ begin
                rcd_cycles := Time_Type'Value(value);
             elsif name = "rp_cycles" then
                rp_cycles := Time_Type'Value(value);
+            elsif name = "wb_cycles" then
+               wb_cycles := Time_Type'Value(value);
             elsif name = "word_size" then
                word_size := Positive'Value(value);
             elsif name = "page_size" then
@@ -60,6 +63,7 @@ begin
    ptr := DRAM.Create_DRAM(cas_cycles,
                            rcd_cycles,
                            rp_cycles,
+                           wb_cycles,
                            multiplier,
                            word_size,
                            page_size,

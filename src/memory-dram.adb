@@ -7,6 +7,7 @@ package body Memory.DRAM is
    function Create_DRAM(cas_cycles     : Time_Type;
                         rcd_cycles     : Time_Type;
                         rp_cycles      : Time_Type;
+                        wb_cycles      : Time_Type;
                         multiplier     : Time_Type;
                         word_size      : Positive;
                         page_size      : Positive;
@@ -30,6 +31,7 @@ package body Memory.DRAM is
       result.cas_cycles       := cas_cycles;
       result.rcd_cycles       := rcd_cycles;
       result.rp_cycles        := rp_cycles;
+      result.wb_cycles        := wb_cycles;
       result.multiplier       := multiplier;
       result.access_cycles    := Time_Type(word_size / width);
       result.word_size        := word_size;
@@ -69,7 +71,8 @@ package body Memory.DRAM is
 
    procedure Process(mem      : in out DRAM_Type;
                      address  : in Address_Type;
-                     last     : in Boolean) is
+                     last     : in Boolean;
+                     is_write : in Boolean) is
       bank_index  : constant Natural := Get_Bank(mem, address);
       page_index  : constant Address_Type := Get_Page(mem, address);
       now         : constant Time_Type    := Get_Time(mem);
@@ -95,16 +98,24 @@ package body Memory.DRAM is
             cycles := cycles + mem.rcd_cycles * mem.multiplier;
             cycles := cycles + mem.access_cycles * mem.multiplier;
             extra  := extra  + mem.rp_cycles * mem.multiplier;
+            if is_write then
+               extra := extra + mem.wb_cycles * mem.multiplier;
+            end if;
          elsif bank.page = page_index then
             -- The correct page is open.
             cycles := cycles + mem.cas_cycles * mem.multiplier;
             cycles := cycles + mem.access_cycles * mem.multiplier;
+            bank.dirty := bank.dirty or is_write;
          else
             -- The wrong page is open.
             cycles := cycles + mem.rp_cycles * mem.multiplier;
             cycles := cycles + mem.rcd_cycles * mem.multiplier;
             cycles := cycles + mem.cas_cycles * mem.multiplier;
             cycles := cycles + mem.access_cycles * mem.multiplier;
+            if bank.dirty then
+               cycles := cycles + mem.wb_cycles + mem.multiplier;
+            end if;
+            bank.dirty := is_write;
          end if;
          bank.pending   := now + cycles + extra;
          bank.page      := page_index;
@@ -113,9 +124,10 @@ package body Memory.DRAM is
       end;
    end Process;
 
-   procedure Process(mem   : in out DRAM_Type;
-                     start : in Address_Type;
-                     size  : in Positive) is
+   procedure Process(mem      : in out DRAM_Type;
+                     start    : in Address_Type;
+                     size     : in Positive;
+                     is_write : in Boolean) is
       last  : constant Address_Type := start + Address_Type(size);
       wsize : constant Address_Type := Address_Type(mem.word_size);
       temp  : Address_Type := start;
@@ -125,7 +137,7 @@ package body Memory.DRAM is
              "invalid address in Memory.DRAM.Process");
       while temp < last loop
          next := temp - (temp mod wsize) + wsize;
-         Process(mem, temp, next >= last);
+         Process(mem, temp, next >= last, is_write);
          temp := next;
       end loop;
    end Process;
@@ -134,14 +146,14 @@ package body Memory.DRAM is
                   address  : in Address_Type;
                   size     : in Positive) is
    begin
-      Process(mem, address, size);
+      Process(mem, address, size, False);
    end Read;
 
    procedure Write(mem     : in out DRAM_Type;
                    address : in Address_Type;
                    size    : in Positive) is
    begin
-      Process(mem, address, size);
+      Process(mem, address, size, True);
       mem.writes := mem.writes + 1;
    end Write;
 
@@ -159,6 +171,7 @@ package body Memory.DRAM is
       Append(result, "(cas_cycles " & To_String(mem.cas_cycles) & ")");
       Append(result, "(rcd_cycles " & To_String(mem.rcd_cycles) & ")");
       Append(result, "(rp_cycles " & To_String(mem.rp_cycles) & ")");
+      Append(result, "(wb_cycles " & To_String(mem.wb_cycles) & ")");
       Append(result, "(word_size " & To_String(mem.word_size) & ")");
       Append(result, "(page_size " & To_String(mem.page_size) & ")");
       Append(result, "(page_count " & To_String(mem.page_count) & ")");

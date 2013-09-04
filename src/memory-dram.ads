@@ -8,6 +8,7 @@ package Memory.DRAM is
    function Create_DRAM(cas_cycles     : Time_Type;   -- CAS latency
                         rcd_cycles     : Time_Type;   -- RCD latency
                         rp_cycles      : Time_Type;   -- Precharge latency
+                        wb_cycles      : Time_Type;   -- Write-back latency
                         multiplier     : Time_Type;   -- Clock multiplier
                         word_size      : Positive;    -- Word size in bytes
                         page_size      : Positive;    -- Page size in bytes
@@ -61,7 +62,8 @@ private
 
    type Bank_Type is record
       page     : Address_Type := Address_Type'Last;
-      pending  : Time_Type := 0;
+      dirty    : Boolean      := False;
+      pending  : Time_Type    := 0;
    end record;
 
    package Bank_Vectors is new Vectors(Natural, Bank_Type);
@@ -72,6 +74,7 @@ private
       cas_cycles     : Time_Type;
       rcd_cycles     : Time_Type;
       rp_cycles      : Time_Type;
+      wb_cycles      : Time_Type;
       access_cycles  : Time_Type;
       multiplier     : Time_Type;
       word_size      : Positive;
