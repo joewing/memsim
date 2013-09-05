@@ -398,30 +398,34 @@ package body Memory.Cache is
    procedure Read(mem      : in out Cache_Type;
                   address  : in Address_Type;
                   size     : in Positive) is
-      extra : constant Natural := size / mem.line_size;
+      extra : constant Natural      := size / mem.line_size;
+      abits : constant Positive     := Get_Address_Bits;
+      mask  : constant Address_Type := Address_Type(2) ** abits - 1;
+      temp  : Address_Type          := address;
    begin
-      for i in 0 .. extra - 1 loop
-         Get_Data(mem, address + Address_Type(i * mem.line_size),
-                  mem.line_size, True);
+      for i in 1 .. extra loop
+         Get_Data(mem, temp, mem.line_size, True);
+         temp := (temp + Address_Type(mem.line_size)) and mask;
       end loop;
       if size > extra * mem.line_size then
-         Get_Data(mem, address + Address_Type(extra * mem.line_size),
-                  size - extra * mem.line_size, True);
+         Get_Data(mem, temp, size - extra * mem.line_size, True);
       end if;
    end Read;
 
    procedure Write(mem     : in out Cache_Type;
                    address : in Address_Type;
                    size    : in Positive) is
-      extra : constant Natural := size / mem.line_size;
+      extra : constant Natural      := size / mem.line_size;
+      abits : constant Positive     := Get_Address_Bits;
+      mask  : constant Address_Type := Address_Type(2) ** abits - 1;
+      temp  : Address_Type          := address;
    begin
-      for i in 0 .. extra - 1 loop
-         Get_Data(mem, address + Address_Type(i * mem.line_size),
-                  mem.line_size, False);
+      for i in 1 .. extra loop
+         Get_Data(mem, temp, mem.line_size, False);
+         temp := (temp + Address_Type(mem.line_size)) and mask;
       end loop;
       if size > extra * mem.line_size then
-         Get_Data(mem, address + Address_Type(extra * mem.line_size),
-                  size - extra * mem.line_size, False);
+         Get_Data(mem, temp, size - extra * mem.line_size, False);
       end if;
    end Write;
 
