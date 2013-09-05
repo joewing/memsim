@@ -113,7 +113,7 @@ package body Memory.DRAM is
             cycles := cycles + mem.cas_cycles * mem.multiplier;
             cycles := cycles + mem.access_cycles * mem.multiplier;
             if bank.dirty then
-               cycles := cycles + mem.wb_cycles + mem.multiplier;
+               cycles := cycles + mem.wb_cycles * mem.multiplier;
             end if;
             bank.dirty := is_write;
          end if;
