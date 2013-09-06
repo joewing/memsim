@@ -3,9 +3,12 @@ with Ada.Unchecked_Deallocation;
 with Ada.Assertions; use Ada.Assertions;
 with Device;         use Device;
 with BRAM;
+with CACTI;
 with Random_Enum;
 
 package body Memory.Cache is
+
+   MIN_LINE_COUNT : constant := 16;
 
    procedure Free is
       new Ada.Unchecked_Deallocation(Cache_Data, Cache_Data_Pointer);
@@ -41,12 +44,16 @@ package body Memory.Cache is
    -- Set the latency based on associativity.
    procedure Update_Latency(mem : in out Cache_Type'Class) is
    begin
-      case mem.policy is
-         when PLRU   =>
-            mem.latency := 3 + Time_Type(mem.associativity) / 8;
-         when others =>
-            mem.latency := 3 + Time_Type(mem.associativity) / 4;
-      end case;
+      if Get_Device = ASIC then
+         mem.latency := CACTI.Get_Time(mem);
+      else
+         case mem.policy is
+            when PLRU   =>
+               mem.latency := 3 + Time_Type(mem.associativity) / 8;
+            when others =>
+               mem.latency := 3 + Time_Type(mem.associativity) / 4;
+         end case;
+      end if;
    end Update_Latency;
 
    function Random_Cache(next       : access Memory_Type'Class;
@@ -59,13 +66,12 @@ package body Memory.Cache is
       -- Start with everything set to the minimum.
       Set_Memory(result.all, next);
       result.line_size     := Get_Word_Size(next.all);
-      result.line_count    := 1;
+      result.line_count    := MIN_LINE_COUNT;
       result.associativity := 1;
-      result.latency       := 3;
       result.policy        := LRU;
       result.write_back    := True;
 
-      -- If even the minimum cache is too costly, return nulll.
+      -- If even the minimum cache is too costly, return null.
       if Get_Cost(result.all) > max_cost then
          Set_Memory(result.all, null);
          Destroy(Memory_Pointer(result));
@@ -141,18 +147,11 @@ package body Memory.Cache is
 
       Update_Latency(result.all);
 
-      -- No point in creating a worthless cache.
-      Assert(Get_Cost(result.all) <= max_cost, "Invalid cache");
-      if result.line_size = 1 and result.line_count = 1 then
-         Destroy(Memory_Pointer(result));
-         return null;
-      else
-         result.data.Set_Length(Count_Type(result.line_count));
-         for i in 0 .. result.line_count - 1 loop
-            result.data.Replace_Element(i, new Cache_Data);
-         end loop;
-         return Memory_Pointer(result);
-      end if;
+      result.data.Set_Length(Count_Type(result.line_count));
+      for i in 0 .. result.line_count - 1 loop
+         result.data.Replace_Element(i, new Cache_Data);
+      end loop;
+      return Memory_Pointer(result);
 
    end Random_Cache;
 
@@ -195,7 +194,8 @@ package body Memory.Cache is
                exit when Get_Cost(mem) <= max_cost;
                mem.line_count := line_count;
             when 3 =>      -- Decrease line count
-               if line_count > 1 and line_count > associativity then
+               if line_count > MIN_LINE_COUNT and
+                  line_count > associativity then
                   mem.line_count := line_count / 2;
                   exit when Get_Cost(mem) <= max_cost;
                   mem.line_count := line_count;
@@ -487,6 +487,13 @@ package body Memory.Cache is
       result : Cost_Type;
 
    begin
+
+      -- Use CACTI to determine the cost for ASICs.
+      if Get_Device = ASIC then
+         result := Get_Cost(Container_Type(mem));
+         result := result + CACTI.Get_Area(mem);
+         return result;
+      end if;
 
       -- Determine the number of age bits.
       if assoc > 1 then

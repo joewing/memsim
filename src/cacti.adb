@@ -1,9 +1,7 @@
 
 with Ada.Text_IO;             use Ada.Text_IO;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
-with Ada.Characters.Latin_1;  use Ada.Characters;
 with Interfaces.C;            use Interfaces.C;
-with Interfaces.C.Strings;    use Interfaces.C.Strings;
 with GNAT.Regpat;             use GNAT.Regpat;
 
 with Device;                  use Device;
@@ -116,7 +114,6 @@ package body CACTI is
                            file  : in File_Type) is
       spm      : constant SPM_Type     := SPM_Type(mem);
       wsize    : constant Positive     := Get_Word_Size(spm);
-      abits    : constant Positive     := Get_Address_Bits;
       size     : constant Positive     := Get_Size(spm);
       bus_bits : constant Positive     := 8 * wsize;
    begin
@@ -207,7 +204,7 @@ package body CACTI is
    begin
 
       -- Create a temporary file with the parameters.
-      Create(File => temp);
+      Create(File => temp, Name => "cacti-temp.cfg");
 
       -- Generate the configuration.
       gen.all(mem, temp);
@@ -236,13 +233,14 @@ package body CACTI is
       end if;
 
       -- Destroy the temporary file.
-      Delete(temp);
+Close(temp);
+--      Delete(temp);
 
    end Run;
 
    function Get_Area(mem : Memory_Type'Class) return Cost_Type is
       buffer   : Unbounded_String;
-      result   : Double;
+      result   : Float;
       matches  : Match_Array(0 .. 1);
    begin
 
@@ -255,16 +253,20 @@ package body CACTI is
          str : constant String := To_String(buffer);
       begin
          Match(area_matcher, str, matches);
-         result := Double'Value(str(matches(1).First .. matches(1).Last));
+         result := Float'Value(str(matches(1).First .. matches(1).Last));
+      exception
+         when others =>
+            return Cost_Type'Last;
       end;
 
-      return Cost_Type(Double'Ceiling(result));
+      -- Here we use units of nm^2, so we need to convert from mm^2.
+      return Cost_Type(Float'Ceiling(result * 1000.0 * 1000.0));
 
    end Get_Area;
 
    function Get_Time(mem : Memory_Type'Class) return Time_Type is
       buffer   : Unbounded_String;
-      result   : Double;
+      result   : Float;
       matches  : Match_Array(0 .. 1);
    begin
 
@@ -277,11 +279,11 @@ package body CACTI is
          str : constant String := To_String(buffer);
       begin
          Match(time_matcher, str, matches);
-         result := Double'Value(str(matches(1).First .. matches(1).Last));
+         result := Float'Value(str(matches(1).First .. matches(1).Last));
       end;
 
       -- Here we assume 1 cycle is 1 ns.
-      return Time_Type(Double'Ceiling(result));
+      return Time_Type(Float'Ceiling(result));
 
    end Get_Time;
 

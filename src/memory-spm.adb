@@ -1,8 +1,11 @@
 
 with BRAM;
 with Device; use Device;
+with CACTI;
 
 package body Memory.SPM is
+
+   MIN_WORD_COUNT : constant := 64;
 
    function Create_SPM(mem       : access Memory_Type'Class;
                        size      : Natural;
@@ -23,8 +26,7 @@ package body Memory.SPM is
    begin
 
       Set_Memory(result.all, next);
-      result.latency := 2;
-      result.size := Get_Word_Size(next.all);
+      result.size := Get_Word_Size(next.all) * MIN_WORD_COUNT;
       for i in 1 .. Random(generator) mod 16 loop
          result.size := result.size * 2;
          if Get_Cost(result.all) > max_cost then
@@ -48,6 +50,11 @@ package body Memory.SPM is
             end loop;
             result.size := result.size / 2;
          end;
+         if Get_Device = ASIC then
+            result.latency := CACTI.Get_Time(result.all);
+         else
+            result.latency := 2;
+         end if;
          return Memory_Pointer(result);
       end if;
 
@@ -76,7 +83,7 @@ package body Memory.SPM is
             end loop;
             exit when Get_Cost(mem) <= max_cost;
             mem.size := size;
-         elsif mem.size > wsize then    -- Decrease size.
+         elsif mem.size > wsize * MIN_WORD_COUNT then -- Decrease size.
             loop
                mem.size := mem.size / 2;
                exit when Get_Cost(mem) /= cost;
@@ -97,6 +104,12 @@ package body Memory.SPM is
          end loop;
          mem.size := mem.size / 2;
       end;
+
+      if Get_Device = ASIC then
+         mem.latency := CACTI.Get_Time(mem);
+      else
+         mem.latency := 2;
+      end if;
 
    end Permute;
 
@@ -156,7 +169,11 @@ package body Memory.SPM is
       depth    : constant Natural   := mem.size / wsize;
       result   : Cost_Type := 0;
    begin
-      result := Cost_Type(BRAM.Get_Count(width, depth));
+      if Get_Device = ASIC then
+         result := CACTI.Get_Area(mem);
+      else
+         result := Cost_Type(BRAM.Get_Count(width, depth));
+      end if;
       result := result + Get_Cost(Container_Type(mem));
       return result;
    end Get_Cost;
