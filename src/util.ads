@@ -11,6 +11,9 @@ package Util is
    -- Type to represent the cost of a memory subsystem.
    type Cost_Type is new Long_Integer range 0 .. Long_Integer'Last;
 
+   -- Add two cost types (saturating addition).
+   function "+"(a, b : Cost_Type) return Cost_Type;
+
    -- Compute the log base 2 of a Natural.
    function Log2(n : Natural) return Natural;
 

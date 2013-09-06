@@ -1,6 +1,15 @@
 
 package body Util is
 
+   function "+"(a, b : Cost_Type) return Cost_Type is
+   begin
+      if a > Cost_Type'Last - b then
+         return Cost_Type'Last;
+      else
+         return Cost_Type(Long_Integer(a) + Long_Integer(b));
+      end if;
+   end "+";
+
    function Log2(n : Natural) return Natural is
       i  : Natural := n;
       r  : Natural := 0;
