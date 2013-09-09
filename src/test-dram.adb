@@ -14,6 +14,7 @@ package body Test.DRAM is
                                         page_size        => 1024,
                                         page_count       => 2048,
                                         width            => 2,
+                                        burst_size       => 2,
                                         open_page_mode   => True);
 
    begin
@@ -64,6 +65,7 @@ package body Test.DRAM is
                                         page_size        => 1024,
                                         page_count       => 16384,
                                         width            => 2,
+                                        burst_size       => 2,
                                         open_page_mode   => False);
 
    begin

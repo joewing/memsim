@@ -13,6 +13,7 @@ package body Memory.DRAM is
                         page_size      : Positive;
                         page_count     : Positive;
                         width          : Positive;
+                        burst_size     : Positive;
                         open_page_mode : Boolean) return DRAM_Pointer is
       result : DRAM_Pointer;
    begin
@@ -33,11 +34,12 @@ package body Memory.DRAM is
       result.rp_cycles        := rp_cycles;
       result.wb_cycles        := wb_cycles;
       result.multiplier       := multiplier;
-      result.access_cycles    := Time_Type(word_size / width);
+      result.access_cycles    := Time_Type(burst_size);
       result.word_size        := word_size;
       result.page_size        := page_size;
       result.page_count       := page_count;
       result.width            := width;
+      result.burst_size       := burst_size;
       result.open_page_mode   := open_page_mode;
 
       return result;
@@ -129,14 +131,15 @@ package body Memory.DRAM is
                      size     : in Positive;
                      is_write : in Boolean) is
       last  : constant Address_Type := start + Address_Type(size);
-      wsize : constant Address_Type := Address_Type(mem.word_size);
+      bsize : constant Address_Type := Address_Type(mem.burst_size *
+                                                    mem.width);
       temp  : Address_Type := start;
       next  : Address_Type;
    begin
       Assert(start < Address_Type(2) ** Get_Address_Bits,
              "invalid address in Memory.DRAM.Process");
       while temp < last loop
-         next := temp - (temp mod wsize) + wsize;
+         next := temp - (temp mod bsize) + bsize;
          Process(mem, temp, next >= last, is_write);
          temp := next;
       end loop;
@@ -176,6 +179,7 @@ package body Memory.DRAM is
       Append(result, "(page_size " & To_String(mem.page_size) & ")");
       Append(result, "(page_count " & To_String(mem.page_count) & ")");
       Append(result, "(width " & To_String(mem.width) & ")");
+      Append(result, "(burst_size " & To_String(mem.burst_size) & ")");
       if mem.open_page_mode then
          Append(result, "(open_page true)");
       else

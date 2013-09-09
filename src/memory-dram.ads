@@ -14,6 +14,7 @@ package Memory.DRAM is
                         page_size      : Positive;    -- Page size in bytes
                         page_count     : Positive;    -- Pages per bank
                         width          : Positive;    -- Channel width in bytes
+                        burst_size     : Positive;    -- Burst size
                         open_page_mode : Boolean)     -- Open or closed page
                         return DRAM_Pointer;
 
@@ -81,6 +82,7 @@ private
       page_size      : Positive;
       page_count     : Positive;
       width          : Positive;
+      burst_size     : Positive;
       open_page_mode : Boolean;
       writes         : Long_Integer := 0;
    end record;

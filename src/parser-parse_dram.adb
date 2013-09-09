@@ -17,6 +17,7 @@ procedure Parse_DRAM(parser   : in out Parser_Type;
    page_size   : Positive  := 1024;
    page_count  : Positive  := 16384;
    width       : Positive  := 2;
+   burst_size  : Positive  := 1;
    multiplier  : Time_Type := 1;
    open_page   : Boolean   := True;
 
@@ -52,6 +53,8 @@ begin
                multiplier := Time_Type'Value(value);
             elsif name = "open_page" then
                open_page := Parse_Boolean(value);
+            elsif name = "burst_size" then
+               burst_size := Positive'Value(value);
             else
                Raise_Error(parser, "invalid dram attribute: " & name);
             end if;
@@ -69,6 +72,7 @@ begin
                            page_size,
                            page_count,
                            width,
+                           burst_size,
                            open_page);
    if ptr = null then
       Raise_Error(parser, "invalid dram configuration");
