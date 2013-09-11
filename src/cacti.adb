@@ -36,15 +36,15 @@ package body CACTI is
 
    procedure Cache_Generator(mem    : in Memory_Type'Class;
                              file   : in File_Type) is
-      cache    : constant Cache_Type   := Cache_Type(mem);
-      wsize    : constant Positive     := Get_Word_Size(cache);
-      lsize    : constant Positive     := Get_Line_Size(cache);
-      lcount   : constant Positive     := Get_Line_Count(cache);
-      bsize    : constant Positive     := wsize * lsize;
-      size     : constant Positive     := bsize * lcount;
-      assoc    : Natural               := Get_Associativity(cache);
-      abits    : constant Positive     := Get_Address_Bits;
-      bus_bits : constant Positive     := abits + wsize * 8;
+      cache    : constant Cache_Type'Class   := Cache_Type'Class(mem);
+      wsize    : constant Positive           := Get_Word_Size(cache);
+      lsize    : constant Positive           := Get_Line_Size(cache);
+      lcount   : constant Positive           := Get_Line_Count(cache);
+      bsize    : constant Positive           := wsize * lsize;
+      size     : constant Positive           := bsize * lcount;
+      assoc    : Natural                     := Get_Associativity(cache);
+      abits    : constant Positive           := Get_Address_Bits;
+      bus_bits : constant Positive           := abits + wsize * 8;
    begin
 
       -- Size in bytes.
@@ -112,10 +112,10 @@ package body CACTI is
 
    procedure SPM_Generator(mem   : in Memory_Type'Class;
                            file  : in File_Type) is
-      spm      : constant SPM_Type     := SPM_Type(mem);
-      wsize    : constant Positive     := Get_Word_Size(spm);
-      size     : constant Positive     := Get_Size(spm);
-      bus_bits : constant Positive     := 8 * wsize;
+      spm      : constant SPM_Type'Class  := SPM_Type'Class(mem);
+      wsize    : constant Positive        := Get_Word_Size(spm);
+      size     : constant Positive        := Get_Size(spm);
+      bus_bits : constant Positive        := 8 * wsize;
    begin
 
       -- Size in bytes.
@@ -233,8 +233,7 @@ package body CACTI is
       end if;
 
       -- Destroy the temporary file.
-Close(temp);
---      Delete(temp);
+      Delete(temp);
 
    end Run;
 
