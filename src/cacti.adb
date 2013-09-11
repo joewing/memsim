@@ -29,22 +29,16 @@ package body CACTI is
    time_matcher   : constant Pattern_Matcher
                      := Compile("Access time \(ns\): ([0-9\.]+)");
 
-   -- Type to represent generators for CACTI configurations.
-   type Config_Generator_Type is access
-      procedure(mem  : in Memory_Type'Class;
-                file : in File_Type);
-
-   procedure Cache_Generator(mem    : in Memory_Type'Class;
-                             file   : in File_Type) is
-      cache    : constant Cache_Type'Class   := Cache_Type'Class(mem);
-      wsize    : constant Positive           := Get_Word_Size(cache);
-      lsize    : constant Positive           := Get_Line_Size(cache);
-      lcount   : constant Positive           := Get_Line_Count(cache);
-      bsize    : constant Positive           := wsize * lsize;
-      size     : constant Positive           := bsize * lcount;
-      assoc    : Natural                     := Get_Associativity(cache);
-      abits    : constant Positive           := Get_Address_Bits;
-      bus_bits : constant Positive           := abits + wsize * 8;
+   procedure Generate_Cache(cache   : in Cache_Type;
+                            file    : in File_Type) is
+      wsize    : constant Positive  := Get_Word_Size(cache);
+      lsize    : constant Positive  := Get_Line_Size(cache);
+      lcount   : constant Positive  := Get_Line_Count(cache);
+      bsize    : constant Positive  := wsize * lsize;
+      size     : constant Positive  := bsize * lcount;
+      assoc    : Natural            := Get_Associativity(cache);
+      abits    : constant Positive  := Get_Address_Bits;
+      bus_bits : constant Positive  := abits + wsize * 8;
    begin
 
       -- Size in bytes.
@@ -108,14 +102,13 @@ package body CACTI is
       -- Prefetch width (needed to prevent cacti from crashing).
       Put_Line(file, "-internal prefetch width 8");
 
-   end Cache_Generator;
+   end Generate_Cache;
 
-   procedure SPM_Generator(mem   : in Memory_Type'Class;
-                           file  : in File_Type) is
-      spm      : constant SPM_Type'Class  := SPM_Type'Class(mem);
-      wsize    : constant Positive        := Get_Word_Size(spm);
-      size     : constant Positive        := Get_Size(spm);
-      bus_bits : constant Positive        := 8 * wsize;
+   procedure Generate_SPM(spm    : in SPM_Type;
+                          file   : in File_Type) is
+      wsize    : constant Positive  := Get_Word_Size(spm);
+      size     : constant Positive  := Get_Size(spm);
+      bus_bits : constant Positive  := 8 * wsize;
    begin
 
       -- Size in bytes.
@@ -176,29 +169,26 @@ package body CACTI is
       -- Prefetch width (needed to prevent cacti from crashing).
       Put_Line(file, "-internal prefetch width 8");
 
-   end SPM_Generator;
+   end Generate_SPM;
 
-   -- Look up the function to use for generating the CACTI input.
-   function Get_Generator(mem : Memory_Type'Class)
-                          return Config_Generator_Type is
+   -- Generate the CACTI input.
+   procedure Generate(mem  : in Memory_Type'Class;
+                      file : in File_Type) is
    begin
       if mem in Cache_Type'Class then
-         return Cache_Generator'Access;
+         Generate_Cache(Cache_Type(mem), file);
       elsif mem in SPM_Type'Class then
-         return SPM_Generator'Access;
-      else
-         return null;
+         Generate_SPM(SPM_Type(mem), file);
       end if;
-   end Get_Generator;
+   end Generate;
 
    -- Run the CACTI program with parameters from the specified memory.
    procedure Run(mem    : in Memory_Type'Class;
                  result : in out Unbounded_String) is
 
       ptr         : file_ptr;
-      gen         : constant Config_Generator_Type := Get_Generator(mem);
-      command     : constant String                := "./cacti -infile ";
-      cacti_type  : constant char_array            := To_C("r");
+      command     : constant String       := "./cacti -infile ";
+      cacti_type  : constant char_array   := To_C("r");
       temp        : File_Type;
 
    begin
@@ -207,7 +197,7 @@ package body CACTI is
       Create(File => temp, Name => "cacti-temp.cfg");
 
       -- Generate the configuration.
-      gen.all(mem, temp);
+      Generate(mem, temp);
       Flush(temp);
 
       -- Run CACTI.
@@ -219,7 +209,7 @@ package body CACTI is
       if ptr /= null then
          loop
             declare
-               ch       : constant int := fgetc(ptr);
+               ch : constant int := fgetc(ptr);
             begin
                exit when ch < 0;
                Append(result, Character'Val(ch));
@@ -243,10 +233,6 @@ package body CACTI is
       matches  : Match_Array(0 .. 1);
    begin
 
-      if Get_Generator(mem) = null then
-         return 0;
-      end if;
-
       Run(mem, buffer);
       declare
          str : constant String := To_String(buffer);
@@ -268,10 +254,6 @@ package body CACTI is
       result   : Float;
       matches  : Match_Array(0 .. 1);
    begin
-
-      if Get_Generator(mem) = null then
-         return 0;
-      end if;
 
       Run(mem, buffer);
       declare
