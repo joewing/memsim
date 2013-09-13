@@ -14,6 +14,7 @@ with Benchmark.Hash;
 with Benchmark.Matrix.MM;
 with Benchmark.Matrix.Cholesky;
 with Benchmark.Matrix.LU;
+with Benchmark.QSort;
 with Benchmark.Tree;
 with Test;
 with Util;                    use Util;
@@ -61,6 +62,9 @@ procedure MemSim is
       BM_Entry("mm",
                "[size=256][iterations=1][spacing=0][seed=15]",
                Benchmark.Matrix.MM.Create_MM'Access),
+      BM_Entry("qsort",
+               "[size=1024][iterations=1][spacing=0][seed=15]",
+               Benchmark.QSort.Create_QSort'Access),
       BM_Entry("stride",
                "[size=1024][iterations=1000][stride=1][spacing=0]",
                Benchmark.Stride.Create_Stride'Access),
