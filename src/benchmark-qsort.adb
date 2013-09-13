@@ -45,8 +45,10 @@ package body Benchmark.QSort is
          a := a + 1;
          b := b - 1;
       end loop;
-      if right > left then
+      if a - 1 > left then
          Sort(benchmark, left, a - 1);
+      end if;
+      if right > a then
          Sort(benchmark, a, right);
       end if;
    end Sort;
