@@ -33,6 +33,14 @@ package body Memory.Container is
       mem.start_time := 0;
    end Reset;
 
+   procedure Set_Port(mem  : in out Container_Type;
+                      port : in Natural) is
+   begin
+      if mem.mem /= null then
+         Set_Port(mem.mem.all, port);
+      end if;
+   end Set_Port;
+
    procedure Read(mem      : in out Container_Type;
                   address  : in Address_Type;
                   size     : in Positive) is

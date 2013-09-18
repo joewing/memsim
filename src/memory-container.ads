@@ -18,6 +18,10 @@ package Memory.Container is
                    context : in Natural);
 
    overriding
+   procedure Set_Port(mem  : in out Container_Type;
+                      port : in Natural);
+
+   overriding
    procedure Read(mem      : in out Container_Type;
                   address  : in Address_Type;
                   size     : in Positive);

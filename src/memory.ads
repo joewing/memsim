@@ -51,6 +51,11 @@ package Memory is
    procedure Reset(mem     : in out Memory_Type;
                    context : in Natural);
 
+   -- Set the port being used to access memory.
+   -- This is used to inform arbiters where an access is coming from.
+   procedure Set_Port(mem  : in out Memory_Type;
+                      port : in Natural) is null;
+
    -- Simulate a memory read.
    procedure Read(mem      : in out Memory_Type;
                   address  : in Address_Type;
