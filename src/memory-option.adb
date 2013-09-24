@@ -39,10 +39,11 @@ package body Memory.Option is
       end loop;
    end Reset;
 
-   procedure Set_Port(mem  : in out Option_Type;
-                      port : in Natural) is
+   procedure Set_Port(mem     : in out Option_Type;
+                      port    : in Natural;
+                      ready   : out Boolean) is
    begin
-      Set_Port(mem.memories.Element(mem.index).all, port);
+      Set_Port(mem.memories.Element(mem.index).all, port, ready);
    end Set_Port;
 
    procedure Read(mem      : in out Option_Type;

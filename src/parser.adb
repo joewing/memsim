@@ -4,6 +4,9 @@ with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 package body Parser is
 
+   procedure Parse_Arbiter(parser   : in out Parser_Type;
+                           result   : out Memory_Pointer) is separate;
+
    procedure Parse_Cache(parser  : in out Parser_Type;
                          result  : out Memory_Pointer) is separate;
 
@@ -70,6 +73,7 @@ package body Parser is
    type Memory_Parser_Array is array(Positive range <>) of Memory_Parser_Type;
 
    parser_map : constant Memory_Parser_Array := (
+      (To_Unbounded_String("arbiter"),          Parse_Arbiter'Access),
       (To_Unbounded_String("cache"),            Parse_Cache'Access),
       (To_Unbounded_String("dram"),             Parse_DRAM'Access),
       (To_Unbounded_String("dup"),              Parse_Dup'Access),

@@ -1,5 +1,6 @@
 
 with Memory.Container; use Memory.Container;
+with Ada.Containers.Vectors;
 
 package Memory.Arbiter is
 
@@ -18,8 +19,9 @@ package Memory.Arbiter is
                    context : in Natural);
 
    overriding
-   procedure Set_Port(mem  : in out Arbiter_Type;
-                      port : in Natural);
+   procedure Set_Port(mem     : in out Arbiter_Type;
+                      port    : in Natural;
+                      ready   : out Boolean);
 
    overriding
    procedure Read(mem      : in out Arbiter_Type;
@@ -40,6 +42,17 @@ package Memory.Arbiter is
 
 private
 
-   type Arbiter_Type is new Container_Type with null record;
+   package Pending_Vectors is new Vectors(Natural, Time_Type);
+
+   type Arbiter_Type is new Container_Type with record
+
+      -- The current port.
+      port     : Natural := 0;
+
+      -- Keep track of the earliest time the next even can happen for
+      -- each port.
+      pending  : Pending_Vectors.Vector;
+
+   end record;
 
 end Memory.Arbiter;

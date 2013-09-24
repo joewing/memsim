@@ -24,8 +24,9 @@ package Memory.Option is
                    context : in Natural);
 
    overriding
-   procedure Set_Port(mem  : in out Option_Type;
-                      port : in Natural);
+   procedure Set_Port(mem     : in out Option_Type;
+                      port    : in Natural;
+                      ready   : out Boolean);
 
    overriding
    procedure Read(mem      : in out Option_Type;
