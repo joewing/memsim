@@ -4,6 +4,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 entity cache is
+   --Generic variables to be used later
    generic (
       ADDR_WIDTH        : in natural := 32;
       WORD_WIDTH        : in natural := 32;
@@ -22,16 +23,16 @@ entity cache is
    port (
       clk      : in  std_logic;
       rst      : in  std_logic;
-      addr     : in  std_logic_vector(ADDR_WIDTH - 1 downto 0);
-      din      : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
-      dout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
+      addr     : in  std_logic_vector(ADDR_WIDTH - 1 downto 0);--31 downto 0 or 32 bits
+      din      : in  std_logic_vector(WORD_WIDTH - 1 downto 0);--31 downto 0 or 32 bits
+      dout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);--31 downto 0 or 32 bits
       re       : in  std_logic;
       we       : in  std_logic;
-      mask     : in  std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
+      mask     : in  std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);--3 downto 0 or 4 bits
       ready    : out std_logic;
-      maddr    : out std_logic_vector(ADDR_WIDTH - 1 downto 0);
-      mout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);
-      min      : in  std_logic_vector(WORD_WIDTH - 1 downto 0);
+      maddr    : out std_logic_vector(ADDR_WIDTH - 1 downto 0);--31 downto 0 or 32 bits
+      mout     : out std_logic_vector(WORD_WIDTH - 1 downto 0);--31 downto 0 or 32 bits
+      min      : in  std_logic_vector(WORD_WIDTH - 1 downto 0);--31 downto 0 or 32 bits
       mre      : out std_logic;
       mwe      : out std_logic;
       mmask    : out std_logic_vector((WORD_WIDTH / 8) - 1 downto 0);
@@ -41,47 +42,47 @@ end cache;
 
 architecture cache_arch of cache is
 
-   constant ASSOCIATIVITY  : natural := 2 ** ASSOC_BITS;
-   constant LINE_SIZE      : natural := 2 ** LINE_SIZE_BITS;
-   constant LINE_COUNT     : natural := 2 ** LINE_COUNT_BITS;
-   constant ROW_COUNT      : natural := LINE_COUNT;
-   constant INDEX_BITS     : natural := LINE_COUNT_BITS;
-   constant TAG_BITS       : natural := ADDR_WIDTH - INDEX_BITS
+   constant ASSOCIATIVITY  : natural := 2 ** ASSOC_BITS; --2^1(Assoc) = 2
+   constant LINE_SIZE      : natural := 2 ** LINE_SIZE_BITS; --2^0(LineSizeBits) = 1 
+   constant LINE_COUNT     : natural := 2 ** LINE_COUNT_BITS;--2^8(LineCountBits) = 256
+   constant ROW_COUNT      : natural := LINE_COUNT;--256
+   constant INDEX_BITS     : natural := LINE_COUNT_BITS;--8
+   constant TAG_BITS       : natural := ADDR_WIDTH - INDEX_BITS-- = 32-8-1 = 23
                                         - LINE_SIZE_BITS;
 
    function get_dirty_bits return natural is
    begin
       case WRITE_POLICY is
-         when 0      =>
-            return ASSOCIATIVITY;
-         when others =>
+         when 0      =>    -- write back or write allocate
+            return ASSOCIATIVITY; --2^(Assoc_Bits or 1) = 2
+         when others =>  -- if not then write through or write around 
             return 0;
       end case;
    end get_dirty_bits;
 
    function get_age_bits return natural is
    begin
-      case REPLACEMENT is
+      case REPLACEMENT is -- 0-Least recently used,1-Most recently used and 2-first in first out
          when 3 =>   -- PRLU requires 1 bit per way
             return 1;
          when others =>
-            return ASSOC_BITS;
+            return ASSOC_BITS; -- 1
       end case;
    end get_age_bits;
 
    constant AGE_BITS       : natural := get_age_bits;
-   constant LINE_BITS      : natural := WORD_WIDTH * LINE_SIZE;
+   constant LINE_BITS      : natural := WORD_WIDTH * LINE_SIZE; -- 32*1= 32
 
    function get_way_bits return natural is
    begin
       case WRITE_POLICY is
-         when 0         => return LINE_BITS + TAG_BITS + AGE_BITS + 2;
-         when others    => return LINE_BITS + TAG_BITS + AGE_BITS + 1;
+         when 0         => return LINE_BITS + TAG_BITS + AGE_BITS + 2;--write back or write allocate then  32 +23+1+2= 58
+         when others    => return LINE_BITS + TAG_BITS + AGE_BITS + 1;-- write through or write around then  32 +23+1+1=57
       end case;
    end get_way_bits;
 
-   constant WAY_BITS       : natural := get_way_bits;
-   constant ROW_BITS       : natural := WAY_BITS * ASSOCIATIVITY;
+   constant WAY_BITS       : natural := get_way_bits;-- 58 or 57 dependant on Write_Policy
+   constant ROW_BITS       : natural := WAY_BITS * ASSOCIATIVITY;--(above)*2^(Assoc_Bits or 1)
    constant DIRTY_BITS     : natural := get_dirty_bits;
    constant LINE_OFFSET    : natural := 0;
    constant TAG_OFFSET     : natural := LINE_OFFSET + LINE_BITS;
